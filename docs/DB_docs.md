@@ -3,7 +3,7 @@
 - **СУБД:** `PostgreSQL`
 - **Версия:** `1.0.1`
 - **Ответственный за документацию:** `Кривенышев Евгений (Ziragon)`
-- **ERD-диаграмма:** `DB_diagram.drawio (модули: Users, Board, Issues, Deadlines, Dashboard, Notifications)`
+- **ERD-диаграмма:** `SUPERServer.drawio (модули: Users, Board, Issues, Deadlines, Dashboard, Notifications)`
 
 
 ## Серверная часть (Backend)
@@ -42,12 +42,12 @@
 
 #### Сущности и краткая информация: 
 - **Users — Основная информация о пользователе (для аутентификации).**
-- **User_Profiles — Дополнительные данные профиля (имя, био, настройки).**
+- **UserProfiles — Дополнительные данные профиля (имя, био, настройки).**
 - **Avatars — Метаданные файла аватара (URL, тип, размер).**
 - **Tokens — Refresh-токены для сессий.**
 
 - #### Связи (В скобках указывается тип связи и зависимое поле из 1 сущности):
-- **User_Profiles -> Users (1:1 - User_Id)**
+- **UserProfiles -> Users (1:1 - User_Id)**
 - **Users -> Avatars (1:1 - Avatar_Id)**
 - **Token -> Users (N:1 - User_Id)**
 
@@ -57,18 +57,18 @@
 
 #### Сущности:
 - **Projects — Основная информация о проекте (название, владелец, статус).**
-- **Project_Members: Участники проекта и их роли.**
-- **Project_Roles — Роли в рамках конкретного проекта.**
-- **Role_Permissions — Назначенные права для роли.**
-- **Project_Permissions — Доступные права в проекте (шаблоны).**
+- **ProjectMembers: Участники проекта и их роли.**
+- **ProjectRoles — Роли в рамках конкретного проекта.**
+- **RolePermissions — Назначенные права для роли.**
+- **ProjectPermissions — Доступные права в проекте (шаблоны).**
 
 #### Связи:
 - **Projects -> Users (N:1 - Owner_Id)**
-- **Project_Members -> Users (1:1 - User_Id)**
-- **Project_Members -> Project (1:1 - Project_Id)**
-- **Project_Roles -> Project (N:1 - Project_Id)**
-- **Role_Permissions -> Project_Roles (N:1 - Role_Id)**
-- **Role_Permissions -> Project_Permissions (N:1 - Permission_Id)**
+- **ProjectMembers -> Users (1:1 - User_Id)**
+- **ProjectMembers -> Projects (1:1 - Project_Id)**
+- **ProjectRoles -> Projects (N:1 - Project_Id)**
+- **RolePermissions -> ProjectRoles (N:1 - Role_Id)**
+- **RolePermissions -> ProjectPermissions (N:1 - Permission_Id)**
 
 
 ## 3. Модуль задач (Issues):
@@ -76,18 +76,18 @@
 
 #### Сущности:
 - **Issues — Основная информация о задаче (название, описание, статус, приоритет).**
-- **Issue_Assignees — Назначенные исполнители.**
-- **Issue_Comments — Комментарии к задаче (с возможностью прикрепления файлов).**
+- **IssueAssignees — Назначенные исполнители.**
+- **IssueComments — Комментарии к задаче (с возможностью прикрепления файлов).**
 
 #### Связи:
-- **Issues -> Project (N:1 - Project_Id)**
+- **Issues -> Projects (N:1 - Project_Id)**
 - **Issues -> Issues (N:1 - Parent_Issue_Id)**
 - **Issues -> Users (N:1 - Creator_Id)**
-- **Issue_Assignees -> Issues (N:1 - Issue_Id)**
-- **Issue_Assignees -> Users (N:1 - User_Id)**
-- **Issue_Assignees -> Users (N:1 - Assigner_Id)**
-- **Issue_Comments -> Issues (N:1 - Issue_Id)**
-- **Issue_Comments -> Users (N:1 - User_Id)**
+- **IssueAssignees -> Issues (N:1 - Issue_Id)**
+- **IssueAssignees -> Users (N:1 - User_Id)**
+- **IssueAssignees -> Users (N:1 - Assigner_Id)**
+- **IssueComments -> Issues (N:1 - Issue_Id)**
+- **IssueComments -> Users (N:1 - User_Id)**
 
 
 ## 4. Модуль спринтов (Deadlines):
@@ -95,12 +95,12 @@
 
 #### Сущности:
 - **Sprints — Информация о спринте (название, даты начала/окончания, цель).**
-- **Sprint_Issues — Задачи в спринте (связующая таблица).**
+- **SprintIssues — Задачи в спринте (связующая таблица).**
 
 #### Зависимости:
 - **Sprints -> Projects (N:1 - Project_Id)**
-- **Deadlined_Issues -> Issues (N:1 - Issue_Id)**
-- **Deadlined_Issues -> Sprints (N:1 - Sprint_Id)**
+- **DeadlinedIssues -> Issues (N:1 - Issue_Id)**
+- **DeadlinedIssues -> Sprints (N:1 - Sprint_Id)**
 
 
 ## 5. Модуль аналитики (Dashboard) (WIP):
@@ -108,12 +108,12 @@
 
 #### Сущности:
 - **Dashboard_Snapshots — Снапшоты состояния проекта.**
-- **Activity_Logs — Логи действий (события из системы прав).**
+- **ActivityLogs — Логи действий (события из системы прав).**
 
 #### Зависимости:
-- **Dashboard_Snapshots -> Project (N:1 - Project_Id)**
-- **Activity_Logs -> Project (N:1 - Project_Id)**
-- **Activity_Logs -> Users (N:1 - User_Id)**
+- **Dashboard_Snapshots -> Projects (N:1 - Project_Id)**
+- **ActivityLogs -> Projects (N:1 - Project_Id)**
+- **ActivityLogs -> Users (N:1 - User_Id)**
 
 
 ## 6. Модуль уведомлений (Notifications) (WIP):
@@ -121,8 +121,8 @@
 
 #### Сущности:
 - **Notifications — Уведомления (генерируются при событиях).**
-- **User_Notification_Preferences — Настройки уведомлений по типам событий.**
+- **UserPreferences — Настройки уведомлений по типам событий.**
 
 #### Зависимости:
 - **Notifications -> Users (N:1 - User_Id)**
-- **User_Notification_Preferences -> Users (N:1 - User_Id)**
+- **UserPreferences -> Users (N:1 - User_Id)**
