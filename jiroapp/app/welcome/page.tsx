@@ -26,22 +26,6 @@ const WelcomePage = () => {
     return (
         <div className={styles.welcomeContainer}>
             <div className={styles.animatedBackground}>
-                <div className={styles.floatingShape1}></div>
-                <div className={styles.floatingShape2}></div>
-                <div className={styles.floatingShape3}></div>
-                <div className={styles.floatingShape4}></div>
-                <div className={styles.floatingShape5}></div>
-                <div className={styles.floatingShape6}></div>
-                <div className={styles.gridPattern}></div>
-                <div className={styles.glowEffect1}></div>
-                <div className={styles.glowEffect2}></div>
-                <div className={styles.particlesContainer}>
-                    {[...Array(8)].map((_, i) => (
-                        <div key={i} className={styles[`particle${i + 1}`]}></div>
-                    ))}
-                </div>
-                <div className={styles.wave1}></div>
-                <div className={styles.wave2}></div>
             </div>
 
             <div className={`${styles.contentWrapper} ${isVisible ? styles.visible : ''}`}>
