@@ -1,0 +1,129 @@
+'use client'
+
+import { JSX } from 'react'
+import { FaUserCircle, FaEllipsisH, FaPaperclip, FaFlag, FaRegFlag } from 'react-icons/fa'
+import styles from './Dashboard.module.css'
+
+type Priority = 'low' | 'medium' | 'high'
+
+interface Author {
+    name: string
+    avatar: string | null
+}
+
+interface Card {
+    id: number
+    title: string
+    description: string
+    priority: Priority
+    priorityLevel: number
+    author: Author
+    tags: string[]
+    progress: number
+    comments: number
+    attachments: number
+}
+
+interface TaskCardProps {
+    card: Card
+    getPriorityColor: (priority: Priority) => string
+    getPriorityBgColor: (priority: Priority) => string
+}
+
+const TaskCard = ({ card, getPriorityColor, getPriorityBgColor }: TaskCardProps) => {
+    const getPriorityIcon = (priority: Priority): JSX.Element => {
+        switch (priority) {
+            case 'high':
+                return <FaFlag className={`${styles.priorityIcon} ${styles.highPriority}`} />
+            case 'medium':
+                return <FaFlag className={`${styles.priorityIcon} ${styles.mediumPriority}`} />
+            case 'low':
+                return <FaRegFlag className={`${styles.priorityIcon} ${styles.lowPriority}`} />
+            default:
+                return <FaRegFlag className={styles.priorityIcon} />
+        }
+    }
+
+    return (
+        <div className={styles.taskCard}>
+            <div
+                className={styles.cardPriorityBar}
+                style={{ backgroundColor: getPriorityColor(card.priority) }}
+            ></div>
+
+            <div className={styles.cardContent}>
+                <div className={styles.cardHeader}>
+                    <div
+                        className={styles.cardTitleContainer}
+                        style={{ backgroundColor: getPriorityBgColor(card.priority) }}
+                    >
+                        {getPriorityIcon(card.priority)}
+                        <h4 className={styles.cardTitle}>{card.title}</h4>
+                    </div>
+                    <button className={styles.cardMenuBtn}>
+                        <FaEllipsisH />
+                    </button>
+                </div>
+
+                <p className={styles.cardDescription}>
+                    {card.description}
+                </p>
+
+                {card.progress > 0 && (
+                    <div className={styles.progressSection}>
+                        <div className={styles.progressHeader}>
+                            <span>Прогресс</span>
+                            <span>{card.progress}%</span>
+                        </div>
+                        <div className={styles.progressBar}>
+                            <div
+                                className={styles.progressFill}
+                                style={{width: `${card.progress}%`}}
+                            ></div>
+                        </div>
+                    </div>
+                )}
+
+                <div className={styles.cardTags}>
+                    {card.tags.map((tag, index) => (
+                        <span key={index} className={styles.tag}>
+                            {tag}
+                        </span>
+                    ))}
+                </div>
+
+                <div className={styles.cardFooter}>
+                    <div className={styles.cardMeta}>
+                        {card.comments > 0 && (
+                            <div className={styles.metaItem}>
+                                <FaUserCircle />
+                                <span>{card.comments}</span>
+                            </div>
+                        )}
+                        {card.attachments > 0 && (
+                            <div className={styles.metaItem}>
+                                <FaPaperclip />
+                                <span>{card.attachments}</span>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className={styles.authorSection}>
+                        <div className={styles.authorAvatar}>
+                            {card.author.avatar ? (
+                                <img
+                                    src={card.author.avatar}
+                                    alt={card.author.name}
+                                />
+                            ) : (
+                                <FaUserCircle className={styles.defaultAvatar} />
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+export default TaskCard

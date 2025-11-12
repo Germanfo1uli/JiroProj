@@ -8,22 +8,15 @@ import {
     FaExclamationCircle,
     FaUserCircle,
     FaEllipsisH,
-    FaArrowUp,
-    FaArrowDown,
-    FaStar,
-    FaRegStar,
     FaChevronDown,
     FaChevronUp,
-    FaFire,
-    FaBolt,
-    FaCircle,
     FaPlus,
     FaFlag,
     FaRegFlag,
-    FaChevronRight,
-    FaPaperclip
+    FaChevronRight
 } from 'react-icons/fa'
 import styles from './Dashboard.module.css'
+import TaskCard from './TaskCard'
 
 type Priority = 'low' | 'medium' | 'high'
 
@@ -185,19 +178,6 @@ const BoardsSection = () => {
             high: 'rgba(239, 68, 68, 0.15)'
         }
         return colors[priority] || 'rgba(107, 114, 128, 0.1)'
-    }
-
-    const getPriorityIcon = (priority: Priority): JSX.Element => {
-        switch (priority) {
-            case 'high':
-                return <FaFlag className={`${styles.priorityIcon} ${styles.highPriority}`} />
-            case 'medium':
-                return <FaFlag className={`${styles.priorityIcon} ${styles.mediumPriority}`} />
-            case 'low':
-                return <FaRegFlag className={`${styles.priorityIcon} ${styles.lowPriority}`} />
-            default:
-                return <FaRegFlag className={styles.priorityIcon} />
-        }
     }
 
     const getFilterPriorityIcon = (priority: Priority): JSX.Element => {
@@ -376,7 +356,8 @@ const BoardsSection = () => {
                         const filteredCards = filterAndSortCards(board.cards)
                         const isExpanded = expandedBoards[board.id]
                         const isCollapsed = collapsedBoards[board.id]
-                        const showExpandButton = filteredCards.length > 3
+                        const hasMultipleCards = filteredCards.length > 1
+                        const showExpandButton = hasMultipleCards
 
                         return (
                             <div key={board.id} className={styles.boardColumn}>
@@ -403,6 +384,9 @@ const BoardsSection = () => {
                                                 }}
                                             >
                                                 {isExpanded ? <FaChevronUp /> : <FaChevronDown />}
+                                                {!isExpanded && (
+                                                    <span className={styles.hiddenCardsCount}>+{filteredCards.length - 1}</span>
+                                                )}
                                             </button>
                                         )}
                                     </div>
@@ -410,90 +394,42 @@ const BoardsSection = () => {
 
                                 {!isCollapsed && (
                                     <div className={styles.cardsList}>
-                                        {filteredCards
-                                            .slice(0, isExpanded ? filteredCards.length : 3)
-                                            .map((card) => (
-                                                <div key={card.id} className={styles.taskCard}>
-                                                    <div
-                                                        className={styles.cardPriorityBar}
-                                                        style={{ backgroundColor: getPriorityColor(card.priority) }}
-                                                    ></div>
+                                        {filteredCards.length > 0 ? (
+                                            <>
+                                                {/* Всегда показываем первую карточку */}
+                                                <TaskCard
+                                                    key={filteredCards[0].id}
+                                                    card={filteredCards[0]}
+                                                    getPriorityColor={getPriorityColor}
+                                                    getPriorityBgColor={getPriorityBgColor}
+                                                />
 
-                                                    <div className={styles.cardContent}>
-                                                        <div className={styles.cardHeader}>
-                                                            <div
-                                                                className={styles.cardTitleContainer}
-                                                                style={{ backgroundColor: getPriorityBgColor(card.priority) }}
-                                                            >
-                                                                {getPriorityIcon(card.priority)}
-                                                                <h4 className={styles.cardTitle}>{card.title}</h4>
-                                                            </div>
-                                                            <button className={styles.cardMenuBtn}>
-                                                                <FaEllipsisH />
-                                                            </button>
-                                                        </div>
+                                                {/* Показываем остальные карточки только если раздел развернут */}
+                                                {isExpanded && filteredCards.slice(1).map((card) => (
+                                                    <TaskCard
+                                                        key={card.id}
+                                                        card={card}
+                                                        getPriorityColor={getPriorityColor}
+                                                        getPriorityBgColor={getPriorityBgColor}
+                                                    />
+                                                ))}
 
-                                                        <p className={styles.cardDescription}>
-                                                            {card.description}
-                                                        </p>
-
-                                                        {card.progress > 0 && (
-                                                            <div className={styles.progressSection}>
-                                                                <div className={styles.progressHeader}>
-                                                                    <span>Прогресс</span>
-                                                                    <span>{card.progress}%</span>
-                                                                </div>
-                                                                <div className={styles.progressBar}>
-                                                                    <div
-                                                                        className={styles.progressFill}
-                                                                        style={{width: `${card.progress}%`}}
-                                                                    ></div>
-                                                                </div>
-                                                            </div>
-                                                        )}
-
-                                                        <div className={styles.cardTags}>
-                                                            {card.tags.map((tag, index) => (
-                                                                <span key={index} className={styles.tag}>
-                                                                    {tag}
-                                                                </span>
-                                                            ))}
-                                                        </div>
-
-                                                        <div className={styles.cardFooter}>
-                                                            <div className={styles.cardMeta}>
-                                                                {card.comments > 0 && (
-                                                                    <div className={styles.metaItem}>
-                                                                        <FaUserCircle />
-                                                                        <span>{card.comments}</span>
-                                                                    </div>
-                                                                )}
-                                                                {card.attachments > 0 && (
-                                                                    <div className={styles.metaItem}>
-                                                                        <FaPaperclip />
-                                                                        <span>{card.attachments}</span>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-
-                                                            <div className={styles.authorSection}>
-                                                                <div className={styles.authorAvatar}>
-                                                                    {card.author.avatar ? (
-                                                                        <img
-                                                                            src={card.author.avatar}
-                                                                            alt={card.author.name}
-                                                                        />
-                                                                    ) : (
-                                                                        <FaUserCircle className={styles.defaultAvatar} />
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                        </div>
+                                                {/* Индикатор скрытых карточек, если их несколько и раздел не развернут */}
+                                                {!isExpanded && hasMultipleCards && (
+                                                    <div className={styles.hiddenCardsIndicator}>
+                                                        <span className={styles.hiddenCardsText}>
+                                                            Еще {filteredCards.length - 1} задач{filteredCards.length - 1 > 1 ? 'и' : 'а'}
+                                                        </span>
+                                                        <button
+                                                            className={styles.showMoreBtn}
+                                                            onClick={() => toggleBoardExpansion(board.id)}
+                                                        >
+                                                            Показать все
+                                                        </button>
                                                     </div>
-                                                </div>
-                                            ))}
-
-                                        {filteredCards.length === 0 && (
+                                                )}
+                                            </>
+                                        ) : (
                                             <div className={styles.noCardsMessage}>
                                                 Нет задач, соответствующих фильтрам
                                             </div>
