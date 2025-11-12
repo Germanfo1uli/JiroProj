@@ -19,7 +19,13 @@ public class User {
     @Column(name="password_hash", nullable = false)
     private String PasswordHash;
 
+    @Column(name="avatar_id")
+    private Long AvatarId;
+
     @Column(name="created_at", updatable = false)
     @CreationTimestamp
     private LocalDateTime CreatedAt;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, optional = false)
+    private UserProfile profile;
 }
