@@ -4,20 +4,20 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 @Entity
-@Table(name = "user_profile", schema = "user_service_schema")
+@Table(name = "user_profiles", schema = "user_service_schema")
 @Data
 public class UserProfile {
     @Id
-    private Long Id;
+    private Long id;
 
     @OneToOne
     @MapsId
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id")
     private User user;
 
     @Column(name = "name")
-    private String Name;
+    private String name;
 
     @Column(name = "bio")
-    private String Bio;
+    private String bio;
 }
