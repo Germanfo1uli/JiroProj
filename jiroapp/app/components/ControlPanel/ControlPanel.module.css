@@ -1,5 +1,7 @@
 .controlPanel {
-    width: 260px;
+    width: 280px;
+    position: fixed;
+    height: 100vh;
     background: linear-gradient(180deg, #f0f8ff 0%, #e6f2ff 50%, #f0f7ff 100%);
     backdrop-filter: blur(15px);
     border-left: 1px solid rgba(61, 107, 179, 0.1);
@@ -179,13 +181,31 @@
 @media (max-width: 768px) {
     .controlPanel {
         position: fixed;
-        right: 0;
+        left: 0;
         top: 0;
         height: 100vh;
         height: 100dvh;
-        transform: translateX(100%);
+        width: 100%;
+        max-width: 300px;
+        transform: none;
+        margin-left: 0;
+        z-index: 1000;
     }
-    .controlPanel.isOpen {
-        transform: translateX(0);
+    .controlPanel.hidden {
+        transform: translateX(-100%);
+    }
+    .controlPanel::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: -1;
+        display: none;
+    }
+    .controlPanel.showOverlay::before {
+        display: block;
     }
 }

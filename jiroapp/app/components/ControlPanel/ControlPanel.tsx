@@ -3,7 +3,16 @@
 import { FaThLarge, FaChartBar, FaCog, FaUsers, FaProjectDiagram, FaHome } from 'react-icons/fa'
 import styles from './ControlPanel.module.css'
 
-const ControlPanel = () => {
+interface ControlPanelProps {
+    activePage: string
+    onPageChange: (page: string) => void
+}
+
+const ControlPanel = ({ activePage, onPageChange }: ControlPanelProps) => {
+    const handleNavClick = (page: string) => {
+        onPageChange(page)
+    }
+
     return (
         <div className={styles.controlPanel}>
             <div className={styles.projectHeader}>
@@ -17,15 +26,23 @@ const ControlPanel = () => {
             </div>
 
             <nav className={styles.panelNav}>
-                <button className={`${styles.panelNavButton} ${styles.active}`}>
+
+                <button
+                    className={`${styles.panelNavButton} ${activePage === 'board' ? styles.active : ''}`}
+                    onClick={() => handleNavClick('board')}
+                >
                     <FaHome className={styles.panelNavIcon} />
                     <span className={styles.panelNavText}>Главная</span>
                 </button>
 
-                <button className={styles.panelNavButton}>
+                <button
+                    className={`${styles.panelNavButton} ${activePage === 'dashboard' ? styles.active : ''}`}
+                    onClick={() => handleNavClick('dashboard')}
+                >
                     <FaThLarge className={styles.panelNavIcon} />
                     <span className={styles.panelNavText}>Доска</span>
                 </button>
+
                 <button className={styles.panelNavButton}>
                     <FaChartBar className={styles.panelNavIcon} />
                     <span className={styles.panelNavText}>Отчёты</span>

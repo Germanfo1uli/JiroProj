@@ -1,18 +1,43 @@
 'use client'
 
+import { useState } from 'react'
 import VerticalNavbar from '../components/VerticalNavbar/VerticalNavbar'
 import ControlPanel from '../components/ControlPanel/ControlPanel'
 import BoardsContent from '../components/BoardsContent/BoardsContent'
+import Dashboard from '../components/DashboardContent/Dashboard'
 import styles from './MainPage.module.css'
 
+
+type ActivePage = 'dashboard' | 'board'
+
 const MainPage = () => {
+    const [activePage, setActivePage] = useState<ActivePage>('dashboard')
+
+    const handlePageChange = (page: ActivePage) => {
+        setActivePage(page)
+    }
+
+    const renderContent = () => {
+        switch (activePage) {
+            case 'dashboard':
+                return <Dashboard />
+            case 'board':
+                return <BoardsContent />
+            default:
+                return <Dashboard />
+        }
+    }
+
     return (
         <div className={styles.mainContainer}>
             <VerticalNavbar />
-            <ControlPanel />
+            <ControlPanel
+                activePage={activePage}
+                onPageChange={handlePageChange}
+            />
 
             <div className={styles.mainContentWrapper}>
-                <BoardsContent />
+                {renderContent()}
             </div>
         </div>
     )

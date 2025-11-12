@@ -2,7 +2,6 @@
     display: flex;
     min-height: 100vh;
     position: relative;
-    overflow: hidden;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 30%, #f093fb 70%, #ff5858 100%);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
