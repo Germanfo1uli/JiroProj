@@ -3,6 +3,7 @@ package com.example.userservice.service;
 import com.example.userservice.exception.EmailAlreadyExistsException;
 import com.example.userservice.exception.InvalidCredentialsException;
 import com.example.userservice.models.dto.response.LoginResponse;
+import com.example.userservice.models.dto.response.TokenResponse;
 import com.example.userservice.models.entity.User;
 import com.example.userservice.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -72,5 +73,21 @@ public class UserService {
                     refreshToken
             );
         });
+    }
+
+    @Async
+    public CompletableFuture<TokenResponse> refreshTokenAsync(String refreshToken, String deviceInfo){
+        return jwtService.validateAndRevokeRefreshTokenAsync(refreshToken)
+                .thenApply(user -> {
+                    String newAccess = jwtService.generateAccessToken(user);
+                    String newRefresh = jwtService.generateRefreshToken(user, deviceInfo);
+
+                    jwtService.saveRefreshTokenAsync(user, newRefresh, deviceInfo);
+
+                    return new TokenResponse(
+                            newAccess,
+                            newRefresh
+                    );
+                });
     }
 }

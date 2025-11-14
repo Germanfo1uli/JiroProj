@@ -1,6 +1,7 @@
 package com.example.userservice.service;
 
 import com.example.userservice.config.JwtConfig;
+import com.example.userservice.exception.InvalidRefreshTokenException;
 import com.example.userservice.models.entity.RefreshToken;
 import com.example.userservice.models.entity.User;
 import com.example.userservice.repository.TokenRepository;
@@ -87,6 +88,40 @@ public class JwtService {
             token.setDeviceInfo(deviceInfo);
 
             return tokenRepository.save(token);
+        });
+    }
+
+    @Async
+    public CompletableFuture<User> validateAndRevokeRefreshTokenAsync(String refreshToken) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                Claims claims = parseToken(refreshToken);
+                UUID jti = UUID.fromString(claims.getId());
+                Long userId = Long.valueOf(claims.getSubject());
+
+                RefreshToken stored = tokenRepository.findByJti(jti)
+                        .orElseThrow(() -> new InvalidRefreshTokenException("Токен не найден в БД"));
+
+                if (stored.getRevoked()) {
+                    throw new InvalidRefreshTokenException("Токен отозван");
+                }
+                if (stored.getExpiresAt().isBefore(LocalDateTime.now())) {
+                    throw new InvalidRefreshTokenException("Токен истёк");
+                }
+                if (!passwordEncoder.matches(refreshToken, stored.getTokenHash())) {
+                    throw new InvalidRefreshTokenException("Хеш не совпадает");
+                }
+
+                stored.setRevoked(true);
+                tokenRepository.save(stored);
+
+                return stored.getUser();
+
+            } catch (ExpiredJwtException e) {
+                throw new InvalidRefreshTokenException("Токен истёк");
+            } catch (JwtException e) {
+                throw new InvalidRefreshTokenException("Невалидный токен");
+            }
         });
     }
 }
