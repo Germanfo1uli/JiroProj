@@ -1,17 +1,17 @@
 package com.example.userservice.service;
 
 import com.example.userservice.config.JwtConfig;
-import com.example.userservice.models.RefreshToken;
-import com.example.userservice.models.User;
+import com.example.userservice.models.entity.RefreshToken;
+import com.example.userservice.models.entity.User;
 import com.example.userservice.repository.TokenRepository;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -21,6 +21,7 @@ import java.util.concurrent.CompletableFuture;
 public class JwtService {
     private final JwtConfig jwtConfig;
     private final TokenRepository tokenRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
 
     public String generateAccessToken(User user) {
         if (user == null || user.getId() == null) {
@@ -64,5 +65,28 @@ public class JwtService {
         } catch (ExpiredJwtException e) {
             return true;
         }
+    }
+
+    @Async
+    public CompletableFuture<RefreshToken> saveRefreshTokenAsync(
+            User user, String rawToken, String deviceInfo) {
+
+        return CompletableFuture.supplyAsync(() -> {
+            UUID jti = UUID.fromString(parseToken(rawToken).getId());
+            LocalDateTime expiresAt = parseToken(rawToken).getExpiration()
+                    .toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+
+            String tokenHash = passwordEncoder.encode(rawToken);
+
+            RefreshToken token = new RefreshToken();
+            token.setUser(user);
+            token.setTokenHash(tokenHash);
+            token.setJti(jti);
+            token.setExpiresAt(expiresAt);
+            token.setRevoked(false);
+            token.setDeviceInfo(deviceInfo);
+
+            return tokenRepository.save(token);
+        });
     }
 }
