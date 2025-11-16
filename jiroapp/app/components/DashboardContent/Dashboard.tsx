@@ -18,9 +18,9 @@ import {
 } from 'react-icons/fa'
 import styles from './Dashboard.module.css'
 import TaskCard from './components/TaskCard'
-import TreeViewModal from './components/TreeViewModal'
-import AddCardModal from './components/AddCardModal'
-import ConfirmationModal from './components/ConfirmationModal'
+import TreeViewModal from './components/tree/TreeViewModal'
+import AddCardModal from './components/modal/AddCardModal'
+import ConfirmationModal from './components/modal/ConfirmationModal'
 
 type Priority = 'low' | 'medium' | 'high'
 
