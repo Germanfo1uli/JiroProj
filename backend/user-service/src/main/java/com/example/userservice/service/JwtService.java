@@ -43,13 +43,15 @@ public class JwtService {
 
     public String generateRefreshToken(User user, String deviceInfo) {
         UUID jti = UUID.randomUUID();
+        LocalDateTime expiresAt = LocalDateTime.now()
+                .plusSeconds(jwtConfig.getRefreshTokenExpiration() / 1000);
 
         return Jwts.builder()
                 .setSubject(user.getId().toString())
                 .setId(jti.toString())
                 .claim("device", deviceInfo)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + jwtConfig.getRefreshTokenExpiration()))
+                .setExpiration(Date.from(expiresAt.atZone(ZoneId.systemDefault()).toInstant()))
                 .signWith(jwtConfig.getSecretKey())
                 .compact();
     }
@@ -133,12 +135,18 @@ public class JwtService {
     }
 
     @Async
-    public CompletableFuture<Void> revokeAllRefreshTokensForUser(String refreshToken) {
+    public CompletableFuture<Void> revokeAllRefreshExcept(String oldToken, String newToken) {
         return CompletableFuture.runAsync(() -> {
-            RefreshToken current = validateRefreshToken(refreshToken);
-            Long userId = current.getUser().getId();
+            RefreshToken oldStored = validateRefreshToken(oldToken);
+            Long userId = oldStored.getUser().getId();
+
+            Claims newClaims = parseToken(newToken);
+            UUID newJti = UUID.fromString(newClaims.getId());
 
             List<RefreshToken> activeTokens = tokenRepository.findAllByUserIdAndRevokedFalse(userId);
+
+            activeTokens.removeIf(token -> token.getJti().equals(newJti));
+
             activeTokens.forEach(token -> token.setRevoked(true));
             tokenRepository.saveAll(activeTokens);
         });
