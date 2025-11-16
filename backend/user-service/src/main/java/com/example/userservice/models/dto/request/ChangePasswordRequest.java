@@ -1,0 +1,16 @@
+package com.example.userservice.models.dto.request;
+
+import jakarta.validation.constraints.NotBlank;
+
+public record ChangePasswordRequest (
+        @NotBlank(message = "Old password is required")
+        String oldPassword,
+
+        @NotBlank(message = "New password is required")
+        String newPassword,
+
+        @NotBlank(message = "Token is required")
+        String refreshToken,
+
+        String deviceInfo
+) {}

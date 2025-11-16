@@ -6,7 +6,9 @@ import com.example.userservice.models.entity.RefreshToken;
 import com.example.userservice.models.entity.User;
 import com.example.userservice.repository.TokenRepository;
 import io.jsonwebtoken.*;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -40,12 +43,11 @@ public class JwtService {
 
     public String generateRefreshToken(User user, String deviceInfo) {
         UUID jti = UUID.randomUUID();
-        LocalDateTime expiresAt = LocalDateTime.now()
-                .plusSeconds(jwtConfig.getRefreshTokenExpiration() / 1000);
 
         return Jwts.builder()
                 .setSubject(user.getId().toString())
                 .setId(jti.toString())
+                .claim("device", deviceInfo)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + jwtConfig.getRefreshTokenExpiration()))
                 .signWith(jwtConfig.getSecretKey())
@@ -58,6 +60,34 @@ public class JwtService {
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
+    }
+
+    private RefreshToken validateRefreshToken(String refreshToken) {
+        Claims claims = parseToken(refreshToken);
+        UUID jti = UUID.fromString(claims.getId());
+
+        RefreshToken stored = tokenRepository.findByJti(jti)
+                .orElseThrow(() -> new InvalidRefreshTokenException("Токен не найден"));
+
+        if (stored.getRevoked()) {
+            throw new InvalidRefreshTokenException("Токен отозван");
+        }
+        if (stored.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new InvalidRefreshTokenException("Токен истёк");
+        }
+        if (!passwordEncoder.matches(refreshToken, stored.getTokenHash())) {
+            throw new InvalidRefreshTokenException("Хеш не совпадает");
+        }
+
+        return stored;
+    }
+
+    public String extractEmail(String token) {
+        return parseToken(token).get("email", String.class);
+    }
+
+    public Long extractUserId(String token) {
+        return Long.valueOf(parseToken(token).getSubject());
     }
 
     public boolean isTokenExpired(String token) {
@@ -73,8 +103,9 @@ public class JwtService {
             User user, String rawToken, String deviceInfo) {
 
         return CompletableFuture.supplyAsync(() -> {
-            UUID jti = UUID.fromString(parseToken(rawToken).getId());
-            LocalDateTime expiresAt = parseToken(rawToken).getExpiration()
+            Claims claims = parseToken(rawToken);
+            UUID jti = UUID.fromString(claims.getId());
+            LocalDateTime expiresAt = claims.getExpiration()
                     .toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
 
             String tokenHash = passwordEncoder.encode(rawToken);
@@ -94,34 +125,22 @@ public class JwtService {
     @Async
     public CompletableFuture<User> validateAndRevokeRefreshTokenAsync(String refreshToken) {
         return CompletableFuture.supplyAsync(() -> {
-            try {
-                Claims claims = parseToken(refreshToken);
-                UUID jti = UUID.fromString(claims.getId());
-                Long userId = Long.valueOf(claims.getSubject());
+            RefreshToken stored = validateRefreshToken(refreshToken);
+            stored.setRevoked(true);
+            tokenRepository.save(stored);
+            return stored.getUser();
+        });
+    }
 
-                RefreshToken stored = tokenRepository.findByJti(jti)
-                        .orElseThrow(() -> new InvalidRefreshTokenException("Токен не найден в БД"));
+    @Async
+    public CompletableFuture<Void> revokeAllRefreshTokensForUser(String refreshToken) {
+        return CompletableFuture.runAsync(() -> {
+            RefreshToken current = validateRefreshToken(refreshToken);
+            Long userId = current.getUser().getId();
 
-                if (stored.getRevoked()) {
-                    throw new InvalidRefreshTokenException("Токен отозван");
-                }
-                if (stored.getExpiresAt().isBefore(LocalDateTime.now())) {
-                    throw new InvalidRefreshTokenException("Токен истёк");
-                }
-                if (!passwordEncoder.matches(refreshToken, stored.getTokenHash())) {
-                    throw new InvalidRefreshTokenException("Хеш не совпадает");
-                }
-
-                stored.setRevoked(true);
-                tokenRepository.save(stored);
-
-                return stored.getUser();
-
-            } catch (ExpiredJwtException e) {
-                throw new InvalidRefreshTokenException("Токен истёк");
-            } catch (JwtException e) {
-                throw new InvalidRefreshTokenException("Невалидный токен");
-            }
+            List<RefreshToken> activeTokens = tokenRepository.findAllByUserIdAndRevokedFalse(userId);
+            activeTokens.forEach(token -> token.setRevoked(true));
+            tokenRepository.saveAll(activeTokens);
         });
     }
 }
