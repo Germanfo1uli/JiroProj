@@ -4,14 +4,13 @@ export interface Developer {
     id: number;
     name: string;
     avatar: string | null;
-    username: string;
     role: DeveloperRole;
     completedTasks: number;
+    projects: string[];
     isCurrentUser?: boolean;
 }
 
 export interface NewDeveloper {
     name: string;
-    username: string;
     role: DeveloperRole;
 }

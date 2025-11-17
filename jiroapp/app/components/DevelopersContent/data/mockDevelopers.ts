@@ -5,41 +5,41 @@ export const mockDevelopers: Developer[] = [
         id: 1,
         name: 'Алексей Петров',
         avatar: null,
-        username: 'alexey_p',
         role: 'leader',
         completedTasks: 24,
+        projects: ['TASKFLOW PRO', 'Мобильное приложение', 'API Gateway'],
         isCurrentUser: true
     },
     {
         id: 2,
         name: 'Мария Иванова',
         avatar: null,
-        username: 'maria_i',
         role: 'executor',
-        completedTasks: 18
+        completedTasks: 18,
+        projects: ['TASKFLOW PRO', 'Дизайн система']
     },
     {
         id: 3,
         name: 'Иван Сидоров',
         avatar: null,
-        username: 'ivan_s',
         role: 'executor',
-        completedTasks: 15
+        completedTasks: 15,
+        projects: ['TASKFLOW PRO', 'База данных', 'Бэкенд API']
     },
     {
         id: 4,
         name: 'Елена Козлова',
         avatar: null,
-        username: 'elena_k',
         role: 'assistant',
-        completedTasks: 8
+        completedTasks: 8,
+        projects: ['TASKFLOW PRO', 'Тестирование']
     },
     {
         id: 5,
         name: 'Дмитрий Волков',
         avatar: null,
-        username: 'dmitry_v',
         role: 'executor',
-        completedTasks: 12
+        completedTasks: 12,
+        projects: ['Мобильное приложение', 'Frontend']
     }
 ];

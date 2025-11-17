@@ -30,10 +30,6 @@
     font-weight: 800;
     color: #1e293b;
     margin: 0 0 0.75rem 0;
-    background: linear-gradient(135deg, #1e293b 0%, #3b82f6 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
@@ -51,7 +47,6 @@
     z-index: 1;
 }
 
-/* Анимации */
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -67,7 +62,6 @@
     animation: fadeIn 0.5s ease-out;
 }
 
-/* Мобильная адаптация */
 @media (max-width: 1200px) {
     .developersSection {
         margin-left: 22rem;

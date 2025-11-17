@@ -11,12 +11,12 @@ import {
     IconButton,
     Typography,
     Box,
-    Tooltip,
-    alpha
+    Tooltip
 } from '@mui/material';
-import { FaTrash, FaCrown, FaUserCheck, FaUserFriends } from 'react-icons/fa';
+import { FaTrash } from 'react-icons/fa';
 import { Developer } from '../types/developer.types';
 import { DeveloperRoleChip } from './DeveloperRoleChip';
+import { useDeveloperProjects } from '../hooks/useDeveloperProjects';
 
 interface DevelopersTableProps {
     developers: Developer[];
@@ -29,21 +29,14 @@ export const DevelopersTable = ({
                                     isLeader,
                                     onRemoveDeveloper
                                 }: DevelopersTableProps) => {
+    const { getDeveloperProjects } = useDeveloperProjects();
+
     const canRemoveDeveloper = (developer: Developer) => {
         return isLeader && !developer.isCurrentUser && developer.role !== 'leader';
     };
 
-    const getRoleIcon = (role: string) => {
-        switch (role) {
-            case 'leader':
-                return <FaCrown style={{ fontSize: '14px' }} />;
-            case 'executor':
-                return <FaUserCheck style={{ fontSize: '14px' }} />;
-            case 'assistant':
-                return <FaUserFriends style={{ fontSize: '14px' }} />;
-            default:
-                return <FaUserFriends style={{ fontSize: '14px' }} />;
-        }
+    const getCurrentProjects = (developer: Developer) => {
+        return getDeveloperProjects(developer);
     };
 
     return (
@@ -67,7 +60,7 @@ export const DevelopersTable = ({
                 }
             }}
         >
-            <Table sx={{ minWidth: 650 }}>
+            <Table sx={{ minWidth: 750 }}>
                 <TableHead>
                     <TableRow
                         sx={{
@@ -93,174 +86,222 @@ export const DevelopersTable = ({
                     >
                         <TableCell>Участник</TableCell>
                         <TableCell>Роль</TableCell>
+                        <TableCell>Проекты</TableCell>
                         <TableCell>Выполнено задач</TableCell>
                         <TableCell align="center">Действия</TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {developers.map((developer, index) => (
-                        <TableRow
-                            key={developer.id}
-                            sx={{
-                                '&:last-child td': { border: 0 },
-                                '&:hover': {
-                                    backgroundColor: 'rgba(59, 130, 246, 0.03)',
-                                    transform: 'translateY(-1px)',
-                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
-                                },
-                                transition: 'all 0.3s ease',
-                                position: 'relative',
-                                background: index % 2 === 0
-                                    ? 'rgba(255, 255, 255, 0.5)'
-                                    : 'rgba(248, 250, 252, 0.7)',
-                                '& td': {
-                                    borderBottom: '1px solid rgba(0, 0, 0, 0.04)',
-                                    padding: '16px 20px',
-                                    position: 'relative'
-                                }
-                            }}
-                        >
-                            <TableCell>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                    <Avatar
-                                        sx={{
-                                            width: 44,
-                                            height: 44,
-                                            background: 'linear-gradient(135deg, #3b82f6, #60a5fa)',
-                                            boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
-                                            border: '2px solid rgba(255, 255, 255, 0.9)',
-                                            transition: 'all 0.3s ease',
-                                            '&:hover': {
-                                                transform: 'scale(1.05)',
-                                                boxShadow: '0 6px 20px rgba(59, 130, 246, 0.4)'
-                                            }
-                                        }}
-                                    >
-                                        {developer.avatar ? (
-                                            <img
-                                                src={developer.avatar}
-                                                alt={developer.name}
-                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                            />
-                                        ) : (
-                                            <span style={{
-                                                color: 'white',
-                                                fontWeight: 700,
-                                                fontSize: '14px'
-                                            }}>
-                                                {developer.name.split(' ').map(n => n[0]).join('')}
-                                            </span>
-                                        )}
-                                    </Avatar>
-                                    <Box sx={{ flex: 1 }}>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                                            <Typography
-                                                variant="body1"
-                                                sx={{
-                                                    fontWeight: 700,
-                                                    color: '#1e293b',
-                                                    fontSize: '1rem'
-                                                }}
-                                            >
-                                                {developer.name}
-                                            </Typography>
-                                            {developer.isCurrentUser && (
-                                                <Chip
-                                                    label="Вы"
-                                                    size="small"
-                                                    sx={{
-                                                        background: 'linear-gradient(135deg, #10b981, #34d399)',
-                                                        color: 'white',
-                                                        fontWeight: 700,
-                                                        fontSize: '0.7rem',
-                                                        height: '20px',
-                                                        boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)'
-                                                    }}
-                                                />
-                                            )}
-                                        </Box>
-                                        <Typography
-                                            variant="body2"
+                    {developers.map((developer, index) => {
+                        const developerProjects = getCurrentProjects(developer);
+
+                        return (
+                            <TableRow
+                                key={developer.id}
+                                sx={{
+                                    '&:last-child td': { border: 0 },
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(59, 130, 246, 0.03)',
+                                        transform: 'translateY(-1px)',
+                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
+                                    },
+                                    transition: 'all 0.3s ease',
+                                    position: 'relative',
+                                    background: index % 2 === 0
+                                        ? 'rgba(255, 255, 255, 0.5)'
+                                        : 'rgba(248, 250, 252, 0.7)',
+                                    '& td': {
+                                        borderBottom: '1px solid rgba(0, 0, 0, 0.04)',
+                                        padding: '16px 20px',
+                                        position: 'relative'
+                                    }
+                                }}
+                            >
+                                <TableCell>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                        <Avatar
                                             sx={{
-                                                color: '#64748b',
-                                                fontSize: '0.85rem',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: 0.5
-                                            }}
-                                        >
-                                            <span style={{ opacity: 0.7 }}>@</span>
-                                            {developer.username}
-                                        </Typography>
-                                    </Box>
-                                </Box>
-                            </TableCell>
-
-                            <TableCell>
-                                <DeveloperRoleChip role={developer.role} />
-                            </TableCell>
-
-                            <TableCell>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <Box
-                                        sx={{
-                                            width: 36,
-                                            height: 36,
-                                            borderRadius: '10px',
-                                            background: 'linear-gradient(135deg, #10b981, #34d399)',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            color: 'white',
-                                            fontWeight: 700,
-                                            fontSize: '0.9rem',
-                                            boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
-                                        }}
-                                    >
-                                        {developer.completedTasks}
-                                    </Box>
-                                    <Typography
-                                        sx={{
-                                            fontWeight: 600,
-                                            color: '#1e293b',
-                                            fontSize: '1rem'
-                                        }}
-                                    >
-                                        задач
-                                    </Typography>
-                                </Box>
-                            </TableCell>
-
-                            <TableCell align="center">
-                                {canRemoveDeveloper(developer) && (
-                                    <Tooltip
-                                        title="Удалить из проекта"
-                                        arrow
-                                        placement="top"
-                                    >
-                                        <IconButton
-                                            onClick={() => onRemoveDeveloper(developer.id)}
-                                            sx={{
-                                                color: '#ef4444',
-                                                background: 'rgba(239, 68, 68, 0.1)',
-                                                border: '1px solid rgba(239, 68, 68, 0.2)',
-                                                width: 40,
-                                                height: 40,
+                                                width: 44,
+                                                height: 44,
+                                                background: 'linear-gradient(135deg, #3b82f6, #60a5fa)',
+                                                boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
+                                                border: '2px solid rgba(255, 255, 255, 0.9)',
                                                 transition: 'all 0.3s ease',
                                                 '&:hover': {
-                                                    background: 'rgba(239, 68, 68, 0.2)',
-                                                    transform: 'scale(1.1) rotate(5deg)',
-                                                    boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)'
+                                                    transform: 'scale(1.05)',
+                                                    boxShadow: '0 6px 20px rgba(59, 130, 246, 0.4)'
                                                 }
                                             }}
                                         >
-                                            <FaTrash style={{ fontSize: '16px' }} />
-                                        </IconButton>
-                                    </Tooltip>
-                                )}
-                            </TableCell>
-                        </TableRow>
-                    ))}
+                                            {developer.avatar ? (
+                                                <img
+                                                    src={developer.avatar}
+                                                    alt={developer.name}
+                                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                />
+                                            ) : (
+                                                <span style={{
+                                                    color: 'white',
+                                                    fontWeight: 700,
+                                                    fontSize: '14px'
+                                                }}>
+                                                    {developer.name.split(' ').map(n => n[0]).join('')}
+                                                </span>
+                                            )}
+                                        </Avatar>
+                                        <Box>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                <Typography
+                                                    variant="body1"
+                                                    sx={{
+                                                        fontWeight: 700,
+                                                        color: '#1e293b',
+                                                        fontSize: '1rem'
+                                                    }}
+                                                >
+                                                    {developer.name}
+                                                </Typography>
+                                                {developer.isCurrentUser && (
+                                                    <Chip
+                                                        label="Вы"
+                                                        size="small"
+                                                        sx={{
+                                                            background: 'linear-gradient(135deg, #10b981, #34d399)',
+                                                            color: 'white',
+                                                            fontWeight: 700,
+                                                            fontSize: '0.7rem',
+                                                            height: '20px',
+                                                            boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)'
+                                                        }}
+                                                    />
+                                                )}
+                                            </Box>
+                                        </Box>
+                                    </Box>
+                                </TableCell>
+
+                                <TableCell>
+                                    <DeveloperRoleChip role={developer.role} />
+                                </TableCell>
+
+                                <TableCell>
+                                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, maxWidth: '200px' }}>
+                                        {developerProjects.slice(0, 3).map((project, index) => (
+                                            <Chip
+                                                key={index}
+                                                label={project}
+                                                size="small"
+                                                sx={{
+                                                    background: 'linear-gradient(135deg, #8b5cf6, #a78bfa)',
+                                                    color: 'white',
+                                                    fontWeight: 600,
+                                                    fontSize: '0.75rem',
+                                                    height: '24px',
+                                                    boxShadow: '0 2px 6px rgba(139, 92, 246, 0.3)',
+                                                    '&:hover': {
+                                                        transform: 'translateY(-1px)',
+                                                        boxShadow: '0 4px 12px rgba(139, 92, 246, 0.4)'
+                                                    },
+                                                    transition: 'all 0.2s ease'
+                                                }}
+                                            />
+                                        ))}
+                                        {developerProjects.length > 3 && (
+                                            <Tooltip
+                                                title={developerProjects.slice(3).join(', ')}
+                                                arrow
+                                            >
+                                                <Chip
+                                                    label={`+${developerProjects.length - 3}`}
+                                                    size="small"
+                                                    sx={{
+                                                        background: 'rgba(100, 116, 139, 0.1)',
+                                                        color: '#64748b',
+                                                        fontWeight: 600,
+                                                        fontSize: '0.75rem',
+                                                        height: '24px',
+                                                        border: '1px solid rgba(100, 116, 139, 0.2)'
+                                                    }}
+                                                />
+                                            </Tooltip>
+                                        )}
+                                        {developerProjects.length === 0 && (
+                                            <Typography
+                                                variant="body2"
+                                                sx={{
+                                                    color: '#94a3b8',
+                                                    fontStyle: 'italic',
+                                                    fontSize: '0.85rem'
+                                                }}
+                                            >
+                                                Нет проектов
+                                            </Typography>
+                                        )}
+                                    </Box>
+                                </TableCell>
+
+                                <TableCell>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <Box
+                                            sx={{
+                                                width: 36,
+                                                height: 36,
+                                                borderRadius: '10px',
+                                                background: 'linear-gradient(135deg, #10b981, #34d399)',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                color: 'white',
+                                                fontWeight: 700,
+                                                fontSize: '0.9rem',
+                                                boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+                                            }}
+                                        >
+                                            {developer.completedTasks}
+                                        </Box>
+                                        <Typography
+                                            sx={{
+                                                fontWeight: 600,
+                                                color: '#1e293b',
+                                                fontSize: '1rem'
+                                            }}
+                                        >
+                                            задач
+                                        </Typography>
+                                    </Box>
+                                </TableCell>
+
+                                <TableCell align="center">
+                                    {canRemoveDeveloper(developer) && (
+                                        <Tooltip
+                                            title="Удалить из проекта"
+                                            arrow
+                                            placement="top"
+                                        >
+                                            <IconButton
+                                                onClick={() => onRemoveDeveloper(developer.id)}
+                                                sx={{
+                                                    color: '#ef4444',
+                                                    background: 'rgba(239, 68, 68, 0.1)',
+                                                    border: '1px solid rgba(239, 68, 68, 0.2)',
+                                                    width: 40,
+                                                    height: 40,
+                                                    transition: 'all 0.3s ease',
+                                                    '&:hover': {
+                                                        background: 'rgba(239, 68, 68, 0.2)',
+                                                        transform: 'scale(1.1) rotate(5deg)',
+                                                        boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)'
+                                                    }
+                                                }}
+                                            >
+                                                <FaTrash style={{ fontSize: '16px' }} />
+                                            </IconButton>
+                                        </Tooltip>
+                                    )}
+                                </TableCell>
+                            </TableRow>
+                        );
+                    })}
                 </TableBody>
             </Table>
         </TableContainer>
