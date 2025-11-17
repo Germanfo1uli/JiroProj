@@ -6,28 +6,40 @@ import NotificationModal from './Notification/NotificationModal'
 import SearchPanel from './Search/SearchPanel'
 import HelpModal from './Help/HelpModal'
 import styles from './VerticalNavbar.module.css'
+import ProfileModal from './Profile/ProfilePanel'
 
 const VerticalNavbar = () => {
     const [isNotificationOpen, setIsNotificationOpen] = useState(false)
     const [isSearchOpen, setIsSearchOpen] = useState(false)
     const [isHelpOpen, setIsHelpOpen] = useState(false)
+    const [isProfileOpen, setProfileOpen] = useState(false)
 
     const handleNotificationClick = () => {
         setIsNotificationOpen(!isNotificationOpen)
         setIsSearchOpen(false)
         setIsHelpOpen(false)
+        setProfileOpen(false)
     }
 
     const handleSearchClick = () => {
         setIsSearchOpen(!isSearchOpen)
         setIsNotificationOpen(false)
         setIsHelpOpen(false)
+        setProfileOpen(false)
     }
 
     const handleHelpClick = () => {
         setIsHelpOpen(!isHelpOpen)
         setIsNotificationOpen(false)
         setIsSearchOpen(false)
+        setProfileOpen(false)
+    }
+
+    const handleProfileClick = () => {
+        setProfileOpen(!isProfileOpen)
+        setIsNotificationOpen(false)
+        setIsSearchOpen(false)
+        setIsHelpOpen(false)
     }
 
     const closeNotification = () => {
@@ -40,6 +52,10 @@ const VerticalNavbar = () => {
 
     const closeHelp = () => {
         setIsHelpOpen(false)
+    }
+
+    const closeProfile = () => {
+        setProfileOpen(false)
     }
 
     return (
@@ -82,17 +98,22 @@ const VerticalNavbar = () => {
                         <FaQuestion className={styles.navButtonIcon} />
                     </button>
 
-                    <div className={styles.navProfile} aria-label="Профиль пользователя">
+                    <button 
+                        className={styles.navProfile} 
+                        aria-label="Профиль пользователя"
+                        onClick={handleProfileClick}
+                    >
                         <div className={styles.profileAvatar}>
                             <FaUserCircle className={styles.avatarIcon} />
                         </div>
-                    </div>
+                    </button>
                 </div>
             </div>
 
             {isNotificationOpen && <NotificationModal onClose={closeNotification} />}
             {isSearchOpen && <SearchPanel onClose={closeSearch} />}
             {isHelpOpen && <HelpModal onClose={closeHelp} />}
+            {isProfileOpen && <ProfileModal onClose={closeProfile}/>}
         </>
     )
 }
