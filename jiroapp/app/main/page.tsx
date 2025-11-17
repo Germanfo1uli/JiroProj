@@ -4,8 +4,8 @@ import { useState } from 'react'
 import VerticalNavbar from '../components/VerticalNavbar/VerticalNavbar'
 import ControlPanel from '../components/ControlPanel/ControlPanel'
 import BoardsContent from '../components/BoardsContent/BoardsContent'
-import Dashboard from '../components/DashboardContent/Dashboard'
-import { DevelopersPage } from '../components/DevelopersContent/DevelopersPage'
+import { DashboardContent } from '@/app/components/DashboardContent'
+import { DevelopersPage } from '@/app/components/DevelopersContent'
 import styles from './MainPage.module.css'
 
 type ActivePage = 'dashboard' | 'board' | 'developers'
@@ -20,7 +20,7 @@ const MainPage = () => {
     const renderContent = () => {
         switch (activePage) {
             case 'dashboard':
-                return <Dashboard />
+                return <DashboardContent />
             case 'board':
                 return <BoardsContent />
             case 'developers':
