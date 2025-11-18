@@ -1,6 +1,6 @@
 'use client'
 
-import { FaSmile, FaPlus, FaTrello, FaClock, FaCheckCircle, FaUsers, FaStar, FaLightbulb } from 'react-icons/fa'
+import { FaSmile, FaPlus, FaTrello, FaLightbulb, FaUsers, FaStar } from 'react-icons/fa'
 import styles from './BoardsContent.module.css'
 
 const BoardsContent = () => {
@@ -14,69 +14,15 @@ const BoardsContent = () => {
             <div className={styles.boardsHeader}>
                 <div className={styles.headerContent}>
                     <div className={styles.pageTitleSection}>
-                        <h1 className={styles.pageTitle}>Главная панель</h1>
+                        <h1 className={styles.pageTitle}>Добро пожаловать в TaskFlow</h1>
                         <p className={styles.pageSubtitle}>
-                            Управляйте проектами и отслеживайте прогресс в TaskFlow
+                            Начните свое путешествие в эффективном управлении задачами
                         </p>
                     </div>
                 </div>
             </div>
 
             <div className={styles.boardsMainContent}>
-                <div className={styles.quickStatsSection}>
-                    <div className={styles.statCard}>
-                        <div className={styles.statDecoration}>
-                            <div className={styles.statPulse}></div>
-                        </div>
-                        <div className={styles.statIconWrapper}>
-                            <FaTrello className={styles.statIcon} />
-                        </div>
-                        <div className={styles.statInfo}>
-                            <h3>12</h3>
-                            <p>Активных проектов</p>
-                        </div>
-                    </div>
-
-                    <div className={styles.statCard}>
-                        <div className={styles.statDecoration}>
-                            <div className={styles.statPulse}></div>
-                        </div>
-                        <div className={styles.statIconWrapper}>
-                            <FaClock className={styles.statIcon} />
-                        </div>
-                        <div className={styles.statInfo}>
-                            <h3>8</h3>
-                            <p>В процессе</p>
-                        </div>
-                    </div>
-
-                    <div className={styles.statCard}>
-                        <div className={styles.statDecoration}>
-                            <div className={styles.statPulse}></div>
-                        </div>
-                        <div className={styles.statIconWrapper}>
-                            <FaCheckCircle className={styles.statIcon} />
-                        </div>
-                        <div className={styles.statInfo}>
-                            <h3>24</h3>
-                            <p>Завершено</p>
-                        </div>
-                    </div>
-
-                    <div className={styles.statCard}>
-                        <div className={styles.statDecoration}>
-                            <div className={styles.statPulse}></div>
-                        </div>
-                        <div className={styles.statIconWrapper}>
-                            <FaUsers className={styles.statIcon} />
-                        </div>
-                        <div className={styles.statInfo}>
-                            <h3>6</h3>
-                            <p>Участников</p>
-                        </div>
-                    </div>
-                </div>
-
                 <div className={styles.contentGrid}>
                     <div className={styles.welcomeCard}>
                         <div className={styles.welcomeContent}>
@@ -89,34 +35,34 @@ const BoardsContent = () => {
 
                             <div className={styles.welcomeTextContent}>
                                 <h2 className={styles.welcomeTitle}>
-                                    Добро пожаловать в
+                                    Начните работать с
                                     <span className={styles.titleAccent}> TaskFlow</span>
                                 </h2>
                                 <p className={styles.welcomeDescription}>
-                                    Откройте новые возможности для управления проектами.
-                                    Создавайте, организуйте и достигайте целей вместе с вашей командой.
+                                    TaskFlow — это интуитивно понятный инструмент для управления задачами и проектами.
+                                    Создавайте доски, добавляйте задачи и сотрудничайте с командой в одном месте.
                                 </p>
                             </div>
 
                             <div className={styles.featureHighlights}>
                                 <div className={styles.featureItem}>
                                     <FaLightbulb className={styles.featureIcon} />
-                                    <span>Умное планирование</span>
+                                    <span>Простое управление задачами</span>
                                 </div>
                                 <div className={styles.featureItem}>
                                     <FaUsers className={styles.featureIcon} />
-                                    <span>Командная работа</span>
+                                    <span>Командное взаимодействие</span>
                                 </div>
                                 <div className={styles.featureItem}>
                                     <FaStar className={styles.featureIcon} />
-                                    <span>Профессиональные инструменты</span>
+                                    <span>Интуитивный интерфейс</span>
                                 </div>
                             </div>
 
                             <div className={styles.welcomeActions}>
                                 <button className={styles.primaryActionBtn}>
                                     <FaPlus className={styles.actionBtnIcon} />
-                                    Создать первый проект
+                                    Создать первую доску
                                 </button>
                                 <button className={styles.secondaryActionBtn}>
                                     Изучить возможности
@@ -137,28 +83,61 @@ const BoardsContent = () => {
                                 </div>
                                 <div className={styles.actionContent}>
                                     <h4>Создать доску</h4>
-                                    <p>Начните новый проект</p>
+                                    <p>Начните с создания вашей первой доски</p>
                                 </div>
                             </div>
 
                             <div className={styles.actionCard}>
                                 <div className={styles.actionIconWrapper}>
-                                    <FaPlus />
+                                    <FaUsers />
                                 </div>
                                 <div className={styles.actionContent}>
                                     <h4>Пригласить команду</h4>
-                                    <p>Добавьте участников</p>
+                                    <p>Добавьте коллег для совместной работы</p>
                                 </div>
                             </div>
 
                             <div className={styles.actionCard}>
                                 <div className={styles.actionIconWrapper}>
-                                    <FaPlus />
+                                    <FaTrello />
                                 </div>
                                 <div className={styles.actionContent}>
-                                    <h4>Настроить сроки</h4>
-                                    <p>Планируйте задачи</p>
+                                    <h4>Добавить задачу</h4>
+                                    <p>Создайте вашу первую задачу</p>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className={styles.tipsSection}>
+                    <h3 className={styles.tipsTitle}>Советы для начинающих</h3>
+                    <div className={styles.tipsGrid}>
+                        <div className={styles.tipCard}>
+                            <div className={styles.tipIconWrapper}>
+                                <FaTrello />
+                            </div>
+                            <div className={styles.tipContent}>
+                                <h4>Организуйте доски</h4>
+                                <p>Создавайте отдельные доски для разных проектов</p>
+                            </div>
+                        </div>
+                        <div className={styles.tipCard}>
+                            <div className={styles.tipIconWrapper}>
+                                <FaPlus />
+                            </div>
+                            <div className={styles.tipContent}>
+                                <h4>Добавляйте детали</h4>
+                                <p>Указывайте сроки и приоритеты для задач</p>
+                            </div>
+                        </div>
+                        <div className={styles.tipCard}>
+                            <div className={styles.tipIconWrapper}>
+                                <FaUsers />
+                            </div>
+                            <div className={styles.tipContent}>
+                                <h4>Работайте в команде</h4>
+                                <p>Приглашайте коллег и отслеживайте прогресс</p>
                             </div>
                         </div>
                     </div>

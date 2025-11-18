@@ -1,0 +1,68 @@
+.profileStats {
+    margin: 1.5rem 0;
+}
+
+.statsGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+}
+
+.statItem {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(61, 107, 179, 0.1);
+    border-radius: 8px;
+    padding: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    transition: all 0.2s ease;
+}
+
+.statItem:hover {
+    border-color: rgba(61, 107, 179, 0.25);
+    transform: translateY(-1px);
+}
+
+.statIconWrapper {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #3d6bb3 0%, #4facfe 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.statIcon {
+    font-size: 1rem;
+    color: white;
+}
+
+.statInfo h3 {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 0.1rem 0;
+    line-height: 1;
+}
+
+.statInfo p {
+    font-size: 0.7rem;
+    color: #64748b;
+    margin: 0;
+    font-weight: 500;
+}
+
+@media (max-width: 480px) {
+    .statsGrid {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+
+    .statItem {
+        padding: 0.6rem;
+    }
+}

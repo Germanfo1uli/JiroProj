@@ -5,29 +5,41 @@ import { FaTasks, FaSearch, FaPlus, FaQuestion, FaUserCircle, FaBell } from 'rea
 import NotificationModal from './Notification/NotificationModal'
 import SearchPanel from './Search/SearchPanel'
 import HelpModal from './Help/HelpModal'
+import { ProfileModal } from '../VerticalNavbar/Profile/ProfileModal'
 import styles from './VerticalNavbar.module.css'
 
 const VerticalNavbar = () => {
     const [isNotificationOpen, setIsNotificationOpen] = useState(false)
     const [isSearchOpen, setIsSearchOpen] = useState(false)
     const [isHelpOpen, setIsHelpOpen] = useState(false)
+    const [isProfileOpen, setIsProfileOpen] = useState(false)
 
     const handleNotificationClick = () => {
         setIsNotificationOpen(!isNotificationOpen)
         setIsSearchOpen(false)
         setIsHelpOpen(false)
+        setIsProfileOpen(false)
     }
 
     const handleSearchClick = () => {
         setIsSearchOpen(!isSearchOpen)
         setIsNotificationOpen(false)
         setIsHelpOpen(false)
+        setIsProfileOpen(false)
     }
 
     const handleHelpClick = () => {
         setIsHelpOpen(!isHelpOpen)
         setIsNotificationOpen(false)
         setIsSearchOpen(false)
+        setIsProfileOpen(false)
+    }
+
+    const handleProfileClick = () => {
+        setIsProfileOpen(!isProfileOpen)
+        setIsNotificationOpen(false)
+        setIsSearchOpen(false)
+        setIsHelpOpen(false)
     }
 
     const closeNotification = () => {
@@ -40,6 +52,10 @@ const VerticalNavbar = () => {
 
     const closeHelp = () => {
         setIsHelpOpen(false)
+    }
+
+    const closeProfile = () => {
+        setIsProfileOpen(false)
     }
 
     return (
@@ -82,17 +98,22 @@ const VerticalNavbar = () => {
                         <FaQuestion className={styles.navButtonIcon} />
                     </button>
 
-                    <div className={styles.navProfile} aria-label="Профиль пользователя">
+                    <button
+                        className={`${styles.navButton} ${styles.profileButton} ${isProfileOpen ? styles.active : ''}`}
+                        aria-label="Профиль пользователя"
+                        onClick={handleProfileClick}
+                    >
                         <div className={styles.profileAvatar}>
                             <FaUserCircle className={styles.avatarIcon} />
                         </div>
-                    </div>
+                    </button>
                 </div>
             </div>
 
             {isNotificationOpen && <NotificationModal onClose={closeNotification} />}
             {isSearchOpen && <SearchPanel onClose={closeSearch} />}
             {isHelpOpen && <HelpModal onClose={closeHelp} />}
+            {isProfileOpen && <ProfileModal isOpen={isProfileOpen} onClose={closeProfile} />}
         </>
     )
 }

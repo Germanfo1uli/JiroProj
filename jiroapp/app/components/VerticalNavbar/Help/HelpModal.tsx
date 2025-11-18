@@ -35,13 +35,13 @@ const HelpModal = ({ onClose }: HelpModalProps) => {
                         <h2 className={styles.helpTitle}>Помогите мне</h2>
                         <p className={styles.helpText}>
                             Я очень устал, босс.<br />
-                            Здесь я когда-нибудь напишу для вас
-                            руководство по этому сайту
-                            (нет)
+                            Я один, я хочу кушать, вкусно кушать.
+                            Мне хочется джина... Лампу джина с желаниями...
+                            Я хочу всё... Уничтожить мир...
                         </p>
                         <div className={styles.helpActions}>
                             <button className={styles.helpButton}>
-                                Спасибо, Котик!!!
+                                Это жизнь, котик, что поделать...
                             </button>
                         </div>
                     </div>
