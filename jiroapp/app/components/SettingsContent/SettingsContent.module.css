@@ -1,0 +1,200 @@
+.settingsContent {
+    flex: 1;
+    min-height: 100vh;
+    background: #f8fafc;
+    margin-left: 15rem;
+}
+
+.settingsContainer {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* Header */
+.settingsHeader {
+    margin-bottom: 3rem;
+}
+
+.headerMain {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.backButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: white;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.backButton:hover {
+    border-color: #3d6bb3;
+    color: #3d6bb3;
+    transform: translateX(-2px);
+}
+
+.backIcon {
+    font-size: 0.9rem;
+}
+
+.headerText {
+    flex: 1;
+}
+
+.pageTitle {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 0.5rem 0;
+    line-height: 1.2;
+}
+
+.pageSubtitle {
+    font-size: 1rem;
+    color: #64748b;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Main Content */
+.settingsMain {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid #f1f5f9;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.settingsForm {
+    display: flex;
+    flex-direction: column;
+    min-height: 500px;
+}
+
+.formContent {
+    flex: 1;
+    padding: 0;
+}
+
+.formSection {
+    border-bottom: 1px solid #f1f5f9;
+    padding: 2rem;
+}
+
+.formSection:last-child {
+    border-bottom: none;
+}
+
+/* Form Actions */
+.formActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding: 1.5rem 2rem;
+    background: #f8fafc;
+    border-top: 1px solid #f1f5f9;
+}
+
+.saveButton {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: #3d6bb3;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.saveButton:hover:not(:disabled) {
+    background: #355a9c;
+    transform: translateY(-1px);
+}
+
+.saveButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.saveIcon {
+    font-size: 0.8rem;
+}
+
+.cancelButton {
+    padding: 0.75rem 1.5rem;
+    background: transparent;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.cancelButton:hover:not(:disabled) {
+    background: #f8fafc;
+    border-color: #64748b;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .settingsContent {
+        margin-left: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .settingsContainer {
+        padding: 1rem;
+    }
+
+    .headerMain {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .backButton {
+        align-self: flex-start;
+    }
+
+    .formSection {
+        padding: 1.5rem;
+    }
+
+    .formActions {
+        flex-direction: column-reverse;
+        padding: 1.5rem;
+    }
+
+    .saveButton,
+    .cancelButton {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .pageTitle {
+        font-size: 1.75rem;
+    }
+
+    .formSection {
+        padding: 1.25rem;
+    }
+}

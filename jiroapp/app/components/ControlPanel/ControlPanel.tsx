@@ -46,14 +46,15 @@ const ControlPanel = ({ activePage, onPageChange }: ControlPanelProps) => {
                     <FaChartBar className={styles.panelNavIcon} />
                     <span className={styles.panelNavText}>Отчёты</span>
                 </button>
-                <button className={styles.panelNavButton}>
-                    <FaProjectDiagram className={styles.panelNavIcon} />
-                    <span className={styles.panelNavText}>Проекты</span>
-                </button>
-                <button className={styles.panelNavButton}>
+
+                <button
+                    className={`${styles.panelNavButton} ${activePage === 'settings' ? styles.active : ''}`}
+                    onClick={() => handleNavClick('settings')}
+                >
                     <FaCog className={styles.panelNavIcon} />
                     <span className={styles.panelNavText}>Настройки</span>
                 </button>
+
                 <button
                     className={`${styles.panelNavButton} ${activePage === 'developers' ? styles.active : ''}`}
                     onClick={() => handleNavClick('developers')}

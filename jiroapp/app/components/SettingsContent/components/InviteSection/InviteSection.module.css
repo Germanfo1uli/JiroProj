@@ -1,0 +1,122 @@
+.inviteSection {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.sectionTitle {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0;
+}
+
+.inviteContent {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.inviteHeader {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.linkIcon {
+    color: #3d6bb3;
+    font-size: 1.25rem;
+    margin-top: 0.25rem;
+    flex-shrink: 0;
+}
+
+.inviteText {
+    flex: 1;
+}
+
+.inviteTitle {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0 0 0.5rem 0;
+}
+
+.inviteDescription {
+    color: #64748b;
+    font-size: 0.9rem;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.linkContainer {
+    display: flex;
+    gap: 1rem;
+    align-items: stretch;
+}
+
+.linkDisplay {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+.linkText {
+    color: #475569;
+    font-size: 0.875rem;
+    word-break: break-all;
+}
+
+.copyButton {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: #3d6bb3;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.copyButton:hover {
+    background: #355a9c;
+    transform: translateY(-1px);
+}
+
+.copyIcon {
+    font-size: 0.8rem;
+}
+
+.securityNote {
+    padding: 1rem;
+    background: #fffbeb;
+    border: 1px solid #fed7aa;
+    border-radius: 8px;
+    color: #92400e;
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+.securityNote strong {
+    color: #92400e;
+}
+
+@media (max-width: 768px) {
+    .linkContainer {
+        flex-direction: column;
+    }
+
+    .copyButton {
+        justify-content: center;
+    }
+}
