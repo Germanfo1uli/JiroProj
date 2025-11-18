@@ -1,28 +1,25 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Projects\\JiroProj\\backend\\sprints-service\\Backend.Sprints.Api\\Backend.Sprints.Api.csproj": {}
+    "C:\\Users\\gunze\\RiderProjects\\JiroProj\\backend\\sprints-service\\Backend.Sprints.Api\\Backend.Sprints.Api.csproj": {}
   },
   "projects": {
-    "C:\\Projects\\JiroProj\\backend\\sprints-service\\Backend.Sprints.Api\\Backend.Sprints.Api.csproj": {
+    "C:\\Users\\gunze\\RiderProjects\\JiroProj\\backend\\shared-libs\\Backend.Shared\\Backend.Shared.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Projects\\JiroProj\\backend\\sprints-service\\Backend.Sprints.Api\\Backend.Sprints.Api.csproj",
-        "projectName": "Backend.Sprints.Api",
-        "projectPath": "C:\\Projects\\JiroProj\\backend\\sprints-service\\Backend.Sprints.Api\\Backend.Sprints.Api.csproj",
-        "packagesPath": "C:\\Users\\Никита\\.nuget\\packages\\",
-        "outputPath": "C:\\Projects\\JiroProj\\backend\\sprints-service\\Backend.Sprints.Api\\obj\\",
+        "projectUniqueName": "C:\\Users\\gunze\\RiderProjects\\JiroProj\\backend\\shared-libs\\Backend.Shared\\Backend.Shared.csproj",
+        "projectName": "Backend.Shared",
+        "projectPath": "C:\\Users\\gunze\\RiderProjects\\JiroProj\\backend\\shared-libs\\Backend.Shared\\Backend.Shared.csproj",
+        "packagesPath": "C:\\Users\\gunze\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\gunze\\RiderProjects\\JiroProj\\backend\\shared-libs\\Backend.Shared\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Никита\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "C:\\Users\\gunze\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -45,14 +42,90 @@
       "frameworks": {
         "net8.0": {
           "targetAlias": "net8.0",
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.408/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "C:\\Users\\gunze\\RiderProjects\\JiroProj\\backend\\sprints-service\\Backend.Sprints.Api\\Backend.Sprints.Api.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\gunze\\RiderProjects\\JiroProj\\backend\\sprints-service\\Backend.Sprints.Api\\Backend.Sprints.Api.csproj",
+        "projectName": "Backend.Sprints.Api",
+        "projectPath": "C:\\Users\\gunze\\RiderProjects\\JiroProj\\backend\\sprints-service\\Backend.Sprints.Api\\Backend.Sprints.Api.csproj",
+        "packagesPath": "C:\\Users\\gunze\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\gunze\\RiderProjects\\JiroProj\\backend\\sprints-service\\Backend.Sprints.Api\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\gunze\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "C:\\Users\\gunze\\RiderProjects\\JiroProj\\backend\\shared-libs\\Backend.Shared\\Backend.Shared.csproj": {
+                "projectPath": "C:\\Users\\gunze\\RiderProjects\\JiroProj\\backend\\shared-libs\\Backend.Shared\\Backend.Shared.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
           "dependencies": {
-            "Microsoft.AspNetCore.OpenApi": {
+            "Microsoft.EntityFrameworkCore": {
               "target": "Package",
-              "version": "[8.0.8, )"
+              "version": "[8.0.0, )"
+            },
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[8.0.0, )"
+            },
+            "Microsoft.EntityFrameworkCore.Tools": {
+              "target": "Package",
+              "version": "[8.0.0, )"
+            },
+            "Npgsql.EntityFrameworkCore.PostgreSQL": {
+              "target": "Package",
+              "version": "[8.0.0, )"
             },
             "Swashbuckle.AspNetCore": {
               "target": "Package",
-              "version": "[6.4.0, )"
+              "version": "[6.5.0, )"
             }
           },
           "imports": [
@@ -74,7 +147,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.400/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.408/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
