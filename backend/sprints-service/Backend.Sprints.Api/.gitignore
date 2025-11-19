@@ -198,19 +198,25 @@ publish/
 # in these scripts will be unencrypted
 PublishScripts/
 
-# NuGet Packages
+# NuGet packages
 *.nupkg
-# NuGet Symbol Packages
 *.snupkg
+*.nuspec
+*.deps.json
+*.runtimeconfig.json
+
+# NuGet restore outputs (more precise)
+**/obj/*.nuget.*
+**/obj/project.assets.json
+**/obj/project.nuget.cache
+**/obj/*.props
+**/obj/*.targets
+
 # The packages folder can be ignored because of Package Restore
 **/[Pp]ackages/*
 # except build/, which is used as an MSBuild target.
 !**/[Pp]ackages/build/
-# Uncomment if necessary however generally it will be regenerated when needed
-#!**/[Pp]ackages/repositories.config
-# NuGet v3's project.json files produces more ignorable files
-*.nuget.props
-*.nuget.targets
+
 
 # Microsoft Azure Build Output
 csx/

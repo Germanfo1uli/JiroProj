@@ -61,6 +61,14 @@ public class Issue {
     )
     private Set<IssueAssignee> assignees = new HashSet<>();
 
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "issue_tags",
+            joinColumns = @JoinColumn(name = "issue_id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id")
+    )
+    private Set<ProjectTag> tags = new HashSet<>();
+
     @Column(nullable = false)
     private String title;
 
