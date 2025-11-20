@@ -13,6 +13,9 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+
 @RestController
 @RequestMapping("api/auth")
 @RequiredArgsConstructor
@@ -88,10 +91,11 @@ public class AuthController {
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(
-            @Valid @RequestBody LogoutRequest request,
-            @AuthenticationPrincipal Long userId) {
+    public CompletableFuture<ResponseEntity<?>> logout(
+            @AuthenticationPrincipal Long userId,
+            @Valid @RequestBody LogoutRequest request) {
 
-        userService.logoutAsync(request.refreshToken());
+        return userService.logoutAsync(request.refreshToken())
+                .thenApply(v -> ResponseEntity.ok(Map.of("message", "Вы успешно вышли")));
     }
 }
