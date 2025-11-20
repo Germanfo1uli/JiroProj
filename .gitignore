@@ -516,3 +516,8 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# JS modules
+.node_modules/
+.next/
+next-env.d.ts

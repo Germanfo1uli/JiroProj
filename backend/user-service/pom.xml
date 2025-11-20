@@ -98,7 +98,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
-            <!-- Версия наследуется от spring-boot-starter-parent -->
         </dependency>
 
     </dependencies>

@@ -29,10 +29,10 @@ public class UserService {
     @Transactional
     @Async
     public CompletableFuture<LoginResponse> registerAsync(
-            String email, String password, String deviceInfo) {
+            String name, String email, String password, String deviceInfo) {
 
         User savedUser = createAndSaveUser(email, password);
-        profileService.createProfile(savedUser);
+        profileService.createProfile(savedUser, name);
         LoginResponse response = createLoginResponse(savedUser, deviceInfo);
 
         return CompletableFuture.completedFuture(response);

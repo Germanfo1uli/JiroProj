@@ -27,7 +27,7 @@ public class AuthController {
             @Valid @RequestBody RegisterRequest request) {
 
         LoginResponse response = userService.registerAsync(
-                request.email(), request.password(), request.deviceInfo()).join();
+                request.name(), request.email(), request.password(), request.deviceInfo()).join();
         return ResponseEntity.ok(response);
     }
 
