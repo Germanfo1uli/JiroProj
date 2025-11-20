@@ -87,12 +87,14 @@ public class JwtService {
                 .orElseThrow(() -> new InvalidRefreshTokenException("Токен не найден"));
     }
 
-    public CompletableFuture<RefreshToken> revokeTokenAsync(String refreshToken) {
-        return CompletableFuture.supplyAsync(() -> {
-            RefreshToken token = getTokenByString(refreshToken);
+    @Async
+    public CompletableFuture<Void> revokeTokenAsync(String refreshToken) {
+        RefreshToken token = getTokenByString(refreshToken);
+        if (token != null) {
             token.setRevoked(true);
-            return tokenRepository.save(token);
-        });
+            tokenRepository.save(token);
+        }
+        return CompletableFuture.completedFuture(null);
     }
 
     public String extractEmail(String token) {

@@ -82,4 +82,16 @@ public class AuthController {
                 request.deviceInfo()).join();
         return ResponseEntity.ok(response);
     }
+
+    @Operation(
+            summary = "Выход с аккаунта",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(
+            @Valid @RequestBody LogoutRequest request,
+            @AuthenticationPrincipal Long userId) {
+
+        userService.logoutAsync(request.refreshToken());
+    }
 }

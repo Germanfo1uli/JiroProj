@@ -31,6 +31,10 @@ public class UserService {
     public CompletableFuture<LoginResponse> registerAsync(
             String name, String email, String password, String deviceInfo) {
 
+        if(userRepository.existsByEmail(email)) {
+            throw new EmailAlreadyExistsException("Пользователь с таким Email уже зарегистрирован");
+        }
+
         User savedUser = createAndSaveUser(email, password);
         profileService.createProfile(savedUser, name);
         LoginResponse response = createLoginResponse(savedUser, deviceInfo);
@@ -155,5 +159,11 @@ public class UserService {
                 jwtService.revokeAllRefreshExcept(data.user().getId(), data.refreshToken())
                         .thenApply(ignored -> new TokenResponse(data.accessToken(), data.refreshToken()))
         );
+    }
+
+    @Async
+    @SuppressWarnings("UnusedReturnValue")
+    public CompletableFuture<Void> logoutAsync(String refreshToken) {
+        return jwtService.revokeTokenAsync(refreshToken);
     }
 }
