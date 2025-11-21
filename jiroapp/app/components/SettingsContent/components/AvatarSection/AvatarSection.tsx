@@ -36,13 +36,18 @@ const AvatarSection = ({ currentAvatar }: AvatarSectionProps) => {
                     />
                     <label htmlFor="avatar-upload" className={styles.uploadOverlay}>
                         <FaCamera className={styles.uploadIcon} />
+                        <span>Сменить</span>
                     </label>
                 </div>
 
                 <div className={styles.avatarInfo}>
-                    <p className={styles.avatarDescription}>
-                        Рекомендуется изображение 1:1, не более 2MB
-                    </p>
+                    <div className={styles.avatarText}>
+                        <h4 className={styles.avatarTitle}>Изображение проекта</h4>
+                        <p className={styles.avatarDescription}>
+                            Загрузите квадратное изображение в формате JPG, PNG или GIF.
+                            Рекомендуемый размер: 400×400 пикселей.
+                        </p>
+                    </div>
 
                     <div className={styles.avatarControls}>
                         <input
@@ -53,7 +58,7 @@ const AvatarSection = ({ currentAvatar }: AvatarSectionProps) => {
                             className={styles.fileInput}
                         />
                         <label htmlFor="avatar-upload" className={styles.uploadButton}>
-                            Загрузить новое
+                            Загрузить изображение
                         </label>
 
                         {field.value && (

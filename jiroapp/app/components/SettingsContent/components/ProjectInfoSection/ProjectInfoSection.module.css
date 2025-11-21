@@ -2,47 +2,55 @@
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
+    height: 100%;
+}
+
+.sectionHeader {
+    text-align: center;
+    margin-bottom: 1rem;
 }
 
 .sectionTitle {
-    font-size: 1.25rem;
+    font-size: 1.5rem;
     font-weight: 600;
     color: #0f172a;
-    margin: 0;
+    margin: 0 0 0.5rem 0;
 }
 
-.formGrid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+.sectionSubtitle {
+    color: #64748b;
+    font-size: 1rem;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.formContent {
+    display: flex;
+    flex-direction: column;
     gap: 1.5rem;
+    flex: 1;
 }
 
 .formGroup {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
-}
-
-.formGroupFull {
-    grid-column: 1 / -1;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.75rem;
 }
 
 .label {
-    font-size: 0.875rem;
-    font-weight: 500;
+    font-size: 0.95rem;
+    font-weight: 600;
     color: #374151;
 }
 
 .input {
-    padding: 0.75rem 1rem;
+    padding: 0.875rem 1rem;
     border: 1.5px solid #e2e8f0;
     border-radius: 8px;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     transition: all 0.2s ease;
     background: white;
+    width: 100%;
 }
 
 .input:focus {
@@ -52,16 +60,17 @@
 }
 
 .textarea {
-    padding: 0.75rem 1rem;
+    padding: 0.875rem 1rem;
     border: 1.5px solid #e2e8f0;
     border-radius: 8px;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     font-family: inherit;
     resize: vertical;
-    min-height: 100px;
+    min-height: 120px;
     transition: all 0.2s ease;
     background: white;
     line-height: 1.5;
+    width: 100%;
 }
 
 .textarea:focus {
@@ -70,10 +79,21 @@
     box-shadow: 0 0 0 3px rgba(61, 107, 179, 0.1);
 }
 
+.textareaFooter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
 .helperText {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     color: #64748b;
-    margin-top: 0.25rem;
+}
+
+.charCount {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
 }
 
 .error {
@@ -82,13 +102,45 @@
     margin-top: 0.25rem;
 }
 
+.infoCard {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.25rem;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 10px;
+    margin-top: auto;
+}
+
+.infoIcon {
+    color: #3d6bb3;
+    font-size: 1.1rem;
+    margin-top: 0.125rem;
+    flex-shrink: 0;
+}
+
+.infoContent {
+    color: #1e40af;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    flex: 1;
+}
+
+.infoContent strong {
+    color: #1e40af;
+}
+
 @media (max-width: 768px) {
-    .formGrid {
-        grid-template-columns: 1fr;
-        gap: 1rem;
+    .textareaFooter {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
     }
 
-    .formGroupFull {
-        grid-column: 1;
+    .infoCard {
+        flex-direction: column;
+        text-align: center;
+        align-items: center;
     }
 }

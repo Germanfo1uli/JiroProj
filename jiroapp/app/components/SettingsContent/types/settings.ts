@@ -1,7 +1,6 @@
 export interface ProjectSettings {
     avatar: string;
     projectName: string;
-    capacity: number;
     description: string;
     inviteLink: string;
 }

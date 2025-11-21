@@ -1,7 +1,7 @@
 'use client'
 
 import { Formik, Form } from 'formik';
-import { FaArrowLeft, FaSave } from 'react-icons/fa';
+import { FaSave } from 'react-icons/fa';
 import { settingsValidationSchema } from './utils/validationSchemas';
 import { useSettingsForm } from './hooks/useSettingsForm';
 import { ProjectSettings } from './types/settings';
@@ -10,41 +10,27 @@ import ProjectInfoSection from './components/ProjectInfoSection/ProjectInfoSecti
 import InviteSection from './components/InviteSection/InviteSection';
 import styles from './SettingsContent.module.css';
 
-interface SettingsContentProps {
-    onBackClick?: () => void;
-}
-
-const SettingsContent = ({ onBackClick }: SettingsContentProps) => {
+const SettingsContent = () => {
     const initialSettings: ProjectSettings = {
         avatar: '',
         projectName: 'TASKFLOW PRO',
-        capacity: 10,
-        description: 'Система управления задачами нового поколения',
+        description: 'Система управления задачами нового поколения. Организуйте работу вашей команды эффективно и просто.',
         inviteLink: 'https://taskflow.ru/invite/abc123-def456-ghi789'
     };
 
-    const { settings, handleSubmit, copyInviteLink } = useSettingsForm(initialSettings);
+    const { settings, handleSubmit, copyInviteLink, refreshInviteLink } = useSettingsForm(initialSettings);
 
     return (
         <div className={styles.settingsContent}>
             <div className={styles.settingsContainer}>
-                {/* Header */}
                 <div className={styles.settingsHeader}>
-                    <div className={styles.headerMain}>
-                        <button
-                            className={styles.backButton}
-                            onClick={onBackClick}
-                        >
-                            <FaArrowLeft className={styles.backIcon} />
-                        </button>
-                        <div className={styles.headerText}>
-                            <h1 className={styles.pageTitle}>Настройки проекта</h1>
-                            <p className={styles.pageSubtitle}>Управление базовой информацией и настройками доступа</p>
-                        </div>
+                    <div className={styles.headerContent}>
+                        <h1 className={styles.pageTitle}>Настройки проекта</h1>
+                        <p className={styles.pageSubtitle}>
+                            Управление базовой информацией проекта, настройками команды и доступом
+                        </p>
                     </div>
                 </div>
-
-                {/* Content */}
                 <div className={styles.settingsMain}>
                     <Formik
                         initialValues={settings}
@@ -54,20 +40,25 @@ const SettingsContent = ({ onBackClick }: SettingsContentProps) => {
                     >
                         {({ isSubmitting, dirty, isValid, resetForm }) => (
                             <Form className={styles.settingsForm}>
-                                <div className={styles.formContent}>
-                                    <div className={styles.formSection}>
-                                        <AvatarSection currentAvatar={initialSettings.avatar} />
+                                <div className={styles.formGrid}>
+                                    <div className={styles.formColumn}>
+                                        <div className={styles.formSection}>
+                                            <AvatarSection currentAvatar={initialSettings.avatar} />
+                                        </div>
+
+                                        <div className={styles.formSection}>
+                                            <InviteSection
+                                                inviteLink={settings.inviteLink}
+                                                onCopyLink={copyInviteLink}
+                                                onRefreshLink={refreshInviteLink}
+                                            />
+                                        </div>
                                     </div>
 
-                                    <div className={styles.formSection}>
-                                        <ProjectInfoSection />
-                                    </div>
-
-                                    <div className={styles.formSection}>
-                                        <InviteSection
-                                            inviteLink={settings.inviteLink}
-                                            onCopyLink={copyInviteLink}
-                                        />
+                                    <div className={styles.formColumn}>
+                                        <div className={styles.formSection}>
+                                            <ProjectInfoSection />
+                                        </div>
                                     </div>
                                 </div>
 
@@ -79,7 +70,7 @@ const SettingsContent = ({ onBackClick }: SettingsContentProps) => {
                                             onClick={() => resetForm()}
                                             disabled={isSubmitting}
                                         >
-                                            Отменить
+                                            Отменить изменения
                                         </button>
                                         <button
                                             type="submit"
