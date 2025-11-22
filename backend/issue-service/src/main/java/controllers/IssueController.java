@@ -13,7 +13,7 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/issues") // Базовый путь для всех эндпоинтов этого контроллера
+@RequestMapping("/api/issues")
 @RequiredArgsConstructor
 public class IssueController {
 

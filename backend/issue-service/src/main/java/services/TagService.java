@@ -1,6 +1,5 @@
 package services;
 
-// --- ПРАВИЛЬНЫЕ ИМПОРТЫ ---
 import dto.request.AssignTagDto;
 import dto.request.CreateProjectTagDto;
 import dto.response.TagDto;
@@ -66,34 +65,25 @@ public class TagService {
     @Transactional
     public void assignTagToIssue(Long issueId, AssignTagDto dto) {
         log.info("Assigning tag {} to issue {}", dto.getTagId(), issueId);
-        if (!issueRepository.existsById(issueId)) {
-            throw new IssueNotFoundException("Issue with id " + issueId + " not found");
-        }
-        if (!projectTagRepository.existsById(dto.getTagId())) {
-            throw new ProjectTagNotFoundException("Project tag with id " + dto.getTagId() + " not found");
-        }
+        Issue issue = issueRepository.findById(issueId)
+                .orElseThrow(() -> new IllegalArgumentException("Issue not found"));
+        ProjectTag tag = projectTagRepository.findById(dto.getTagId())
+                .orElseThrow(() -> new IllegalArgumentException("Tag not found"));
 
-        // Проверяем, что тег еще не привязан к задаче
-        if (issue.getTags().stream().anyMatch(tag -> tag.getId().equals(dto.getTagId()))) {
-            log.warn("Tag {} is already assigned to issue {}", dto.getTagId(), issueId);
-            return;
-        }
-
-        // Добавляем тег в коллекцию задачи
-        issue.getTags().add(projectTagRepository.findById(dto.getTagId()).get());
+        issue.getTags().add(tag);
         issueRepository.save(issue);
         log.info("Successfully assigned tag to issue.");
     }
+
 
     @Transactional
     public void removeTagFromIssue(Long issueId, Long tagId) {
         log.info("Removing tag {} from issue {}", tagId, issueId);
         Issue issue = issueRepository.findById(issueId)
-                .orElseThrow(() -> new IssueNotFoundException("Issue with id " + issueId + " not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Issue not found"));
         ProjectTag tag = projectTagRepository.findById(tagId)
-                .orElseThrow(() -> new ProjectTagNotFoundException("Project tag with id " + tagId + " not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Tag not found"));
 
-        // Удаляем тег из коллекции задачи
         issue.getTags().remove(tag);
         issueRepository.save(issue);
         log.info("Successfully removed tag from issue.");
@@ -102,14 +92,12 @@ public class TagService {
     public List<TagDto> getTagsByIssue(Long issueId) {
         log.info("Fetching tags for issue: {}", issueId);
         Issue issue = issueRepository.findById(issueId)
-                .orElseThrow(() -> new IssueNotFoundException("Issue with id " + issueId + " not found"));
-        // Конвертируем Set<ProjectTag> в List<TagDto>
+                .orElseThrow(() -> new IllegalArgumentException("Issue not found"));
+
         return issue.getTags().stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
-
-    // --- Внутренние методы ---
 
     private TagDto convertToDto(ProjectTag tag) {
         return TagDto.builder()
