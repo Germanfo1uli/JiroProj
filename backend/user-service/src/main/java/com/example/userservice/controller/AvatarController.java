@@ -9,6 +9,7 @@ import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -75,6 +76,13 @@ public class AvatarController {
     @DeleteMapping("/me/avatar")
     public ResponseEntity<Void> deleteAvatar(@AuthenticationPrincipal JwtUser principal) {
         avatarService.deleteAvatar(principal.userId());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/admin/{userId}/avatar")
+    public ResponseEntity<Void> deleteAvatarById(@PathVariable Long userId) {
+        avatarService.deleteAvatar(userId);
         return ResponseEntity.noContent().build();
     }
 }

@@ -6,6 +6,7 @@ import com.example.userservice.exception.UserNotFoundException;
 import com.example.userservice.models.dto.response.TokenPair;
 import com.example.userservice.models.dto.response.LoginResponse;
 import com.example.userservice.models.entity.RefreshToken;
+import com.example.userservice.models.entity.SystemRole;
 import com.example.userservice.models.entity.User;
 import com.example.userservice.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -32,6 +33,7 @@ public class AuthService {
         User user = User.builder()
                 .email(email)
                 .passwordHash(passwordEncoder.encode(password))
+                .systemRole(SystemRole.USER)
                 .build();
         userRepository.save(user);
 

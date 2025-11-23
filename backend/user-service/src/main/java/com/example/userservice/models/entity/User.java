@@ -31,6 +31,16 @@ public class User {
     @CreationTimestamp
     private LocalDateTime createdAt;
 
+    @Column(name = "system_role", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private SystemRole systemRole = SystemRole.USER;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Column(name = "locked_at")
+    private LocalDateTime lockedAt;
+
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, optional = false)
     private UserProfile profile;
 

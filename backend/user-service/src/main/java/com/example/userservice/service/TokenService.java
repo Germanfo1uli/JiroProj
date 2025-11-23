@@ -97,4 +97,8 @@ public class TokenService {
     public UUID extractJti(String token) {
         return UUID.fromString(jwtHelper.parseToken(token).getId());
     }
+
+    public String extractRole(String token) {
+        return jwtHelper.parseToken(token).get("role", String.class);
+    }
 }

@@ -22,6 +22,7 @@ public class JwtHelper {
         return Jwts.builder()
                 .setSubject(user.getId().toString())
                 .claim("email", user.getEmail())
+                .claim("role", user.getSystemRole().name())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + cfg.getAccessTokenExpiration()))
                 .signWith(cfg.getSecretKey())
