@@ -60,6 +60,9 @@ public class AvatarService {
 
     @Transactional
     public void deleteAvatar(Long userId) {
-        avatarRepository.deleteByUser_Id(userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId));
+        user.setAvatar(null);
+        userRepository.save(user);
     }
 }
