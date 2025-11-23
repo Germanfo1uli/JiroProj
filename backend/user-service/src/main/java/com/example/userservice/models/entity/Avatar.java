@@ -29,5 +29,6 @@ public class Avatar {
     private String filename;
 
     @OneToOne
+    @JoinColumn(name = "user_id")
     private User user;
 }

@@ -25,7 +25,7 @@ public class AvatarService {
             "image/jpeg", "image/png", "image/gif", "image/webp"
     );
 
-    public Avatar uploadAvatar(Long userId, MultipartFile file) {
+    public void uploadAvatar(Long userId, MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("Файл пустой");
         }
@@ -52,7 +52,7 @@ public class AvatarService {
         avatar.setFilename(file.getOriginalFilename());
         avatar.setUser(user);
 
-        return avatarRepository.save(avatar);
+        avatarRepository.save(avatar);
     }
 
     public Optional<Avatar> findByUserId(Long userId) {
