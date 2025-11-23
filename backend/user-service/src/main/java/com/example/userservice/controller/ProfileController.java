@@ -5,6 +5,7 @@ import com.example.userservice.models.dto.response.ChangeProfileResponse;
 import com.example.userservice.models.dto.response.UserProfileResponse;
 import com.example.userservice.security.JwtUser;
 import com.example.userservice.service.UserService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

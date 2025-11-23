@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
+import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -19,7 +20,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class GlobalExceptionHandler {
 
-    // 400 ошибка валидации
+    // 400 ошибка валидации полей
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Object> handleValidation(MethodArgumentNotValidException ex,
                                                    HttpServletRequest request) {
@@ -67,6 +68,27 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), request);
     }
 
+    // 403 доступ запрещен (не ADMIN роль)
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Object> handleLocked(AccessDeniedException ex,
+                                               HttpServletRequest req) {
+        return buildResponse(HttpStatus.FORBIDDEN, "Access denied", req);
+    }
+
+    // 403 аккаунт помечен удаленным
+    @ExceptionHandler(AccountDeletedException.class)
+    public ResponseEntity<Object> handleDeleted(AccountDeletedException ex,
+                                                HttpServletRequest req) {
+        return buildResponse(HttpStatus.FORBIDDEN, "Account is deleted", req);
+    }
+
+    // 403 аккаунт заблокирован админом
+    @ExceptionHandler(AccountLockedException.class)
+    public ResponseEntity<Object> handleLocked(AccountLockedException ex,
+                                               HttpServletRequest req) {
+        return buildResponse(HttpStatus.FORBIDDEN, "Access is locked", req);
+    }
+
     // 404 пользователь не найден
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<Object> handleUserNotFound(UserNotFoundException ex,
@@ -81,7 +103,7 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), request);
     }
 
-    //413 большой размер файла
+    // 413 большой размер файла
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<Object> handleTooLarge(MaxUploadSizeExceededException ex,
                                                  HttpServletRequest req) {

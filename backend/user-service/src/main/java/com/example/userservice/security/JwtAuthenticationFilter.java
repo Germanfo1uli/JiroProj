@@ -1,6 +1,10 @@
 package com.example.userservice.security;
 
+import com.example.userservice.exception.AccountDeletedException;
+import com.example.userservice.exception.AccountLockedException;
 import com.example.userservice.service.TokenService;
+import com.example.userservice.service.UserService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
@@ -8,6 +12,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,12 +21,16 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final TokenService tokenService;
+    private final UserService userService;
+    private final ObjectMapper objectMapper;
     private static final String BEARER_PREFIX = "Bearer ";
 
     @Override
@@ -40,8 +50,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             String role = tokenService.extractRole(token);
             Long userId = tokenService.extractUserId(token);
+            boolean locked = userService.isLocked(userId);
+            boolean deleted = userService.isDeleted(userId);
 
-            UserDetails principal = new JwtUser(userId, role);
+            if (deleted) {
+                throw new AccountDeletedException();
+            }
+            if (locked) {
+                throw new AccountLockedException();
+            }
+
+            UserDetails principal = new JwtUser(userId, role, locked, deleted);
             UsernamePasswordAuthenticationToken auth =
                     new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
 
@@ -49,14 +68,33 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         } catch (ExpiredJwtException e) {
             SecurityContextHolder.clearContext();
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token expired");
+            sendErrorResponse(response, HttpStatus.UNAUTHORIZED, "Token expired");
             return;
         } catch (JwtException | IllegalArgumentException e) {
             SecurityContextHolder.clearContext();
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid token");
+            sendErrorResponse(response, HttpStatus.UNAUTHORIZED, "Invalid token");
             return;
+        } catch (AccountDeletedException | AccountLockedException e) {
+            SecurityContextHolder.clearContext();
+            sendErrorResponse(response, HttpStatus.FORBIDDEN,
+                    e instanceof AccountDeletedException ? "Account is deleted" : "Account is locked");
         }
-
         chain.doFilter(request, response);
+    }
+
+    private void sendErrorResponse(HttpServletResponse response,
+                                   HttpStatus status,
+                                   String message) throws IOException {
+        response.setStatus(status.value());
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+
+        Map<String, Object> body = Map.of(
+                "timestamp", LocalDateTime.now().toString(),
+                "status", status.value(),
+                "error", status.getReasonPhrase(),
+                "message", message
+        );
+
+        response.getWriter().write(objectMapper.writeValueAsString(body));
     }
 }

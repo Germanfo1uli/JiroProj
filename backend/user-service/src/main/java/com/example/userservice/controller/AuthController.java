@@ -97,4 +97,16 @@ public class AuthController {
         authService.logout(request.refreshToken());
         return ResponseEntity.ok(Map.of("message", "Logout was successfully"));
     }
+
+    @Operation(
+            summary = "Удаление учетной записи (мягкое удаление)",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @DeleteMapping("/account")
+    public ResponseEntity<?> deleteMyAccount(
+            @AuthenticationPrincipal JwtUser principal) {
+
+        authService.deleteAccount(principal.userId());
+        return ResponseEntity.noContent().build();
+    }
 }

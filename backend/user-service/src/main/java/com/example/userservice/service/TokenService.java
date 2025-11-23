@@ -90,6 +90,12 @@ public class TokenService {
         token.setRevoked(true);
     }
 
+    @Transactional
+    public void revokeAllByUser(Long userId) {
+        List<RefreshToken> active = tokenRepository.findAllByUser_IdAndRevokedFalse(userId);
+        active.forEach(t -> t.setRevoked(true));
+    }
+
     public Long extractUserId(String token) {
         return Long.valueOf(jwtHelper.parseToken(token).getSubject());
     }

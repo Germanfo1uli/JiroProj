@@ -7,7 +7,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.List;
 
-public record JwtUser(Long userId, String role) implements UserDetails {
+public record JwtUser(Long userId, String role,
+                      boolean locked, boolean deleted) implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -30,17 +31,17 @@ public record JwtUser(Long userId, String role) implements UserDetails {
     }
 
     @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
-    @Override
     public boolean isCredentialsNonExpired() {
         return true;
     }
 
     @Override
+    public boolean isAccountNonLocked() {
+        return !locked;
+    }
+
+    @Override
     public boolean isEnabled() {
-        return true;
+        return !deleted;
     }
 }

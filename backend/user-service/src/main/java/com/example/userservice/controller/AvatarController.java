@@ -37,7 +37,7 @@ public class AvatarController {
         avatarService.uploadAvatar(principal.userId(), file);
 
         return ResponseEntity.ok(Map.of(
-                "message", "Аватарка успешно загружена",
+                "message", "Avatar is uploaded",
                 "avatarUrl", "/users/me/avatar"
         ));
     }

@@ -1,6 +1,7 @@
 package com.example.userservice.service;
 
 import com.example.userservice.exception.UserNotFoundException;
+import com.example.userservice.models.dto.data.UserFlags;
 import com.example.userservice.models.dto.response.ChangeProfileResponse;
 import com.example.userservice.models.dto.response.UserProfileResponse;
 import com.example.userservice.models.entity.User;
@@ -50,5 +51,17 @@ public class UserService {
                     user.getProfile().getBio(),
                     user.getCreatedAt()
             );
+    }
+
+    public boolean isLocked(Long userId) {
+        return userRepository.findFlagsById(userId)
+                .map(UserFlags::isLocked)
+                .orElse(false);
+    }
+
+    public boolean isDeleted(Long userId) {
+        return userRepository.findFlagsById(userId)
+                .map(UserFlags::isDeleted)
+                .orElse(true);
     }
 }

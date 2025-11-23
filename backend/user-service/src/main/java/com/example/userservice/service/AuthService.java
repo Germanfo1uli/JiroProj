@@ -1,8 +1,6 @@
 package com.example.userservice.service;
 
-import com.example.userservice.exception.EmailAlreadyExistsException;
-import com.example.userservice.exception.InvalidCredentialsException;
-import com.example.userservice.exception.UserNotFoundException;
+import com.example.userservice.exception.*;
 import com.example.userservice.models.dto.response.TokenPair;
 import com.example.userservice.models.dto.response.LoginResponse;
 import com.example.userservice.models.entity.RefreshToken;
@@ -13,6 +11,8 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -47,6 +47,14 @@ public class AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new InvalidCredentialsException("Incorrect login or password"));
 
+        if (user.getDeletedAt() != null) {
+            throw new AccountDeletedException();
+        }
+
+        if (user.getLockedAt() != null) {
+            throw new AccountLockedException();
+        }
+
         if (!passwordEncoder.matches(password, user.getPasswordHash())) {
             throw new InvalidCredentialsException("Incorrect login or password");
         }
@@ -57,8 +65,18 @@ public class AuthService {
 
     public TokenPair refresh(String refreshTokenString, String deviceInfo) {
         RefreshToken current = tokenService.validateRefreshToken(refreshTokenString);
+        User user = current.getUser();
         tokenService.revokeByString(refreshTokenString);
-        return tokenService.createTokenPair(current.getUser(), deviceInfo);
+
+        if (user.getDeletedAt() != null) {
+            throw new AccountDeletedException();
+        }
+
+        if (user.getLockedAt() != null) {
+            throw new AccountLockedException();
+        }
+
+        return tokenService.createTokenPair(user, deviceInfo);
     }
 
     public void logout(String refreshTokenString) {
@@ -112,5 +130,16 @@ public class AuthService {
 
         tokenService.revokeAllExcept(userId, currentRefresh);
         return tokenService.createTokenPair(user, deviceInfo);
+    }
+
+    @Transactional
+    public void deleteAccount(Long userId) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId));
+
+        user.setDeletedAt(LocalDateTime.now());
+
+        tokenService.revokeAllByUser(userId);
     }
 }
