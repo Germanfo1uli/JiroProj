@@ -3,6 +3,7 @@ package com.example.userservice.controller;
 import com.example.userservice.models.dto.request.*;
 import com.example.userservice.models.dto.response.LoginResponse;
 import com.example.userservice.models.dto.response.TokenResponse;
+import com.example.userservice.security.JwtUser;
 import com.example.userservice.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -61,11 +62,11 @@ public class AuthController {
     @PatchMapping("/change-password")
     public ResponseEntity<TokenResponse> changePassword(
             @Valid @RequestBody ChangePasswordRequest request,
-            @AuthenticationPrincipal Long userId) {
+            @AuthenticationPrincipal JwtUser principal) {
 
         TokenResponse response = userService.changePasswordAsync(
                 request.oldPassword(), request.newPassword(),
-                userId, request.refreshToken(),
+                principal.userId(), request.refreshToken(),
                 request.deviceInfo()).join();
         return ResponseEntity.ok(response);
     }

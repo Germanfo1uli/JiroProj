@@ -1,8 +1,16 @@
 package com.example.userservice.service;
 
+import com.example.userservice.exception.EmailAlreadyExistsException;
+import com.example.userservice.exception.InvalidCredentialsException;
+import com.example.userservice.exception.UserNotFoundException;
+import com.example.userservice.models.dto.response.TokenPair;
+import com.example.userservice.models.dto.response.LoginResponse;
+import com.example.userservice.models.entity.RefreshToken;
 import com.example.userservice.models.entity.User;
 import com.example.userservice.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -10,75 +18,91 @@ import org.springframework.stereotype.Service;
 public class AuthService {
 
     private final UserRepository userRepository;
-    private final PasswordService passwordService;   // шифрование + policy
-    private final TokenService tokenService;         // работа с RefreshToken
-    private final JwtHelper jwtHelper;               // генерация/парсинг JWT
+    private final TokenService tokenService;
+    private final BCryptPasswordEncoder passwordEncoder;
+    private final UserService userService;
 
     @Transactional
-    public LoginResponse register(String email, String rawPassword, String name, String deviceInfo) {
+    public LoginResponse register(String email, String password, String name, String deviceInfo) {
 
         if (userRepository.existsByEmail(email)) {
-            throw new EmailAlreadyExistsException();
+            throw new EmailAlreadyExistsException("Email already in use");
         }
 
         User user = User.builder()
                 .email(email)
-                .passwordHash(passwordService.encode(rawPassword))
+                .passwordHash(passwordEncoder.encode(password))
                 .build();
         userRepository.save(user);
 
-        // доменный сервис профиля
-        profileService.createProfile(user, name);
+        userService.createProfile(user, name);
 
         TokenPair pair = tokenService.createTokenPair(user, deviceInfo);
-        return LoginResponse.of(user.getEmail(), pair);
+        return new LoginResponse(user.getEmail(), pair.accessToken(), pair.refreshToken());
     }
 
-    public LoginResponse login(String email, String rawPassword, String deviceInfo) {
+    public LoginResponse login(String email, String password, String deviceInfo) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(InvalidCredentialsException::new);
+                .orElseThrow(() -> new InvalidCredentialsException("Incorrect login or password"));
 
-        passwordService.verify(rawPassword, user.getPasswordHash());
+        if (!passwordEncoder.matches(password, user.getPasswordHash())) {
+            throw new InvalidCredentialsException("Incorrect login or password");
+        }
 
         TokenPair pair = tokenService.createTokenPair(user, deviceInfo);
-        return LoginResponse.of(user.getEmail(), pair);
+        return new LoginResponse(user.getEmail(), pair.accessToken(), pair.refreshToken());
     }
 
-    public TokenResponse refresh(String refreshTokenString, String deviceInfo) {
-        RefreshToken current = tokenService.validateAndRevoke(refreshTokenString);
-        User user = current.getUser();
-        TokenPair pair = tokenService.createTokenPair(user, deviceInfo);
-        return TokenResponse.of(pair);
+    public TokenPair refresh(String refreshTokenString, String deviceInfo) {
+        RefreshToken current = tokenService.validateRefreshToken(refreshTokenString);
+        tokenService.revokeByString(refreshTokenString);
+        return tokenService.createTokenPair(current.getUser(), deviceInfo);
     }
 
     public void logout(String refreshTokenString) {
         tokenService.revokeByString(refreshTokenString);
     }
 
-    public TokenResponse changePassword(Long userId, String oldRaw, String newRaw,
+    @Transactional
+    public TokenPair changePassword(Long userId, String oldPassword, String newPassword,
                                         String currentRefresh, String deviceInfo) {
         User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
+                .orElseThrow(() -> new UserNotFoundException(userId));
 
-        passwordService.verifyAndChange(oldRaw, newRaw, user);
-        tokenService.revokeAllExcept(user, currentRefresh);
-        TokenPair pair = tokenService.createTokenPair(user, deviceInfo);
-        return TokenResponse.of(pair);
+        if (!passwordEncoder.matches(oldPassword, user.getPasswordHash())) {
+            throw new InvalidCredentialsException("Incorrect password");
+        }
+        if (oldPassword.equals(newPassword)) {
+            throw new InvalidCredentialsException("Password must be different");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+
+        tokenService.revokeAllExcept(userId, currentRefresh);
+        return tokenService.createTokenPair(user, deviceInfo);
     }
 
-    public TokenResponse changeEmail(Long userId, String password, String newEmail,
+    @Transactional
+    public TokenPair changeEmail(Long userId, String password, String newEmail,
                                      String currentRefresh, String deviceInfo) {
         User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
+                .orElseThrow(() -> new UserNotFoundException(userId));
 
-        passwordService.verify(password, user.getPasswordHash());
-        if (newEmail.equals(user.getEmail())) {
-            throw new SameEmailException();
+        if (!passwordEncoder.matches(password, user.getPasswordHash())) {
+            throw new InvalidCredentialsException("Incorrect password");
         }
+
+        if (newEmail.equals(user.getEmail())) {
+            throw new InvalidCredentialsException("Email must be different");
+        }
+
+        if (userRepository.existsByEmail(newEmail)) {
+            throw new EmailAlreadyExistsException("Email already in use");
+        }
+
         user.setEmail(newEmail);
 
-        tokenService.revokeAllExcept(user, currentRefresh);
-        TokenPair pair = tokenService.createTokenPair(user, deviceInfo);
-        return TokenResponse.of(pair);
+        tokenService.revokeAllExcept(userId, currentRefresh);
+        return tokenService.createTokenPair(user, deviceInfo);
     }
 }

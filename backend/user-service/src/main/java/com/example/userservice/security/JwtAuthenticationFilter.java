@@ -1,6 +1,8 @@
 package com.example.userservice.security;
 
-import com.example.userservice.service.JwtService;
+import com.example.userservice.service.TokenService;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -8,48 +10,53 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final JwtService jwtService;
+    private final TokenService tokenService;
+    private static final String BEARER_PREFIX = "Bearer ";
 
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain chain) throws ServletException, IOException {
 
         String authHeader = request.getHeader("Authorization");
 
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-
-            try {
-                if (jwtService.isTokenExpired(token)) {
-                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Access token expired");
-                    return;
-                }
-
-                Long userId = jwtService.extractUserId(token);
-
-                var authentication = new UsernamePasswordAuthenticationToken(
-                        userId, null, Collections.emptyList()
-                );
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-
-            } catch (Exception e) {
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid access token");
-                return;
-            }
+        if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
+            chain.doFilter(request, response);
+            return;
         }
 
-        filterChain.doFilter(request, response);
+        String token = authHeader.substring(BEARER_PREFIX.length());
+
+        try {
+            Long userId = tokenService.extractUserId(token);
+            UserDetails principal = new JwtUser(userId);
+            UsernamePasswordAuthenticationToken auth =
+                    new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
+
+            SecurityContextHolder.getContext().setAuthentication(auth);
+
+        } catch (ExpiredJwtException e) {
+            SecurityContextHolder.clearContext();
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token expired");
+            return;
+        } catch (JwtException | IllegalArgumentException e) {
+            SecurityContextHolder.clearContext();
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid token");
+            return;
+        }
+
+        chain.doFilter(request, response);
     }
 }

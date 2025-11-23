@@ -1,169 +1,61 @@
 package com.example.userservice.service;
 
-import com.example.userservice.exception.EmailAlreadyExistsException;
-import com.example.userservice.exception.InvalidCredentialsException;
 import com.example.userservice.exception.UserNotFoundException;
-import com.example.userservice.models.dto.data.LoginData;
-import com.example.userservice.models.dto.response.LoginResponse;
-import com.example.userservice.models.dto.response.TokenResponse;
-import com.example.userservice.models.entity.RefreshToken;
+import com.example.userservice.models.dto.projection.UserProfileProjection;
+import com.example.userservice.models.dto.response.ChangeProfileResponse;
+import com.example.userservice.models.dto.response.UserProfileResponse;
 import com.example.userservice.models.entity.User;
+import com.example.userservice.models.entity.UserProfile;
+import com.example.userservice.repository.ProfileRepository;
 import com.example.userservice.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.concurrent.CompletableFuture;
+
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
+    private final ProfileRepository profileRepository;
     private final UserRepository userRepository;
-    private final JwtService jwtService;
-    private final ProfileService profileService;
-    private final BCryptPasswordEncoder passwordEncoder;
 
     @Transactional
-    @Async
-    public CompletableFuture<LoginResponse> registerAsync(
-            String name, String email, String password, String deviceInfo) {
-
-        if(userRepository.existsByEmail(email)) {
-            throw new EmailAlreadyExistsException("Пользователь с таким Email уже зарегистрирован");
-        }
-
-        User savedUser = createAndSaveUser(email, password);
-        profileService.createProfile(savedUser, name);
-        LoginResponse response = createLoginResponse(savedUser, deviceInfo);
-
-        return CompletableFuture.completedFuture(response);
-    }
-
-    private User createAndSaveUser(String email, String password) {
-        User user = new User();
-        user.setEmail(email);
-        user.setCreatedAt(LocalDateTime.now());
-        user.setPasswordHash(passwordEncoder.encode(password));
-        return userRepository.save(user);
+    public UserProfile createProfile(User user, String name) {
+        UserProfile profile = new UserProfile();
+        profile.setName(name);
+        profile.setUser(user);
+        return profileRepository.save(profile);
     }
 
     @Async
-    public CompletableFuture<LoginResponse> loginAsync(
-            String email, String password, String deviceInfo) {
-
+    public CompletableFuture<ChangeProfileResponse> updateProfileByIdAsync(Long userId, String name, String bio) {
         return CompletableFuture.supplyAsync(() -> {
-            User user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new InvalidCredentialsException("Неверный логин или пароль"));
-
-            if (!passwordEncoder.matches(password, user.getPasswordHash())) {
-                throw new InvalidCredentialsException("Неверный логин или пароль");
-            }
-
-            return createLoginResponse(user, deviceInfo);
+            UserProfile profile = profileRepository.findUserProfileById(userId);
+            profile.setBio(bio);
+            profile.setName(name);
+            UserProfile savedProfile = profileRepository.save(profile);
+            return new ChangeProfileResponse(
+                    savedProfile.getId(), savedProfile.getName(), savedProfile.getBio()
+            );
         });
     }
 
-    public LoginResponse createLoginResponse(User user, String deviceInfo) {
-        String accessToken = jwtService.generateAccessToken(user);
-        String refreshToken = jwtService.generateRefreshToken(user, deviceInfo);
-        jwtService.saveRefreshTokenAsync(user, refreshToken, deviceInfo);
-        return new LoginResponse(user.getEmail(), accessToken, refreshToken);
-    }
-
     @Async
-    public CompletableFuture<TokenResponse> refreshTokenAsync(String refreshToken, String deviceInfo) {
-        return CompletableFuture.supplyAsync(() ->
-                        jwtService.validateRefreshToken(refreshToken)
-                )
-                .thenApply(RefreshToken::getUser)
-                .thenCompose(user ->
-                        jwtService.revokeTokenAsync(refreshToken)
-                                .thenApply(ignored -> user)
-                )
-                .thenCompose(user -> {
-                    String newAccess = jwtService.generateAccessToken(user);
-                    String newRefresh = jwtService.generateRefreshToken(user, deviceInfo);
-
-                    return jwtService.saveRefreshTokenAsync(user, newRefresh, deviceInfo)
-                            .thenApply(saved -> new TokenResponse(newAccess, newRefresh));
-                });
-    }
-
-    @Async
-    public CompletableFuture<TokenResponse> changePasswordAsync(
-            String oldPassword, String newPassword,
-            Long userId, String refreshToken, String deviceInfo) {
-
+    public CompletableFuture<UserProfileResponse> getProfileByIdAsync(Long userId) {
         return CompletableFuture.supplyAsync(() -> {
-            User user = userRepository.findById(userId)
+            UserProfileProjection proj = userRepository.findUserById(userId)
                     .orElseThrow(() -> new UserNotFoundException(userId));
 
-            jwtService.validateRefreshToken(refreshToken);
-
-            if (!passwordEncoder.matches(oldPassword, user.getPasswordHash())) {
-                throw new InvalidCredentialsException("Неверный старый пароль");
-            }
-            if (oldPassword.equals(newPassword)) {
-                throw new InvalidCredentialsException("Новый пароль должен отличаться");
-            }
-
-            user.setPasswordHash(passwordEncoder.encode(newPassword));
-            userRepository.save(user);
-
-            String newAccess = jwtService.generateAccessToken(user);
-            String newRefresh = jwtService.generateRefreshToken(user, deviceInfo);
-
-            return new LoginData(user, newAccess, newRefresh);
-        }).thenCompose(data ->
-                jwtService.saveRefreshTokenAsync(data.user(), data.refreshToken(), deviceInfo)
-                        .thenApply(saved -> data)
-        ).thenCompose(data ->
-                jwtService.revokeAllRefreshExcept(data.user().getId(), data.refreshToken())
-                        .thenApply(ignored -> new TokenResponse(data.accessToken(), data.refreshToken()))
-        );
-    }
-
-    @Async
-    public CompletableFuture<TokenResponse> changeEmailAsync(
-            String newEmail, String password,
-            Long userId, String refreshToken, String deviceInfo) {
-
-        return CompletableFuture.supplyAsync(() -> {
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new UserNotFoundException(userId));
-
-            jwtService.validateRefreshToken(refreshToken);
-
-            if (!passwordEncoder.matches(password, user.getPasswordHash())) {
-                throw new InvalidCredentialsException("Неверный пароль");
-            }
-
-            if (newEmail.equals(user.getEmail())) {
-                throw new InvalidCredentialsException("Почта совпадает со старой");
-            }
-
-            user.setEmail(newEmail);
-            userRepository.save(user);
-
-            String newAccess = jwtService.generateAccessToken(user);
-            String newRefresh = jwtService.generateRefreshToken(user, deviceInfo);
-
-            return new LoginData(user, newAccess, newRefresh);
-        }).thenCompose(data ->
-                jwtService.saveRefreshTokenAsync(data.user(), data.refreshToken(), deviceInfo)
-                        .thenApply(saved -> data)
-        ).thenCompose(data ->
-                jwtService.revokeAllRefreshExcept(data.user().getId(), data.refreshToken())
-                        .thenApply(ignored -> new TokenResponse(data.accessToken(), data.refreshToken()))
-        );
-    }
-
-    @Async
-    @SuppressWarnings("UnusedReturnValue")
-    public CompletableFuture<Void> logoutAsync(String refreshToken) {
-        return jwtService.revokeTokenAsync(refreshToken);
+            return new UserProfileResponse(
+                    userId,
+                    proj.getEmail(),
+                    proj.getName(),
+                    proj.getBio(),
+                    proj.getCreatedAt()
+            );
+        });
     }
 }
