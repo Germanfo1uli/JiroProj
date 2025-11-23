@@ -23,7 +23,7 @@ public class AuthService {
     private final UserService userService;
 
     @Transactional
-    public LoginResponse register(String email, String password, String name, String deviceInfo) {
+    public LoginResponse register(String name, String email, String password, String deviceInfo) {
 
         if (userRepository.existsByEmail(email)) {
             throw new EmailAlreadyExistsException("Email already in use");
@@ -66,6 +66,9 @@ public class AuthService {
     @Transactional
     public TokenPair changePassword(Long userId, String oldPassword, String newPassword,
                                         String currentRefresh, String deviceInfo) {
+
+        tokenService.validateRefreshToken(currentRefresh);
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
 
@@ -83,8 +86,11 @@ public class AuthService {
     }
 
     @Transactional
-    public TokenPair changeEmail(Long userId, String password, String newEmail,
+    public TokenPair changeEmail(Long userId, String newEmail, String password,
                                      String currentRefresh, String deviceInfo) {
+
+        tokenService.validateRefreshToken(currentRefresh);
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
 

@@ -73,8 +73,8 @@ public class AvatarController {
     }
 
     @DeleteMapping("/me/avatar")
-    public ResponseEntity<?> deleteAvatar(@AuthenticationPrincipal JwtUser principal) {
+    public ResponseEntity<Void> deleteAvatar(@AuthenticationPrincipal JwtUser principal) {
         avatarService.deleteAvatar(principal.userId());
-        return ResponseEntity.ok(Map.of("message", "Аватарка удалена"));
+        return ResponseEntity.noContent().build();
     }
 }
