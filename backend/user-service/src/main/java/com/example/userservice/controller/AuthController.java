@@ -2,9 +2,9 @@ package com.example.userservice.controller;
 
 import com.example.userservice.models.dto.request.*;
 import com.example.userservice.models.dto.response.LoginResponse;
-import com.example.userservice.models.dto.response.TokenResponse;
+import com.example.userservice.models.dto.response.TokenPair;
 import com.example.userservice.security.JwtUser;
-import com.example.userservice.service.UserService;
+import com.example.userservice.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
@@ -15,7 +15,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("api/auth")
@@ -23,80 +22,79 @@ import java.util.concurrent.CompletableFuture;
 @Validated
 public class AuthController {
 
-    public final UserService userService;
+    public final AuthService authService;
 
-    @Operation(summary = "Регистрация пользователя")
+    @Operation(summary = "User registration")
     @PostMapping("/register")
     public ResponseEntity<LoginResponse> register(
             @Valid @RequestBody RegisterRequest request) {
 
-        LoginResponse response = userService.registerAsync(
-                request.name(), request.email(), request.password(), request.deviceInfo()).join();
+        LoginResponse response = authService.register(
+                request.name(), request.email(), request.password(), request.deviceInfo());
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Авторизация пользователя")
+    @Operation(summary = "User authentication")
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(
             @Valid @RequestBody LoginRequest request) {
 
-        LoginResponse response = userService.loginAsync(
-                request.email(), request.password(), request.deviceInfo()).join();
+        LoginResponse response = authService.login(
+                request.email(), request.password(), request.deviceInfo());
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Получение новых токенов")
+    @Operation(summary = "Get new tokens")
     @PostMapping("/refresh")
-    public ResponseEntity<TokenResponse> refresh(
+    public ResponseEntity<TokenPair> refresh(
             @Valid @RequestBody RefreshRequest request) {
 
-        TokenResponse response = userService.refreshTokenAsync(
-                request.refreshToken(), request.deviceInfo()).join();
+        TokenPair response = authService.refresh(
+                request.refreshToken(), request.deviceInfo());
         return ResponseEntity.ok(response);
     }
 
     @Operation(
-            summary = "Смена пароля",
+            summary = "Password change",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @PatchMapping("/change-password")
-    public ResponseEntity<TokenResponse> changePassword(
+    public ResponseEntity<TokenPair> changePassword(
             @Valid @RequestBody ChangePasswordRequest request,
             @AuthenticationPrincipal JwtUser principal) {
 
-        TokenResponse response = userService.changePasswordAsync(
-                request.oldPassword(), request.newPassword(),
-                principal.userId(), request.refreshToken(),
-                request.deviceInfo()).join();
+        TokenPair response = authService.changePassword(
+                principal.userId(), request.oldPassword(),
+                request.newPassword(), request.refreshToken(),
+                request.deviceInfo());
         return ResponseEntity.ok(response);
     }
 
     @Operation(
-            summary = "Смена почты",
+            summary = "Email change",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @PatchMapping("/change-email")
-    public ResponseEntity<TokenResponse> changeEmail(
+    public ResponseEntity<TokenPair> changeEmail(
             @Valid @RequestBody ChangeEmailRequest request,
-            @AuthenticationPrincipal Long userId) {
+            @AuthenticationPrincipal JwtUser principal) {
 
-        TokenResponse response = userService.changeEmailAsync(
-                request.newEmail(), request.password(),
-                userId, request.refreshToken(),
-                request.deviceInfo()).join();
+        TokenPair response = authService.changeEmail(
+                principal.userId(), request.newEmail(),
+                request.password(), request.refreshToken(),
+                request.deviceInfo());
         return ResponseEntity.ok(response);
     }
 
     @Operation(
-            summary = "Выход с аккаунта",
+            summary = "User logout",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @PostMapping("/logout")
-    public CompletableFuture<ResponseEntity<?>> logout(
-            @AuthenticationPrincipal Long userId,
+    public ResponseEntity<?> logout(
             @Valid @RequestBody LogoutRequest request) {
 
-        return userService.logoutAsync(request.refreshToken())
-                .thenApply(v -> ResponseEntity.ok(Map.of("message", "Вы успешно вышли")));
+        authService.logout(request.refreshToken());
+        return ResponseEntity.ok(Map.of("message", "Logout was successfully"));
     }
 }
