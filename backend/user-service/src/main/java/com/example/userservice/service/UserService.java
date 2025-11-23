@@ -1,7 +1,6 @@
 package com.example.userservice.service;
 
 import com.example.userservice.exception.UserNotFoundException;
-import com.example.userservice.models.dto.projection.UserProfileProjection;
 import com.example.userservice.models.dto.response.ChangeProfileResponse;
 import com.example.userservice.models.dto.response.UserProfileResponse;
 import com.example.userservice.models.entity.User;
@@ -10,11 +9,7 @@ import com.example.userservice.repository.ProfileRepository;
 import com.example.userservice.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-
-import java.util.concurrent.CompletableFuture;
-
 
 @Service
 @RequiredArgsConstructor
@@ -23,39 +18,37 @@ public class UserService {
     private final UserRepository userRepository;
 
     @Transactional
-    public UserProfile createProfile(User user, String name) {
-        UserProfile profile = new UserProfile();
+    public void createProfile(User user, String name) {
+        UserProfile profile = UserProfile.builder()
+                .name(name)
+                .user(user)
+                .build();
+
+        profileRepository.save(profile);
+    }
+
+    @Transactional
+    public ChangeProfileResponse updateProfileById(Long userId, String name, String bio) {
+        UserProfile profile = profileRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId));
+
+        profile.setBio(bio);
         profile.setName(name);
-        profile.setUser(user);
-        return profileRepository.save(profile);
+        return new ChangeProfileResponse(
+                profile.getId(), profile.getName(), profile.getBio());
+
     }
 
-    @Async
-    public CompletableFuture<ChangeProfileResponse> updateProfileByIdAsync(Long userId, String name, String bio) {
-        return CompletableFuture.supplyAsync(() -> {
-            UserProfile profile = profileRepository.findUserProfileById(userId);
-            profile.setBio(bio);
-            profile.setName(name);
-            UserProfile savedProfile = profileRepository.save(profile);
-            return new ChangeProfileResponse(
-                    savedProfile.getId(), savedProfile.getName(), savedProfile.getBio()
-            );
-        });
-    }
-
-    @Async
-    public CompletableFuture<UserProfileResponse> getProfileByIdAsync(Long userId) {
-        return CompletableFuture.supplyAsync(() -> {
-            UserProfileProjection proj = userRepository.findUserById(userId)
+    public UserProfileResponse getProfileById(Long userId) {
+            User user = userRepository.findWithProfileById(userId)
                     .orElseThrow(() -> new UserNotFoundException(userId));
 
             return new UserProfileResponse(
                     userId,
-                    proj.getEmail(),
-                    proj.getName(),
-                    proj.getBio(),
-                    proj.getCreatedAt()
+                    user.getEmail(),
+                    user.getProfile().getName(),
+                    user.getProfile().getBio(),
+                    user.getCreatedAt()
             );
-        });
     }
 }

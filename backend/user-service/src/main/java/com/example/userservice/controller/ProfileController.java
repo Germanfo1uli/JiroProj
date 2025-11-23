@@ -3,7 +3,6 @@ package com.example.userservice.controller;
 import com.example.userservice.models.dto.request.ChangeProfileRequest;
 import com.example.userservice.models.dto.response.ChangeProfileResponse;
 import com.example.userservice.models.dto.response.UserProfileResponse;
-import com.example.userservice.service.ProfileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
