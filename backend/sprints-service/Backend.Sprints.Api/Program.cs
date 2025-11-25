@@ -8,6 +8,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<SprintRepository>();
 builder.Services.AddScoped<SprintIssueRepository>();
+builder.Services.AddScoped<ISprintService, SprintService>();
+builder.Services.AddScoped<ISprintIssueService, SprintIssueService>();
 
 builder.Services.AddDbContext<SprintsDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default"),
