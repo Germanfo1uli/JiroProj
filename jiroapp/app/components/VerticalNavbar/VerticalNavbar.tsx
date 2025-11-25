@@ -1,14 +1,19 @@
 'use client'
 
 import { useState } from 'react'
-import { FaTasks, FaSearch, FaPlus, FaQuestion, FaUserCircle, FaBell } from 'react-icons/fa'
+import { FaTasks, FaSearch, FaPlus, FaQuestion, FaUserCircle, FaBell, FaBars, FaTimes } from 'react-icons/fa'
 import NotificationModal from './Notification/NotificationModal'
 import SearchPanel from './Search/SearchPanel'
 import HelpModal from './Help/HelpModal'
 import { ProfileModal } from '../VerticalNavbar/Profile/ProfileModal'
 import styles from './VerticalNavbar.module.css'
 
-const VerticalNavbar = () => {
+interface VerticalNavbarProps {
+    onToggleControlPanel?: () => void;
+    isControlPanelOpen?: boolean;
+}
+
+const VerticalNavbar = ({ onToggleControlPanel, isControlPanelOpen = true }: VerticalNavbarProps) => {
     const [isNotificationOpen, setIsNotificationOpen] = useState(false)
     const [isSearchOpen, setIsSearchOpen] = useState(false)
     const [isHelpOpen, setIsHelpOpen] = useState(false)
@@ -42,6 +47,12 @@ const VerticalNavbar = () => {
         setIsHelpOpen(false)
     }
 
+    const handleToggleControlPanel = () => {
+        if (onToggleControlPanel) {
+            onToggleControlPanel()
+        }
+    }
+
     const closeNotification = () => {
         setIsNotificationOpen(false)
     }
@@ -63,7 +74,13 @@ const VerticalNavbar = () => {
             <div className={styles.verticalNavbar}>
                 <div className={styles.navTop}>
                     <div className={styles.navLogo}>
-                        <FaTasks className={styles.navLogoIcon} />
+                        <button
+                            className={styles.toggleControlPanelButton}
+                            onClick={handleToggleControlPanel}
+                            aria-label={isControlPanelOpen ? "Скрыть панель управления" : "Показать панель управления"}
+                        >
+                            {isControlPanelOpen ? <FaTimes className={styles.toggleIcon} /> : <FaBars className={styles.toggleIcon} />}
+                        </button>
                     </div>
 
                     <div className={styles.navActions}>

@@ -6,7 +6,12 @@
     overflow-y: hidden;
     background: linear-gradient(135deg, #f0f8ff 0%, #e6f2ff 50%, #f0f7ff 100%);
     padding: 1rem;
-    margin-left: 12rem;
+    margin-left: 20rem;
+    transition: margin-left 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.boardsContent.panelCollapsed {
+    margin-left: 5rem;
 }
 
 .backgroundElements {
@@ -454,16 +459,18 @@
 }
 
 @media (max-width: 1700px) {
-    .boardsContent {
-        margin-left: 20rem;
+
+    .boardsContent.panelCollapsed {
+        margin-left: 5rem;
     }
-
-
 }
 
 @media (max-width: 1600px) {
-    .boardsContent {
+    .boardsContent{
         margin-left: 22rem;
+    }
+    .boardsContent.panelCollapsed {
+        margin-left: 5rem;
     }
     .contentGrid {
         grid-template-columns: 1fr;
@@ -473,12 +480,14 @@
     .quickActionsPanel {
         order: -1;
     }
-
 }
 
 @media (max-width: 1200px) {
-    .boardsContent {
+    .boardsContent{
         margin-left: 22rem;
+    }
+    .boardsContent.panelCollapsed {
+        margin-left: 6rem;
     }
     .contentGrid {
         grid-template-columns: 1fr;
@@ -488,12 +497,14 @@
     .quickActionsPanel {
         order: -1;
     }
-
 }
 
 @media (max-width: 1024px) {
-    .boardsContent {
-        margin-left: 18.5rem;
+    .boardsContent{
+        margin-left: 20rem;
+    }
+    .boardsContent.panelCollapsed {
+        margin-left: 5rem;
     }
     .pageTitle {
         font-size: 2.2rem;
@@ -502,7 +513,11 @@
 
 @media (max-width: 768px) {
     .boardsContent {
+        margin-left: 4rem;
         padding: 0.8rem;
+    }
+    .boardsContent.panelCollapsed {
+        margin-left: 0;
     }
 
     .pageTitle {
@@ -541,7 +556,10 @@
 
 @media (max-width: 480px) {
     .boardsContent {
-        margin-left: 18.5rem;
+        margin-left: 0;
+    }
+    .boardsContent.panelCollapsed {
+        margin-left: 0;
     }
 
     .pageTitle {

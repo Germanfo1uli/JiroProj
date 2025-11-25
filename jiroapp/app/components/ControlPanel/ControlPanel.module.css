@@ -16,6 +16,10 @@
     overflow: hidden;
 }
 
+.controlPanel.collapsed {
+    transform: translateX(-100%);
+}
+
 .projectHeader {
     display: flex;
     align-items: center;
@@ -192,7 +196,7 @@
         margin-left: 0;
         z-index: 1000;
     }
-    .controlPanel.hidden {
+    .controlPanel.collapsed {
         transform: translateX(-100%);
     }
     .controlPanel::before {

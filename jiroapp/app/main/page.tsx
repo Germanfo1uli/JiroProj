@@ -9,13 +9,18 @@ import { DevelopersPage } from '@/app/components/DevelopersContent'
 import SettingsContent from '../components/SettingsContent/SettingsContent'
 import styles from './MainPage.module.css'
 
-type ActivePage = 'dashboard' | 'board' | 'developers' | 'settings' // Добавляем 'settings'
+type ActivePage = 'dashboard' | 'board' | 'developers' | 'settings'
 
 const MainPage = () => {
     const [activePage, setActivePage] = useState<ActivePage>('board')
+    const [isControlPanelOpen, setIsControlPanelOpen] = useState(true)
 
     const handlePageChange = (page: ActivePage) => {
         setActivePage(page)
+    }
+
+    const handleToggleControlPanel = () => {
+        setIsControlPanelOpen(!isControlPanelOpen)
     }
 
     const renderContent = () => {
@@ -26,7 +31,7 @@ const MainPage = () => {
                 return <BoardsContent />
             case 'developers':
                 return <DevelopersPage />
-            case 'settings': // Добавляем case для настроек
+            case 'settings':
                 return <SettingsContent onBackClick={() => setActivePage('board')} />
             default:
                 return <BoardsContent />
@@ -35,13 +40,17 @@ const MainPage = () => {
 
     return (
         <div className={styles.mainContainer}>
-            <VerticalNavbar />
+            <VerticalNavbar
+                onToggleControlPanel={handleToggleControlPanel}
+                isControlPanelOpen={isControlPanelOpen}
+            />
             <ControlPanel
                 activePage={activePage}
                 onPageChange={handlePageChange}
+                isOpen={isControlPanelOpen}
             />
 
-            <div className={styles.mainContentWrapper}>
+            <div className={`${styles.mainContentWrapper} ${!isControlPanelOpen ? styles.panelCollapsed : ''}`}>
                 {renderContent()}
             </div>
         </div>

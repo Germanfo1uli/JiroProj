@@ -6,15 +6,16 @@ import styles from './ControlPanel.module.css'
 interface ControlPanelProps {
     activePage: string
     onPageChange: (page: string) => void
+    isOpen?: boolean
 }
 
-const ControlPanel = ({ activePage, onPageChange }: ControlPanelProps) => {
+const ControlPanel = ({ activePage, onPageChange, isOpen = true }: ControlPanelProps) => {
     const handleNavClick = (page: string) => {
         onPageChange(page)
     }
 
     return (
-        <div className={styles.controlPanel}>
+        <div className={`${styles.controlPanel} ${isOpen ? '' : styles.collapsed}`}>
             <div className={styles.projectHeader}>
                 <div className={styles.projectAvatar}>
                     <FaProjectDiagram className={styles.projectAvatarIcon} />
