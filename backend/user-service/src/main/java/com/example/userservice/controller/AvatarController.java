@@ -4,6 +4,9 @@ import com.example.userservice.models.entity.Avatar;
 import com.example.userservice.security.JwtUser;
 import com.example.userservice.service.AvatarService;
 import com.example.userservice.service.AvatarValidator;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
@@ -24,10 +27,13 @@ import java.util.concurrent.TimeUnit;
 @RequestMapping("api/users")
 @RequiredArgsConstructor
 @Validated
+@SecurityRequirement(name = "bearerAuth")
+@Tag(name = "Avatar Management", description = "Управление аватарами пользователей")
 public class AvatarController {
     public final AvatarService avatarService;
     public final AvatarValidator validator;
 
+    @Operation(summary = "Загрузить аватар (< 10 МБ, JPG, PNG, WebP, Gif)")
     @PostMapping(value = "/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Map<String, String>> uploadAvatar(
             @AuthenticationPrincipal JwtUser principal,
@@ -38,15 +44,17 @@ public class AvatarController {
 
         return ResponseEntity.ok(Map.of(
                 "message", "Avatar is uploaded",
-                "avatarUrl", "/users/me/avatar"
+                "avatarUrl", "/api/users/me/avatar"
         ));
     }
 
+    @Operation(summary = "Получить личный аватар")
     @GetMapping("/me/avatar")
     public ResponseEntity<byte[]> getMyAvatar(@AuthenticationPrincipal JwtUser principal) {
         return getAvatarResponse(principal.userId());
     }
 
+    @Operation(summary = "Получить аватар другого пользователя")
     @GetMapping("/{userId}/avatar")
     public ResponseEntity<byte[]> getUserAvatar(@PathVariable Long userId) {
         return getAvatarResponse(userId);
@@ -73,16 +81,10 @@ public class AvatarController {
                 .body(avatar.getData());
     }
 
+    @Operation(summary = "Удалить свой аватар")
     @DeleteMapping("/me/avatar")
     public ResponseEntity<Void> deleteAvatar(@AuthenticationPrincipal JwtUser principal) {
         avatarService.deleteAvatar(principal.userId());
-        return ResponseEntity.noContent().build();
-    }
-
-    @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/admin/{userId}/avatar")
-    public ResponseEntity<Void> deleteAvatarById(@PathVariable Long userId) {
-        avatarService.deleteAvatar(userId);
         return ResponseEntity.noContent().build();
     }
 }

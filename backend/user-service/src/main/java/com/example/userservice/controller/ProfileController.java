@@ -18,6 +18,7 @@ import jakarta.validation.Valid;
 @RequestMapping("api/users")
 @RequiredArgsConstructor
 @Validated
+@SecurityRequirement(name = "bearerAuth")
 public class ProfileController {
 
     public final UserService userService;

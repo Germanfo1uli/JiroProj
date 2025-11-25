@@ -9,7 +9,7 @@ import java.util.Set;
 @Component
 public class AvatarValidator {
 
-    private static final Set<String> ALLOWED_TYPES = Set.of("image/jpeg", "image/png", "image/webp");
+    private static final Set<String> ALLOWED_TYPES = Set.of("image/jpeg", "image/png", "image/webp", "image/gif");
     private static final long MAX_SIZE = 10 * 1024 * 1024;
 
     public void validate(MultipartFile file) {
@@ -18,6 +18,6 @@ public class AvatarValidator {
         if (file.getSize() > MAX_SIZE)
             throw new BadRequestException("File size must be <= 10 MB");
         if (!ALLOWED_TYPES.contains(file.getContentType()))
-            throw new BadRequestException("Only JPG, PNG, WebP are allowed");
+            throw new BadRequestException("Only JPG, PNG, WebP, Gif are allowed");
     }
 }

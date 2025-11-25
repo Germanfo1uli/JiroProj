@@ -133,10 +133,14 @@ public class AuthService {
     }
 
     @Transactional
-    public void deleteAccount(Long userId) {
+    public void deleteAccount(Long userId, String password) {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
+
+        if (!passwordEncoder.matches(password, user.getPasswordHash())) {
+            throw new InvalidCredentialsException("Incorrect login or password");
+        }
 
         user.setDeletedAt(LocalDateTime.now());
 
