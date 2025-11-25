@@ -8,7 +8,7 @@ import com.example.userservice.models.entity.User;
 import com.example.userservice.models.entity.UserProfile;
 import com.example.userservice.repository.ProfileRepository;
 import com.example.userservice.repository.UserRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

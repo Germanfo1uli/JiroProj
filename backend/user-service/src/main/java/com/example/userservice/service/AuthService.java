@@ -7,7 +7,7 @@ import com.example.userservice.models.entity.RefreshToken;
 import com.example.userservice.models.entity.SystemRole;
 import com.example.userservice.models.entity.User;
 import com.example.userservice.repository.UserRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -22,11 +22,12 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final TokenService tokenService;
+    private final TokenRevocationService revocationService;
     private final BCryptPasswordEncoder passwordEncoder;
     private final UserService userService;
 
     @Transactional
-    public LoginResponse register(String name, String email, String password, String deviceInfo) {
+    public LoginResponse register(String name, String email, String password, String deviceFingerprint) {
 
         if (userRepository.existsByEmail(email)) {
             throw new EmailAlreadyExistsException("Email already in use");
@@ -41,11 +42,11 @@ public class AuthService {
 
         userService.createProfile(user, name);
 
-        TokenPair pair = tokenService.createTokenPair(user, deviceInfo);
+        TokenPair pair = tokenService.createTokenPair(user, deviceFingerprint);
         return new LoginResponse(user.getEmail(), pair.accessToken(), pair.refreshToken());
     }
 
-    public LoginResponse login(String email, String password, String deviceInfo) {
+    public LoginResponse login(String email, String password, String deviceFingerprint) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new InvalidCredentialsException("Incorrect login or password"));
 
@@ -61,24 +62,15 @@ public class AuthService {
             throw new InvalidCredentialsException("Incorrect login or password");
         }
 
-        TokenPair pair = tokenService.createTokenPair(user, deviceInfo);
+        TokenPair pair = tokenService.createTokenPair(user, deviceFingerprint);
         return new LoginResponse(user.getEmail(), pair.accessToken(), pair.refreshToken());
     }
 
+    @Transactional
     public TokenPair refresh(String refreshTokenString, String deviceFingerprint) {
-        RefreshToken current = tokenService.validateRefreshToken(refreshTokenString);
-
-        if (!current.getDeviceFingerprint().equals(deviceFingerprint)) {
-            log.warn("Device mismatch: jti: {}, userId: {}",
-                    current.getJti(), current.getUser().getId());
-
-            tokenService.revokeAllByUser(current.getUser().getId());
-
-            throw new DeviceMismatchException();
-        }
+        RefreshToken current = tokenService.validateRefreshToken(refreshTokenString, deviceFingerprint);
 
         User user = current.getUser();
-        tokenService.revokeByString(refreshTokenString);
 
         if (user.getDeletedAt() != null) {
             throw new AccountDeletedException();
@@ -88,6 +80,7 @@ public class AuthService {
             throw new AccountLockedException();
         }
 
+        tokenService.revokeByString(refreshTokenString);
         return tokenService.createTokenPair(user, deviceFingerprint);
     }
 
@@ -97,9 +90,9 @@ public class AuthService {
 
     @Transactional
     public TokenPair changePassword(Long userId, String oldPassword, String newPassword,
-                                        String currentRefresh, String deviceInfo) {
+                                        String currentRefresh, String deviceFingerprint) {
 
-        tokenService.validateRefreshToken(currentRefresh);
+        tokenService.validateRefreshToken(currentRefresh, deviceFingerprint);
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
@@ -113,15 +106,15 @@ public class AuthService {
 
         user.setPasswordHash(passwordEncoder.encode(newPassword));
 
-        tokenService.revokeAllExcept(userId, currentRefresh);
-        return tokenService.createTokenPair(user, deviceInfo);
+        revocationService.revokeAllExcept(userId, currentRefresh);
+        return tokenService.createTokenPair(user, deviceFingerprint);
     }
 
     @Transactional
     public TokenPair changeEmail(Long userId, String newEmail, String password,
-                                     String currentRefresh, String deviceInfo) {
+                                     String currentRefresh, String deviceFingerprint) {
 
-        tokenService.validateRefreshToken(currentRefresh);
+        tokenService.validateRefreshToken(currentRefresh, deviceFingerprint);
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
@@ -140,8 +133,8 @@ public class AuthService {
 
         user.setEmail(newEmail);
 
-        tokenService.revokeAllExcept(userId, currentRefresh);
-        return tokenService.createTokenPair(user, deviceInfo);
+        revocationService.revokeAllExcept(userId, currentRefresh);
+        return tokenService.createTokenPair(user, deviceFingerprint);
     }
 
     @Transactional
@@ -156,6 +149,6 @@ public class AuthService {
 
         user.setDeletedAt(LocalDateTime.now());
 
-        tokenService.revokeAllByUser(userId);
+        revocationService.revokeAllByUser(userId);
     }
 }

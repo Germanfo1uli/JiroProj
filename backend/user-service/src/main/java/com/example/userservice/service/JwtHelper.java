@@ -30,13 +30,12 @@ public class JwtHelper {
     }
 
     public String generateRefresh(User user, UUID jti,
-                                  Date expiration, String deviceInfo) {
+                                  Date expiration) {
         Objects.requireNonNull(user, "user must not be null");
 
         return Jwts.builder()
                 .setSubject(user.getId().toString())
                 .setId(jti.toString())
-                .claim("device", deviceInfo)
                 .setIssuedAt(new Date())
                 .setExpiration(expiration)
                 .signWith(cfg.getSecretKey())

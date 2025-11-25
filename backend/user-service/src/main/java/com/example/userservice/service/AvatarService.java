@@ -6,7 +6,7 @@ import com.example.userservice.models.entity.Avatar;
 import com.example.userservice.models.entity.User;
 import com.example.userservice.repository.AvatarRepository;
 import com.example.userservice.repository.UserRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;

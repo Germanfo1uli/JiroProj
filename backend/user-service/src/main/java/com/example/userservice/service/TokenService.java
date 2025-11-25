@@ -1,14 +1,16 @@
 package com.example.userservice.service;
 
 import com.example.userservice.config.JwtConfig;
+import com.example.userservice.exception.DeviceMismatchException;
 import com.example.userservice.exception.InvalidRefreshTokenException;
 import com.example.userservice.models.dto.response.TokenPair;
 import com.example.userservice.models.entity.RefreshToken;
 import com.example.userservice.models.entity.User;
 import com.example.userservice.repository.TokenRepository;
 import io.jsonwebtoken.*;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -19,9 +21,11 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class TokenService {
     private final JwtConfig cfg;
     private final JwtHelper jwtHelper;
+    private final TokenRevocationService revocationService;
     private final TokenRepository tokenRepository;
 
     @Transactional
@@ -33,7 +37,7 @@ public class TokenService {
         Date refreshExp = new Date(System.currentTimeMillis() + refreshTtlMillis);
 
         String access = jwtHelper.generateAccess(user);
-        String refresh = jwtHelper.generateRefresh(user, jti, refreshExp, deviceFingerprint);
+        String refresh = jwtHelper.generateRefresh(user, jti, refreshExp);
 
         RefreshToken rt = RefreshToken.builder()
                 .user(user)
@@ -49,12 +53,22 @@ public class TokenService {
         return new TokenPair(access, refresh);
     }
 
-    public RefreshToken validateRefreshToken(String refreshToken) {
+    @Transactional
+    public RefreshToken validateRefreshToken(String refreshToken, String deviceFingerprint) {
         Claims claims = jwtHelper.parseToken(refreshToken);
         UUID jti = UUID.fromString(claims.getId());
 
         RefreshToken stored = tokenRepository.findByJti(jti)
                 .orElseThrow(() -> new InvalidRefreshTokenException("Token not found"));
+
+        if (!stored.getDeviceFingerprint().equals(deviceFingerprint)) {
+            log.warn("Device mismatch: jti: {}, userId: {}",
+                    stored.getJti(), stored.getUser().getId());
+
+            revocationService.revokeAllByUser(stored.getUser().getId());
+
+            throw new DeviceMismatchException();
+        }
 
         if (stored.getRevoked()) {
             throw new InvalidRefreshTokenException("Token is revoked");
@@ -76,24 +90,9 @@ public class TokenService {
     }
 
     @Transactional
-    public void revokeAllExcept(Long userId, String newToken) {
-        UUID newJti = extractJti(newToken);
-        List<RefreshToken> active = tokenRepository.findAllByUser_IdAndRevokedFalse(userId);
-        active.stream()
-                .filter(t -> !t.getJti().equals(newJti))
-                .forEach(t -> t.setRevoked(true));
-    }
-
-    @Transactional
     public void revokeByString(String refreshToken) {
         RefreshToken token = getTokenByString(refreshToken);
         token.setRevoked(true);
-    }
-
-    @Transactional
-    public void revokeAllByUser(Long userId) {
-        List<RefreshToken> active = tokenRepository.findAllByUser_IdAndRevokedFalse(userId);
-        active.forEach(t -> t.setRevoked(true));
     }
 
     public Long extractUserId(String token) {
