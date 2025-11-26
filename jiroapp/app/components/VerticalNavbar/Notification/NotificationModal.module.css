@@ -49,26 +49,26 @@
 }
 
 .closeButton {
+    background: none;
+    border: none;
+    color: #ffffff;
+    cursor: pointer;
+    padding: 0.75rem;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    font-size: 1.4rem;
+    position: relative;
+    z-index: 1;
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
-    background: rgba(255, 255, 255, 0.2);
-    border: none;
-    border-radius: 8px;
-    color: #ffffff;
-    cursor: pointer;
-    transition: all 0.3s ease;
 }
 
 .closeButton:hover {
-    background: rgba(255, 255, 255, 0.3);
-    transform: scale(1.1);
-}
-
-.closeIcon {
-    font-size: 0.9rem;
+    background: rgba(255, 255, 255, 0.1);
+    transform: rotate(90deg);
 }
 
 .modalBody {
