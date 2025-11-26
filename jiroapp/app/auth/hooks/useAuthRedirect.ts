@@ -5,10 +5,16 @@ export const useAuthRedirect = () => {
     const router = useRouter()
 
     useEffect(() => {
-        const token = localStorage.getItem('token')
-        if (!token) {
-            router.push('/welcome')
+        const checkAuth = () => {
+            const token = localStorage.getItem('token')
+            if (!token) {
+                router.push('/welcome')
+            }
         }
+
+        const timer = setTimeout(checkAuth, 200)
+
+        return () => clearTimeout(timer)
     }, [router])
 
     return null

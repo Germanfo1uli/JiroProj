@@ -1,12 +1,24 @@
 export interface FormValues {
-    name: string
-    email: string
-    password: string
-    confirmPassword: string
+    name: string;
+    email: string;
+    password: string;
+    confirmPassword: string;
 }
 
 export interface AuthResponse {
-    success: boolean
-    message?: string
-    token?: string
+    userId: number;
+    username: string;
+    tag: string;
+    email: string;
+    pair: {
+        accessToken: string;
+        refreshToken: string;
+    };
+}
+
+export interface User {
+    userId: number;
+    username: string;
+    tag: string;
+    email: string;
 }
