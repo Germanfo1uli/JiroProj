@@ -43,7 +43,10 @@ const ControlPanel = ({ activePage, onPageChange, isOpen = true }: ControlPanelP
                     <span className={styles.panelNavText}>Доска</span>
                 </button>
 
-                <button className={styles.panelNavButton}>
+                <button
+                    className={`${styles.panelNavButton} ${activePage === 'reports' ? styles.active : ''}`}
+                    onClick={() => handleNavClick('reports')}
+                >
                     <FaChartBar className={styles.panelNavIcon} />
                     <span className={styles.panelNavText}>Отчёты</span>
                 </button>

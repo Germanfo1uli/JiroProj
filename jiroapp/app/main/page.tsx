@@ -8,10 +8,11 @@ import ControlPanel from '../components/ControlPanel/ControlPanel'
 import BoardsContent from '../components/BoardsContent/BoardsContent'
 import { DashboardContent } from '@/app/components/DashboardContent'
 import { DevelopersPage } from '@/app/components/DevelopersContent'
+import { ReportsPage } from '../components/ReportsContent/ReportsPage'
 import SettingsContent from '../components/SettingsContent/SettingsContent'
 import styles from './MainPage.module.css'
 
-type ActivePage = 'dashboard' | 'board' | 'developers' | 'settings'
+type ActivePage = 'dashboard' | 'board' | 'developers' | 'settings' | 'reports' // Добавьте 'reports'
 
 const MainPage = () => {
     const [activePage, setActivePage] = useState<ActivePage>('board')
@@ -41,6 +42,8 @@ const MainPage = () => {
                 return <BoardsContent />
             case 'developers':
                 return <DevelopersPage />
+            case 'reports': // Добавьте этот case
+                return <ReportsPage />
             case 'settings':
                 return <SettingsContent onBackClick={() => setActivePage('board')} />
             default:

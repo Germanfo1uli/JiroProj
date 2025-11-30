@@ -1,0 +1,51 @@
+.developersCard {
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(59, 130, 246, 0.15);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    margin-bottom: 2rem;
+}
+
+.devCard {
+    border-radius: 12px;
+    background: rgba(248, 250, 252, 0.8);
+    border: 1px solid rgba(59, 130, 246, 0.1);
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.devCard:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+.devInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.devName {
+    color: #1e293b;
+    font-size: 0.95rem;
+    text-align: center;
+}
+
+.devStats {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.devStat {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+}
+
+.devStatIcon {
+    font-size: 0.9rem;
+}

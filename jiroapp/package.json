@@ -10,9 +10,11 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@ant-design/charts": "^2.6.6",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@mui/material": "^7.3.5",
+    "antd": "^6.0.0",
     "formik": "^2.4.8",
     "next": "16.0.1",
     "react": "19.2.0",
