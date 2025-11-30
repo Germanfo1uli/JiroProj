@@ -30,8 +30,8 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers(SecurityWhiteList.PUBLIC_ENDPOINTS.toArray(String[]::new))
-                        .permitAll()
+                        .requestMatchers(SecurityWhiteList.PUBLIC_ENDPOINTS.toArray(String[]::new)).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/users/{userId:\\d+}/avatar").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
