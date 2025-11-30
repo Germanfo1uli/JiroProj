@@ -4,7 +4,7 @@ import { Board, Card, SortOption, FilterOption, DashboardState, Priority } from 
 const initialBoards: Board[] = [
     {
         id: 1,
-        title: 'To Do',
+        title: 'TO DO',
         color: '#3b82f6',
         cards: [
             {
@@ -26,7 +26,7 @@ const initialBoards: Board[] = [
     },
     {
         id: 2,
-        title: 'In Progress',
+        title: 'IN PROGRESS',
         color: '#f59e0b',
         cards: [
             {
@@ -63,7 +63,7 @@ const initialBoards: Board[] = [
     },
     {
         id: 3,
-        title: 'Review',
+        title: 'CODE REVIEW',
         color: '#8b5cf6',
         cards: [
             {
@@ -85,7 +85,7 @@ const initialBoards: Board[] = [
     },
     {
         id: 4,
-        title: 'Done',
+        title: 'DONE',
         color: '#10b981',
         cards: [
             {
@@ -124,6 +124,16 @@ const initialAuthors = [
         name: 'Елена Козлова',
         avatar: null
     }
+];
+
+const availableBoardTitles = [
+    'TO DO',
+    'SELECTED FOR DEVELOPMENT',
+    'IN PROGRESS',
+    'CODE REVIEW',
+    'QA',
+    'STAGING',
+    'DONE'
 ];
 
 export const useDashboard = () => {
@@ -356,6 +366,14 @@ export const useDashboard = () => {
         return filteredCards;
     };
 
+    const getAvailableBoardTitles = () => {
+        const existingTitles = boards.map(board => board.title);
+        return availableBoardTitles.map(title => ({
+            title,
+            available: !existingTitles.includes(title)
+        }));
+    };
+
     return {
         boards,
         setBoards,
@@ -381,6 +399,7 @@ export const useDashboard = () => {
         handleDeleteCard,
         confirmDelete,
         cancelDelete,
-        filterAndSortCards
+        filterAndSortCards,
+        getAvailableBoardTitles
     };
 };

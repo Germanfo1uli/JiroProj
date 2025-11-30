@@ -86,7 +86,7 @@
     gap: 1rem;
 }
 
-.boardInput {
+.boardSelect {
     padding: 0.875rem 1rem;
     border: 2px solid rgba(59, 130, 246, 0.15);
     border-radius: 12px;
@@ -94,13 +94,19 @@
     font-size: 0.95rem;
     transition: all 0.3s ease;
     font-family: inherit;
+    cursor: pointer;
 }
 
-.boardInput:focus {
+.boardSelect:focus {
     outline: none;
     border-color: #3b82f6;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     transform: translateY(-1px);
+}
+
+.disabledOption {
+    color: #9ca3af;
+    background-color: #f3f4f6;
 }
 
 .colorPicker {
@@ -148,6 +154,18 @@
 .addButton:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
+.addButton.disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.addButton.disabled:hover {
+    transform: none;
+    box-shadow: none;
 }
 
 .boardsListSection {
@@ -255,6 +273,17 @@
     background: rgba(16, 185, 129, 0.1);
     color: #10b981;
     transform: scale(1.1);
+}
+
+.saveButton.disabled {
+    color: #9ca3af;
+    cursor: not-allowed;
+}
+
+.saveButton.disabled:hover {
+    background: none;
+    color: #9ca3af;
+    transform: none;
 }
 
 .cancelButton:hover {

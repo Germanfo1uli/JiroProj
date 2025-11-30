@@ -36,7 +36,8 @@ export const DashboardContent = () => {
         handleDeleteCard,
         confirmDelete,
         cancelDelete,
-        filterAndSortCards
+        filterAndSortCards,
+        getAvailableBoardTitles
     } = useDashboard();
 
     return (
@@ -93,6 +94,7 @@ export const DashboardContent = () => {
                 onClose={closeBoardManager}
                 boards={boards}
                 onSave={handleSaveBoards}
+                getAvailableBoardTitles={getAvailableBoardTitles}
             />
 
             <EditCardModal

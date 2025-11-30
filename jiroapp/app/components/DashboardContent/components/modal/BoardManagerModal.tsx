@@ -15,36 +15,39 @@ interface BoardManagerModalProps {
     onClose: () => void
     boards: Board[]
     onSave: (boards: Board[]) => void
+    getAvailableBoardTitles: () => Array<{title: string, available: boolean}>
 }
 
-const BoardManagerModal = ({ isOpen, onClose, boards, onSave }: BoardManagerModalProps) => {
+const BoardManagerModal = ({ isOpen, onClose, boards, onSave, getAvailableBoardTitles }: BoardManagerModalProps) => {
     const [boardsList, setBoardsList] = useState<Board[]>([...boards])
-    const [newBoardTitle, setNewBoardTitle] = useState('')
+    const [selectedBoardTitle, setSelectedBoardTitle] = useState('')
     const [newBoardColor, setNewBoardColor] = useState('#3b82f6')
     const [editingBoardId, setEditingBoardId] = useState<number | null>(null)
     const [editBoardTitle, setEditBoardTitle] = useState('')
     const [editBoardColor, setEditBoardColor] = useState('')
 
     const predefinedColors = [
-        '#3b82f6', // blue
-        '#f59e0b', // amber
-        '#8b5cf6', // violet
-        '#10b981', // emerald
-        '#ef4444', // red
-        '#ec4899', // pink
-        '#06b6d4', // cyan
-        '#f97316', // orange
+        '#3b82f6',
+        '#f59e0b',
+        '#8b5cf6',
+        '#10b981',
+        '#ef4444',
+        '#ec4899',
+        '#06b6d4',
+        '#f97316',
     ]
 
+    const availableTitles = getAvailableBoardTitles()
+
     const handleAddBoard = () => {
-        if (newBoardTitle.trim()) {
+        if (selectedBoardTitle) {
             const newBoard: Board = {
                 id: Date.now(),
-                title: newBoardTitle.trim(),
+                title: selectedBoardTitle,
                 color: newBoardColor,
             }
             setBoardsList([...boardsList, newBoard])
-            setNewBoardTitle('')
+            setSelectedBoardTitle('')
             setNewBoardColor('#3b82f6')
         }
     }
@@ -60,10 +63,10 @@ const BoardManagerModal = ({ isOpen, onClose, boards, onSave }: BoardManagerModa
     }
 
     const saveEditedBoard = () => {
-        if (editingBoardId !== null && editBoardTitle.trim()) {
+        if (editingBoardId !== null && editBoardTitle) {
             setBoardsList(boardsList.map(board =>
                 board.id === editingBoardId
-                    ? { ...board, title: editBoardTitle.trim(), color: editBoardColor }
+                    ? { ...board, title: editBoardTitle, color: editBoardColor }
                     : board
             ))
             cancelEditing()
@@ -97,13 +100,23 @@ const BoardManagerModal = ({ isOpen, onClose, boards, onSave }: BoardManagerModa
                     <div className={styles.addBoardSection}>
                         <h3 className={styles.sectionTitle}>Добавить новую доску</h3>
                         <div className={styles.addBoardForm}>
-                            <input
-                                type="text"
-                                className={styles.boardInput}
-                                value={newBoardTitle}
-                                onChange={(e) => setNewBoardTitle(e.target.value)}
-                                placeholder="Название доски"
-                            />
+                            <select
+                                className={styles.boardSelect}
+                                value={selectedBoardTitle}
+                                onChange={(e) => setSelectedBoardTitle(e.target.value)}
+                            >
+                                <option value="">Выберите название доски</option>
+                                {availableTitles.map(({ title, available }) => (
+                                    <option
+                                        key={title}
+                                        value={title}
+                                        disabled={!available}
+                                        className={!available ? styles.disabledOption : ''}
+                                    >
+                                        {title} {!available ? '(уже используется)' : ''}
+                                    </option>
+                                ))}
+                            </select>
                             <div className={styles.colorPicker}>
                                 {predefinedColors.map(color => (
                                     <button
@@ -114,7 +127,11 @@ const BoardManagerModal = ({ isOpen, onClose, boards, onSave }: BoardManagerModa
                                     />
                                 ))}
                             </div>
-                            <button className={styles.addButton} onClick={handleAddBoard}>
+                            <button
+                                className={`${styles.addButton} ${!selectedBoardTitle ? styles.disabled : ''}`}
+                                onClick={handleAddBoard}
+                                disabled={!selectedBoardTitle}
+                            >
                                 <FaPlus /> Добавить доску
                             </button>
                         </div>
@@ -127,12 +144,22 @@ const BoardManagerModal = ({ isOpen, onClose, boards, onSave }: BoardManagerModa
                                 <div key={board.id} className={styles.boardItem}>
                                     {editingBoardId === board.id ? (
                                         <div className={styles.editBoardForm}>
-                                            <input
-                                                type="text"
-                                                className={styles.boardInput}
+                                            <select
+                                                className={styles.boardSelect}
                                                 value={editBoardTitle}
                                                 onChange={(e) => setEditBoardTitle(e.target.value)}
-                                            />
+                                            >
+                                                {availableTitles.map(({ title, available }) => (
+                                                    <option
+                                                        key={title}
+                                                        value={title}
+                                                        disabled={!available && title !== board.title}
+                                                        className={!available && title !== board.title ? styles.disabledOption : ''}
+                                                    >
+                                                        {title} {!available && title !== board.title ? '(уже используется)' : ''}
+                                                    </option>
+                                                ))}
+                                            </select>
                                             <div className={styles.colorPicker}>
                                                 {predefinedColors.map(color => (
                                                     <button
@@ -144,7 +171,11 @@ const BoardManagerModal = ({ isOpen, onClose, boards, onSave }: BoardManagerModa
                                                 ))}
                                             </div>
                                             <div className={styles.editActions}>
-                                                <button className={styles.saveButton} onClick={saveEditedBoard}>
+                                                <button
+                                                    className={`${styles.saveButton} ${!editBoardTitle ? styles.disabled : ''}`}
+                                                    onClick={saveEditedBoard}
+                                                    disabled={!editBoardTitle}
+                                                >
                                                     <FaSave />
                                                 </button>
                                                 <button className={styles.cancelButton} onClick={cancelEditing}>
