@@ -1,4 +1,4 @@
-package com.example.userservice.models.entity;
+package com.example.userservice.dto.models;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

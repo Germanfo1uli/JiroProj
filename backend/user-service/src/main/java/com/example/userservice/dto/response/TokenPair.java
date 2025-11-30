@@ -1,4 +1,4 @@
-package com.example.userservice.models.dto.response;
+package com.example.userservice.dto.response;
 
 public record TokenPair (
         String accessToken,

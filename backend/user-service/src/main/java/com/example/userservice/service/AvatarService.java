@@ -2,8 +2,8 @@ package com.example.userservice.service;
 
 import com.example.userservice.exception.InvalidFileException;
 import com.example.userservice.exception.UserNotFoundException;
-import com.example.userservice.models.entity.Avatar;
-import com.example.userservice.models.entity.User;
+import com.example.userservice.dto.models.Avatar;
+import com.example.userservice.dto.models.User;
 import com.example.userservice.repository.AvatarRepository;
 import com.example.userservice.repository.UserRepository;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,7 +43,7 @@ public class AvatarService {
             throw new InvalidFileException(e.getMessage());
         }
 
-        avatarRepository.save(avatar); // UPDATE если существует, INSERT если новый
+        avatarRepository.save(avatar);
     }
 
     private String getExtension(String originalName) {

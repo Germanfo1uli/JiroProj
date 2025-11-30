@@ -1,6 +1,6 @@
-package com.example.userservice.models.dto.response;
+package com.example.userservice.dto.response;
 
-import com.example.userservice.models.entity.User;
+import com.example.userservice.dto.models.User;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;

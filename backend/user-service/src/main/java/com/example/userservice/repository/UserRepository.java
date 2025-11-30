@@ -1,7 +1,7 @@
 package com.example.userservice.repository;
 
-import com.example.userservice.models.dto.data.UserFlags;
-import com.example.userservice.models.entity.User;
+import com.example.userservice.dto.data.UserFlags;
+import com.example.userservice.dto.models.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

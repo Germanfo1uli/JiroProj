@@ -1,4 +1,4 @@
-package com.example.userservice.models.entity;
+package com.example.userservice.dto.models;
 
 public enum SystemRole {
     USER,

@@ -1,6 +1,6 @@
 package com.example.userservice.repository;
 
-import com.example.userservice.models.entity.RefreshToken;
+import com.example.userservice.dto.models.RefreshToken;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

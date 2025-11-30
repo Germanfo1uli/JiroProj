@@ -1,15 +1,14 @@
 package com.example.userservice.controller;
 
-import com.example.userservice.models.dto.request.ChangeProfileRequest;
-import com.example.userservice.models.dto.response.ChangeProfileResponse;
-import com.example.userservice.models.dto.response.MyProfileResponse;
-import com.example.userservice.models.dto.response.PublicProfileResponse;
+import com.example.userservice.dto.request.ChangeProfileRequest;
+import com.example.userservice.dto.response.ChangeProfileResponse;
+import com.example.userservice.dto.response.MyProfileResponse;
+import com.example.userservice.dto.response.PublicProfileResponse;
 import com.example.userservice.security.JwtUser;
 import com.example.userservice.service.UserService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

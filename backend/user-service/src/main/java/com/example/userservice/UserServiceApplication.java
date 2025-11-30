@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 @SpringBootApplication
-@EntityScan(basePackages = "com.example.userservice.models")
+@EntityScan(basePackages = "com.example.userservice.dto")
 @EnableAsync
 public class UserServiceApplication {
 
