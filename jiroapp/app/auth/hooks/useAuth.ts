@@ -1,10 +1,26 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNotification } from './useNotification';
+import { useTokenRefresh, api } from './useTokenRefresh';
 
 export const useAuth = () => {
     const [showPassword, setShowPassword] = useState<boolean>(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
     const { showSuccess, showError, showLoading, dismissToast } = useNotification();
+
+    const updateTokensInStorage = useCallback((accessToken: string, refreshToken: string) => {
+        localStorage.setItem('token', accessToken);
+        localStorage.setItem('refreshToken', refreshToken);
+        console.log('Tokens updated in storage');
+    }, []);
+
+    const handleLogoutAndClear = useCallback(() => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        console.log('User logged out');
+    }, []);
+
+    const { refreshToken } = useTokenRefresh(updateTokensInStorage, handleLogoutAndClear);
 
     const togglePasswordVisibility = () => setShowPassword(!showPassword);
     const toggleConfirmPasswordVisibility = () => setShowConfirmPassword(!showConfirmPassword);
@@ -13,49 +29,33 @@ export const useAuth = () => {
         const loadingToast = showLoading('Выполняется вход...');
 
         try {
-            const response = await fetch('http://localhost:8080/api/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ email, password }),
-            });
+            const response = await api.post('/auth/login', { email, password });
+            const data = response.data;
 
-            const data = await response.json();
+            if (data.pair?.accessToken) {
+                updateTokensInStorage(data.pair.accessToken, data.pair.refreshToken);
 
-            if (response.ok) {
-                if (data.pair?.accessToken) {
-                    localStorage.setItem('token', data.pair.accessToken);
-                    if (data.pair.refreshToken) {
-                        localStorage.setItem('refreshToken', data.pair.refreshToken);
-                    }
-                    localStorage.setItem('user', JSON.stringify({
-                        userId: data.userId,
-                        username: data.username,
-                        email: data.email,
-                        tag: data.tag,
-                        bio: data.bio || '',
-                        position: data.position || 'Сотрудник',
-                        joinDate: data.joinDate || new Date().toISOString().split('T')[0]
-                    }));
+                localStorage.setItem('user', JSON.stringify({
+                    userId: data.userId,
+                    username: data.username,
+                    email: data.email,
+                    tag: data.tag,
+                    bio: data.bio || '',
+                    position: data.position || 'Сотрудник',
+                    joinDate: data.joinDate || new Date().toISOString().split('T')[0]
+                }));
 
-                    dismissToast(loadingToast);
-                    showSuccess('Вход выполнен успешно!');
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                }
+                dismissToast(loadingToast);
+                showSuccess('Вход выполнен успешно!');
+
                 if (navigate) {
                     navigate('/main');
                 }
                 return { success: true, user: data };
-            } else {
-                dismissToast(loadingToast);
-                const errorMessage = data.message || 'Неверный email или пароль';
-                showError(errorMessage);
-                return { success: false, message: errorMessage };
             }
-        } catch (error) {
+        } catch (error: any) {
             dismissToast(loadingToast);
-            const errorMessage = 'Ошибка сети. Проверьте соединение и адрес сервера.';
+            const errorMessage = error.response?.data?.message || 'Ошибка сети. Проверьте соединение и адрес сервера.';
             showError(errorMessage);
             return { success: false, message: errorMessage };
         }
@@ -65,59 +65,40 @@ export const useAuth = () => {
         const loadingToast = showLoading('Регистрация...');
 
         try {
-            const response = await fetch('http://localhost:8080/api/auth/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ username, email, password }),
-            });
+            const response = await api.post('/auth/register', { username, email, password });
+            const data = response.data;
 
-            const data = await response.json();
+            if (data.pair?.accessToken) {
+                updateTokensInStorage(data.pair.accessToken, data.pair.refreshToken);
 
-            if (response.ok) {
-                if (data.pair?.accessToken) {
-                    localStorage.setItem('token', data.pair.accessToken);
-                    if (data.pair.refreshToken) {
-                        localStorage.setItem('refreshToken', data.pair.refreshToken);
-                    }
-                    localStorage.setItem('user', JSON.stringify({
-                        userId: data.userId,
-                        username: data.username,
-                        email: data.email,
-                        tag: data.tag,
-                        bio: data.bio || '',
-                        position: data.position || 'Сотрудник',
-                        joinDate: data.joinDate || new Date().toISOString().split('T')[0]
-                    }));
+                localStorage.setItem('user', JSON.stringify({
+                    userId: data.userId,
+                    username: data.username,
+                    email: data.email,
+                    tag: data.tag,
+                    bio: data.bio || '',
+                    position: data.position || 'Сотрудник',
+                    joinDate: data.joinDate || new Date().toISOString().split('T')[0]
+                }));
 
-                    dismissToast(loadingToast);
-                    showSuccess('Регистрация завершена успешно!');
+                dismissToast(loadingToast);
+                showSuccess('Регистрация завершена успешно!');
 
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                }
                 if (navigate) {
                     navigate('/main');
                 }
                 return { success: true, user: data };
-            } else {
-                dismissToast(loadingToast);
-                const errorMessage = data.message || 'Ошибка при регистрации';
-                showError(errorMessage);
-                return { success: false, message: errorMessage };
             }
-        } catch (error) {
+        } catch (error: any) {
             dismissToast(loadingToast);
-            const errorMessage = 'Ошибка сети. Проверьте соединение и адрес сервера.';
+            const errorMessage = error.response?.data?.message || 'Ошибка при регистрации';
             showError(errorMessage);
             return { success: false, message: errorMessage };
         }
     };
 
     const logoutUser = (navigate?: (path: string) => void) => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
+        handleLogoutAndClear();
         showSuccess('Вы вышли из системы');
         if (navigate) {
             navigate('/');
@@ -142,6 +123,10 @@ export const useAuth = () => {
         }
     };
 
+    const manualRefreshToken = async () => {
+        return await refreshToken();
+    };
+
     return {
         showPassword,
         showConfirmPassword,
@@ -153,5 +138,7 @@ export const useAuth = () => {
         isAuthenticated,
         getCurrentUser,
         updateUserData,
+        manualRefreshToken,
+        api
     };
 };

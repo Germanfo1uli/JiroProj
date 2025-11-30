@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { UserProfile, ProfileFormData } from '../types/profile.types';
 import { useAuth } from '@/app/auth/hooks/useAuth';
+import toast from 'react-hot-toast';
+import { api } from '@/app/auth/hooks/useTokenRefresh';
 
 export const useProfile = () => {
     const { getCurrentUser, updateUserData } = useAuth();
@@ -20,7 +22,11 @@ export const useProfile = () => {
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
-        loadUserProfile();
+        const initializeProfile = async () => {
+            loadUserProfile();
+            await loadUserAvatar();
+        };
+        initializeProfile();
     }, []);
 
     const loadUserProfile = () => {
@@ -44,75 +50,19 @@ export const useProfile = () => {
         setIsLoading(true);
 
         try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                throw new Error('Токен авторизации отсутствует');
-            }
-
-            console.log('Отправка данных профиля:', {
+            const payload = {
                 username: formData.name,
                 bio: formData.bio
-            });
+            };
 
-            let response = await fetch('http://localhost:8080/api/users/me/update', {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    username: formData.name,
-                    bio: formData.bio
-                }),
-            });
+            let response = await api.patch('/users/me/update', payload);
 
-            console.log('Статус ответа PATCH:', response.status);
-
-            if (!response.ok && response.status === 405) {
-                console.log('Пробуем PUT метод вместо PATCH');
-                response = await fetch('http://localhost:8080/api/users/me/update', {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({
-                        username: formData.name,
-                        bio: formData.bio
-                    }),
-                });
-                console.log('Статус ответа PUT:', response.status);
+            if (response.status === 405) {
+                response = await api.put('/users/me/update', payload);
             }
 
-            if (!response.ok) {
-                let errorMessage = `HTTP error! status: ${response.status}`;
-                try {
-                    const errorData = await response.json();
-                    console.error('Детали ошибки от сервера:', errorData);
-                    if (response.status === 400 && errorData.errors) {
-                        const validationErrors = Object.values(errorData.errors).join(', ');
-                        errorMessage = `Ошибка валидации: ${validationErrors}`;
-                    } else {
-                        errorMessage = errorData.message || errorData.error || errorMessage;
-                    }
-                    if (response.status === 500) {
-                        errorMessage = 'Ошибка сервера при обновлении профиля. Пожалуйста, попробуйте позже.';
-                    }
-                } catch (parseError) {
-                    console.error('Ошибка парсинга ответа:', parseError);
-                    const text = await response.text();
-                    console.error('Текст ответа:', text);
+            const data = response.data;
 
-                    if (response.status === 500) {
-                        errorMessage = 'Внутренняя ошибка сервера. Пожалуйста, попробуйте позже.';
-                    }
-                }
-
-                throw new Error(errorMessage);
-            }
-
-            const data = await response.json();
-            console.log('Успешный ответ от сервера:', data);
             setProfile(prev => ({
                 ...prev,
                 ...formData,
@@ -127,11 +77,11 @@ export const useProfile = () => {
                 bio: data.bio || formData.bio
             });
 
-        } catch (error) {
-            console.error('Полная ошибка при обновлении профиля:', error);
+            toast.success('Профиль успешно обновлен');
 
-            if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-                console.warn('Сервер недоступен, обновляем локально');
+        } catch (error: any) {
+            if (error.code === 'ERR_NETWORK') {
+                toast.error('Сервер недоступен. Изменения сохранены локально');
                 setProfile(prev => ({
                     ...prev,
                     ...formData
@@ -141,6 +91,24 @@ export const useProfile = () => {
                     bio: formData.bio
                 });
             } else {
+                let errorMessage = 'Ошибка при обновлении профиля';
+                if (error.response) {
+                    const errorData = error.response.data;
+                    if (error.response.status === 400 && errorData.errors) {
+                        const validationErrors = Object.values(errorData.errors).join(', ');
+                        errorMessage = `Ошибка валидации: ${validationErrors}`;
+                    } else {
+                        errorMessage = errorData.message || errorData.error || errorMessage;
+                    }
+                    if (error.response.status === 500) {
+                        errorMessage = 'Ошибка сервера при обновлении профиля. Пожалуйста, попробуйте позже.';
+                    }
+                } else if (error.request) {
+                    errorMessage = 'Нет ответа от сервера';
+                } else {
+                    errorMessage = error.message;
+                }
+                toast.error(errorMessage);
                 throw error;
             }
         } finally {
@@ -163,52 +131,25 @@ export const useProfile = () => {
         });
 
         try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                console.warn('Токен авторизации отсутствует, сохраняем только локально');
-                return;
-            }
-
             const formData = new FormData();
             formData.append('file', avatarFile);
 
-            console.log('Отправка файла аватара на сервер:', {
-                fileName: avatarFile.name,
-                fileSize: avatarFile.size,
-                fileType: avatarFile.type
-            });
-
-            const response = await fetch('http://localhost:8080/api/users/me/avatar', {
-                method: 'POST',
+            await api.post('/users/me/avatar', formData, {
                 headers: {
-                    'Authorization': `Bearer ${token}`
+                    'Content-Type': 'multipart/form-data',
                 },
-                body: formData,
             });
 
-            if (!response.ok) {
-                let errorMessage = `HTTP error! status: ${response.status}`;
-                try {
-                    const errorData = await response.json();
-                    console.error('Детали ошибки от сервера:', errorData);
-                    errorMessage = errorData.message || errorData.error || errorMessage;
-                } catch (parseError) {
-                    console.error('Ошибка парсинга ответа:', parseError);
-                }
+            toast.success('Аватар успешно обновлен');
 
-                console.warn('Ошибка при синхронизации аватара с сервером:', errorMessage);
-                return;
+        } catch (error: any) {
+            let errorMessage = 'Ошибка при синхронизации аватара с сервером';
+            if (error.response) {
+                errorMessage = error.response.data?.message || error.response.data?.error || errorMessage;
+            } else if (error.code === 'ERR_NETWORK') {
+                errorMessage = 'Сервер недоступен. Аватар сохранен локально.';
             }
-
-            const data = await response.json();
-            console.log('Успешный ответ от сервера при обновлении аватара:', data);
-
-            if (data.avatarUrl) {
-                console.log('Серверный URL аватара:', data.avatarUrl);
-            }
-
-        } catch (error) {
-            console.error('Ошибка при синхронизации аватара с сервером:', error);
+            toast.warning(errorMessage);
         } finally {
             setIsLoading(false);
         }
@@ -227,89 +168,55 @@ export const useProfile = () => {
         });
 
         try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                console.warn('Токен авторизации отсутствует, удаляем только локально');
-                return;
+            await api.delete('/users/me/avatar');
+            toast.success('Аватар успешно удален');
+        } catch (error: any) {
+            let errorMessage = 'Ошибка при удалении аватара с сервера';
+            if (error.response) {
+                errorMessage = error.response.data?.message || error.response.data?.error || errorMessage;
+            } else if (error.code === 'ERR_NETWORK') {
+                errorMessage = 'Сервер недоступен. Аватар удален локально.';
             }
-
-            const response = await fetch('http://localhost:8080/api/users/me/avatar', {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
-            });
-
-            if (!response.ok) {
-                let errorMessage = `HTTP error! status: ${response.status}`;
-                try {
-                    const errorData = await response.json();
-                    console.error('Детали ошибки от сервера:', errorData);
-                    errorMessage = errorData.message || errorData.error || errorMessage;
-                } catch (parseError) {
-                    console.error('Ошибка парсинга ответа:', parseError);
-                }
-
-                console.warn('Ошибка при удалении аватара с сервера:', errorMessage);
-            } else {
-                console.log('Аватар успешно удален с сервера');
-            }
-
-        } catch (error) {
-            console.error('Ошибка при удалении аватара с сервера:', error);
+            toast.warning(errorMessage);
         } finally {
             setIsLoading(false);
         }
     };
 
     const loadUserAvatar = async (): Promise<void> => {
-        const token = localStorage.getItem('token');
-        if (!token) return;
-
         try {
-            const avatarUrl = `http://localhost:8080/api/users/me/avatar?t=${Date.now()}`;
+            const token = localStorage.getItem('token');
+            if (!token) {
+                console.log('No token found for avatar request');
+                return;
+            }
 
-            const response = await fetch(avatarUrl, {
-                method: 'GET',
+            const avatarUrl = `/users/me/avatar?t=${Date.now()}`;
+            const response = await api.get(avatarUrl, {
+                responseType: 'blob',
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
 
-            if (response.ok) {
-                const blob = await response.blob();
-                const avatarObjectUrl = URL.createObjectURL(blob);
+            const blob = response.data;
+            const avatarObjectUrl = URL.createObjectURL(blob);
 
-                setProfile(prev => ({
-                    ...prev,
-                    avatar: avatarObjectUrl
-                }));
+            setProfile(prev => ({
+                ...prev,
+                avatar: avatarObjectUrl
+            }));
 
-                updateUserData({
-                    avatar: avatarObjectUrl
-                });
-
-                console.log('Аватар успешно загружен с сервера');
-            } else {
-                console.log('Аватар не найден на сервере, используем null');
-                setProfile(prev => ({
-                    ...prev,
-                    avatar: null
-                }));
+            updateUserData({
+                avatar: avatarObjectUrl
+            });
+        } catch (error: any) {
+            if (error.response?.status !== 404) {
+                console.warn('Ошибка при загрузке аватара с сервера:', error.message);
             }
-        } catch (error) {
-            console.warn('Ошибка при загрузке аватара с сервера:', error);
+            setProfile(prev => ({ ...prev, avatar: null }));
         }
     };
-
-    useEffect(() => {
-        const initializeProfile = async () => {
-            loadUserProfile();
-            await loadUserAvatar();
-        };
-
-        initializeProfile();
-    }, []);
 
     return {
         profile,

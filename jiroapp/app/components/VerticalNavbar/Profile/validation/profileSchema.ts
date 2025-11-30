@@ -8,7 +8,10 @@ export const profileSchema = Yup.object({
         .matches(/^[a-zA-Z]+$/, 'Имя должно содержать только английские буквы'),
     email: Yup.string()
         .required('Email обязателен для заполнения')
-        .email('Введите корректный email'),
+        .matches(
+            /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+            'Введите корректный email (например, user@example.com)'
+        ),
     bio: Yup.string()
         .max(500, 'Описание не должно превышать 500 символов')
 });
