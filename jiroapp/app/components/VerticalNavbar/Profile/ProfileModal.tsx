@@ -21,6 +21,7 @@ export const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
     const { showSuccess, showError } = useNotification();
     const router = useRouter();
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+    const [avatarError, setAvatarError] = useState<string | null>(null);
 
     if (!isOpen) return null;
 
@@ -36,16 +37,20 @@ export const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
 
     const handleAvatarChange = async (file: File) => {
         try {
+            setAvatarError(null);
             await updateAvatar(file);
             showSuccess('Аватар успешно обновлен!');
         } catch (error: any) {
             console.error('Ошибка при обновлении аватара:', error);
-            showError(error.message || 'Ошибка при обновлении аватара');
+            const errorMessage = error.message || 'Ошибка при обновлении аватара';
+            showError(errorMessage);
+            setAvatarError(errorMessage);
         }
     };
 
     const handleAvatarDelete = async () => {
         try {
+            setAvatarError(null);
             await deleteAvatar();
             showSuccess('Аватар успешно удален!');
         } catch (error: any) {
@@ -105,7 +110,9 @@ export const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
             }
         }
     };
+
     const currentUser = getCurrentUser();
+
     return (
         <>
             <div className={styles.profileModalOverlay} onClick={onClose}>
@@ -166,6 +173,17 @@ export const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
                                             </button>
                                         </div>
                                     </div>
+                                    {avatarError && (
+                                        <div className={styles.avatarError}>
+                                            <span>{avatarError}</span>
+                                            <button
+                                                onClick={() => setAvatarError(null)}
+                                                className={styles.avatarErrorClose}
+                                            >
+                                                ×
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 

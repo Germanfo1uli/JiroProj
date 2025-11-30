@@ -151,16 +151,28 @@ export const useProfile = () => {
     const updateAvatar = async (avatarFile: File): Promise<void> => {
         setIsLoading(true);
 
+        const localAvatarUrl = URL.createObjectURL(avatarFile);
+
+        setProfile(prev => ({
+            ...prev,
+            avatar: localAvatarUrl
+        }));
+
+        updateUserData({
+            avatar: localAvatarUrl
+        });
+
         try {
             const token = localStorage.getItem('token');
             if (!token) {
-                throw new Error('Токен авторизации отсутствует');
+                console.warn('Токен авторизации отсутствует, сохраняем только локально');
+                return;
             }
 
             const formData = new FormData();
-            formData.append('file', avatarFile); // Исправлено с 'avatar' на 'file'
+            formData.append('file', avatarFile);
 
-            console.log('Отправка файла аватара:', {
+            console.log('Отправка файла аватара на сервер:', {
                 fileName: avatarFile.name,
                 fileSize: avatarFile.size,
                 fileType: avatarFile.type
@@ -183,38 +195,20 @@ export const useProfile = () => {
                 } catch (parseError) {
                     console.error('Ошибка парсинга ответа:', parseError);
                 }
-                throw new Error(errorMessage);
+
+                console.warn('Ошибка при синхронизации аватара с сервером:', errorMessage);
+                return;
             }
 
             const data = await response.json();
             console.log('Успешный ответ от сервера при обновлении аватара:', data);
 
-            setProfile(prev => ({
-                ...prev,
-                avatar: data.avatarUrl || data.url || data.imageUrl
-            }));
-
-            // Обновляем аватар в данных пользователя
-            updateUserData({
-                avatar: data.avatarUrl || data.url || data.imageUrl
-            });
+            if (data.avatarUrl) {
+                console.log('Серверный URL аватара:', data.avatarUrl);
+            }
 
         } catch (error) {
-            console.error('Ошибка при обновлении аватара:', error);
-
-            if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-                console.warn('Сервер недоступен, используем локальный URL для аватара');
-                const avatarUrl = URL.createObjectURL(avatarFile);
-                setProfile(prev => ({
-                    ...prev,
-                    avatar: avatarUrl
-                }));
-                updateUserData({
-                    avatar: avatarUrl
-                });
-            } else {
-                throw error;
-            }
+            console.error('Ошибка при синхронизации аватара с сервером:', error);
         } finally {
             setIsLoading(false);
         }
@@ -223,10 +217,20 @@ export const useProfile = () => {
     const deleteAvatar = async (): Promise<void> => {
         setIsLoading(true);
 
+        setProfile(prev => ({
+            ...prev,
+            avatar: null
+        }));
+
+        updateUserData({
+            avatar: null
+        });
+
         try {
             const token = localStorage.getItem('token');
             if (!token) {
-                throw new Error('Токен авторизации отсутствует');
+                console.warn('Токен авторизации отсутствует, удаляем только локально');
+                return;
             }
 
             const response = await fetch('http://localhost:8080/api/users/me/avatar', {
@@ -245,33 +249,74 @@ export const useProfile = () => {
                 } catch (parseError) {
                     console.error('Ошибка парсинга ответа:', parseError);
                 }
-                throw new Error(errorMessage);
+
+                console.warn('Ошибка при удалении аватара с сервера:', errorMessage);
+            } else {
+                console.log('Аватар успешно удален с сервера');
             }
 
-            // Успешное удаление аватара
-            setProfile(prev => ({
-                ...prev,
-                avatar: null
-            }));
-
-            // Обновляем данные пользователя
-            updateUserData({
-                avatar: null
-            });
-
         } catch (error) {
-            console.error('Ошибка при удалении аватара:', error);
-            throw error;
+            console.error('Ошибка при удалении аватара с сервера:', error);
         } finally {
             setIsLoading(false);
         }
     };
+
+    const loadUserAvatar = async (): Promise<void> => {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        try {
+            const avatarUrl = `http://localhost:8080/api/users/me/avatar?t=${Date.now()}`;
+
+            const response = await fetch(avatarUrl, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const avatarObjectUrl = URL.createObjectURL(blob);
+
+                setProfile(prev => ({
+                    ...prev,
+                    avatar: avatarObjectUrl
+                }));
+
+                updateUserData({
+                    avatar: avatarObjectUrl
+                });
+
+                console.log('Аватар успешно загружен с сервера');
+            } else {
+                console.log('Аватар не найден на сервере, используем null');
+                setProfile(prev => ({
+                    ...prev,
+                    avatar: null
+                }));
+            }
+        } catch (error) {
+            console.warn('Ошибка при загрузке аватара с сервера:', error);
+        }
+    };
+
+    useEffect(() => {
+        const initializeProfile = async () => {
+            loadUserProfile();
+            await loadUserAvatar();
+        };
+
+        initializeProfile();
+    }, []);
 
     return {
         profile,
         isLoading,
         updateProfile,
         updateAvatar,
-        deleteAvatar
+        deleteAvatar,
+        loadUserAvatar
     };
 };
