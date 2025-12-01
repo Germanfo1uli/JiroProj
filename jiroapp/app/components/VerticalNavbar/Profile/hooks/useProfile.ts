@@ -20,29 +20,78 @@ export const useProfile = () => {
     });
 
     const [isLoading, setIsLoading] = useState(false);
+    const [isInitialized, setIsInitialized] = useState(false);
 
     useEffect(() => {
         const initializeProfile = async () => {
-            loadUserProfile();
+            await loadUserProfile();
             await loadUserAvatar();
+            setIsInitialized(true);
         };
         initializeProfile();
     }, []);
 
-    const loadUserProfile = () => {
-        const user = getCurrentUser();
-        if (user) {
+    const loadUserProfile = async (): Promise<void> => {
+        setIsLoading(true);
+        try {
+            const user = getCurrentUser();
+            if (!user?.userId) {
+                console.error('User ID not found');
+                return;
+            }
+
+            const response = await api.get(`/users/${user.userId}/profile`);
+            const profileData = response.data;
+
             setProfile(prev => ({
                 ...prev,
-                id: user.userId || '',
-                name: user.username || '',
-                email: user.email || '',
-                tag: user.tag || '',
-                bio: user.bio || '',
-                avatar: user.avatar || null,
-                position: user.position || 'Сотрудник',
-                joinDate: user.joinDate || new Date().toISOString().split('T')[0]
+                id: profileData.id || user.userId || '',
+                name: profileData.name || profileData.username || user.username || '',
+                email: profileData.email || user.email || '',
+                tag: profileData.tag || user.tag || '',
+                bio: profileData.bio || user.bio || '',
+                avatar: profileData.avatar || user.avatar || null,
+                position: profileData.position || user.position || 'Сотрудник',
+                joinDate: profileData.joinDate || user.joinDate || new Date().toISOString().split('T')[0],
+                completedTasks: profileData.completedTasks || 0,
+                activeProjects: profileData.activeProjects || 0
             }));
+
+            updateUserData({
+                username: profileData.name || profileData.username || user.username,
+                email: profileData.email || user.email,
+                tag: profileData.tag || user.tag,
+                bio: profileData.bio || user.bio,
+                position: profileData.position || user.position,
+                joinDate: profileData.joinDate || user.joinDate,
+                avatar: profileData.avatar || user.avatar
+            });
+
+        } catch (error: any) {
+            console.error('Error loading user profile:', error);
+
+            const user = getCurrentUser();
+            if (user) {
+                setProfile(prev => ({
+                    ...prev,
+                    id: user.userId || '',
+                    name: user.username || '',
+                    email: user.email || '',
+                    tag: user.tag || '',
+                    bio: user.bio || '',
+                    avatar: user.avatar || null,
+                    position: user.position || 'Сотрудник',
+                    joinDate: user.joinDate || new Date().toISOString().split('T')[0]
+                }));
+            }
+
+            if (error.code === 'ERR_NETWORK') {
+                toast.error('Сервер недоступен. Используются локальные данные');
+            } else if (error.response?.status === 404) {
+                console.log('Profile endpoint not found, using local data');
+            }
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -76,6 +125,8 @@ export const useProfile = () => {
                 tag: data.tag,
                 bio: data.bio || formData.bio
             });
+
+            await loadUserProfile();
 
             toast.success('Профиль успешно обновлен');
 
@@ -140,6 +191,8 @@ export const useProfile = () => {
                 },
             });
 
+            await loadUserProfile();
+
             toast.success('Аватар успешно обновлен');
 
         } catch (error: any) {
@@ -169,6 +222,9 @@ export const useProfile = () => {
 
         try {
             await api.delete('/users/me/avatar');
+
+            await loadUserProfile();
+
             toast.success('Аватар успешно удален');
         } catch (error: any) {
             let errorMessage = 'Ошибка при удалении аватара с сервера';
@@ -185,45 +241,45 @@ export const useProfile = () => {
 
     const loadUserAvatar = async (): Promise<void> => {
         try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                console.log('No token found for avatar request');
+            const user = getCurrentUser();
+            if (!user?.userId) {
+                console.log('User ID not found for avatar request');
                 return;
             }
 
-            const avatarUrl = `/users/me/avatar?t=${Date.now()}`;
+            const avatarUrl = `/users/${user.userId}/avatar?t=${Date.now()}`;
             const response = await api.get(avatarUrl, {
-                responseType: 'blob',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+                responseType: 'blob'
             });
 
-            const blob = response.data;
-            const avatarObjectUrl = URL.createObjectURL(blob);
+            if (response.status === 200) {
+                const blob = response.data;
+                const avatarObjectUrl = URL.createObjectURL(blob);
 
-            setProfile(prev => ({
-                ...prev,
-                avatar: avatarObjectUrl
-            }));
+                setProfile(prev => ({
+                    ...prev,
+                    avatar: avatarObjectUrl
+                }));
 
-            updateUserData({
-                avatar: avatarObjectUrl
-            });
+                updateUserData({
+                    avatar: avatarObjectUrl
+                });
+            }
         } catch (error: any) {
             if (error.response?.status !== 404) {
                 console.warn('Ошибка при загрузке аватара с сервера:', error.message);
             }
-            setProfile(prev => ({ ...prev, avatar: null }));
         }
     };
 
     return {
         profile,
         isLoading,
+        isInitialized,
         updateProfile,
         updateAvatar,
         deleteAvatar,
-        loadUserAvatar
+        loadUserAvatar,
+        loadUserProfile
     };
 };

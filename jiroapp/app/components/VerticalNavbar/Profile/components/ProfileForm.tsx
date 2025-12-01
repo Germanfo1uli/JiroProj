@@ -21,7 +21,6 @@ const EditButton = () => {
             input.classList.remove(styles.disabled);
         });
 
-
         setFieldValue('__editing', true);
     };
 
@@ -125,10 +124,10 @@ export const ProfileForm = ({ initialData, onSubmit, isLoading }: ProfileFormPro
                                 <button
                                     type="submit"
                                     className={styles.saveButton}
-                                    disabled={isSubmitting || !isValid}
+                                    disabled={isSubmitting || !isValid || isLoading}
                                 >
                                     <FaSave className={styles.saveIcon} />
-                                    {isSubmitting ? 'Сохранение...' : 'Сохранить'}
+                                    {isSubmitting || isLoading ? 'Сохранение...' : 'Сохранить'}
                                 </button>
                             </div>
                         )}
