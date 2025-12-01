@@ -1,10 +1,29 @@
 .settingsContent {
     flex: 1;
     min-height: 100vh;
-    background: linear-gradient(135deg, #f0f8ff 0%, #e6f2ff 50%, #f0f7ff 100%);
-    margin-left: 15rem;
+    background: linear-gradient(135deg,
+    rgba(240, 248, 255, 0.95) 0%,
+    rgba(230, 242, 255, 0.95) 50%,
+    rgba(240, 247, 255, 0.95) 100%);
+    margin-left: 22rem;
     display: flex;
     flex-direction: column;
+    position: relative;
+    overflow-x: hidden;
+}
+
+.settingsContent::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100vh;
+    background:
+            radial-gradient(circle at 10% 20%, rgba(61, 107, 179, 0.05) 0%, transparent 50%),
+            radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
 }
 
 .settingsContainer {
@@ -15,28 +34,56 @@
     margin: 0 auto;
     padding: 0;
     width: 100%;
+    position: relative;
+    z-index: 1;
 }
 
 .settingsHeader {
-    padding: 2rem 2.5rem;
+    padding: 2rem 2.5rem 0;
     flex-shrink: 0;
 }
 
 .headerContent {
     text-align: left;
     max-width: none;
+    margin-bottom: 2rem;
+}
+
+.titleWrapper {
+    margin-bottom: 1.5rem;
 }
 
 .pageTitle {
     font-size: 2.5rem;
-    font-weight: 800;
-    color: #1e293b;
-    margin: 0;
-    background: linear-gradient(135deg, #1e293b 0%, #3d6bb3 100%);
+    font-weight: 900;
+    margin: 0 0 0.5rem 0;
+    line-height: 1.1;
+}
+
+.titleGradient {
+    background: linear-gradient(135deg,
+    #1e293b 0%,
+    #3d6bb3 30%,
+    #1e293b 70%,
+    #3d6bb3 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    line-height: 1.2;
+    background-size: 200% auto;
+    animation: shimmer 3s ease-in-out infinite;
+    display: inline-block;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: 0% center;
+    }
+    50% {
+        background-position: 100% center;
+    }
+    100% {
+        background-position: 0% center;
+    }
 }
 
 .pageSubtitle {
@@ -44,20 +91,121 @@
     color: #64748b;
     margin: 0;
     line-height: 1.6;
+    max-width: 600px;
+}
+
+.headerStats {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.statCard {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(61, 107, 179, 0.1);
+    border-radius: 12px;
+    padding: 0.75rem 1.25rem;
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.statValue {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #3d6bb3;
+}
+
+.statLabel {
+    font-size: 0.85rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.settingsTabs {
+    border-bottom: 1px solid rgba(61, 107, 179, 0.1);
+    margin: 0 2.5rem;
+}
+
+.tabsContainer {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding-bottom: 1px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.tabsContainer::-webkit-scrollbar {
+    display: none;
+}
+
+.tabButton {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1.5rem;
+    background: transparent;
+    color: #64748b;
+    border: none;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    position: relative;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+    border-radius: 8px 8px 0 0;
+}
+
+.tabButton:hover {
+    color: #3d6bb3;
+    background: rgba(61, 107, 179, 0.05);
+}
+
+.tabActive {
+    color: #3d6bb3;
+}
+
+.tabActive::before {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #3d6bb3, #60a5fa);
+    border-radius: 3px 3px 0 0;
+}
+
+.tabIcon {
+    font-size: 0.9rem;
+}
+
+.tabIndicator {
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #3d6bb3, #60a5fa);
+    border-radius: 3px 3px 0 0;
 }
 
 .settingsMain {
     flex: 1;
-    background: linear-gradient(135deg, #f0f8ff 0%, #e6f2ff 50%, #f0f7ff 100%);
     padding: 2rem 2.5rem;
     display: flex;
     flex-direction: column;
+    overflow-y: auto;
 }
 
 .settingsForm {
     flex: 1;
     display: flex;
     flex-direction: column;
+    gap: 2rem;
 }
 
 .formGrid {
@@ -74,49 +222,106 @@
 }
 
 .formSection {
-    background: white;
-    border: 1px solid #f1f5f9;
-    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(61, 107, 179, 0.1);
+    border-radius: 16px;
     padding: 2rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    transition: all 0.2s ease;
+    box-shadow: 0 8px 32px rgba(61, 107, 179, 0.08);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.formSection::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(61, 107, 179, 0.3), transparent);
 }
 
 .formSection:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(61, 107, 179, 0.12);
+    border-color: rgba(61, 107, 179, 0.2);
 }
 
 .formActions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
-    padding: 2rem 0 0 0;
-    background: transparent;
-    border-top: none;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(61, 107, 179, 0.1);
+    border-radius: 16px;
+    padding: 1.5rem 2rem;
     margin-top: 2rem;
-    flex-shrink: 0;
+    box-shadow: 0 8px 32px rgba(61, 107, 179, 0.08);
+}
+
+.actionsContainer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.unsavedChanges {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #3d6bb3;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.changeDot {
+    width: 8px;
+    height: 8px;
+    background: #3d6bb3;
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(1.2);
+    }
+}
+
+.actionButtons {
+    display: flex;
+    gap: 1rem;
 }
 
 .saveButton {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    padding: 1rem 2.5rem;
-    background: #3d6bb3;
+    padding: 0.875rem 2rem;
+    background: linear-gradient(135deg, #3d6bb3, #60a5fa);
     color: white;
     border: none;
-    border-radius: 10px;
+    border-radius: 12px;
     font-weight: 600;
-    font-size: 1rem;
+    font-size: 0.95rem;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
     min-width: 200px;
+    box-shadow: 0 4px 12px rgba(61, 107, 179, 0.3);
+    position: relative;
+    overflow: hidden;
 }
 
 .saveButton:hover:not(:disabled) {
-    background: #355a9c;
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(61, 107, 179, 0.25);
+    box-shadow: 0 8px 24px rgba(61, 107, 179, 0.4);
 }
 
 .saveButton:disabled {
@@ -131,45 +336,77 @@
 }
 
 .cancelButton {
-    padding: 1rem 2rem;
-    background: transparent;
+    padding: 0.875rem 2rem;
+    background: rgba(255, 255, 255, 0.9);
     color: #64748b;
-    border: 1.5px solid #e2e8f0;
-    border-radius: 10px;
+    border: 1.5px solid rgba(61, 107, 179, 0.2);
+    border-radius: 12px;
     font-weight: 600;
-    font-size: 1rem;
+    font-size: 0.95rem;
     cursor: pointer;
-    transition: all 0.2s ease;
-    min-width: 160px;
+    transition: all 0.3s ease;
+    min-width: 120px;
+    backdrop-filter: blur(10px);
 }
 
 .cancelButton:hover:not(:disabled) {
-    background: #f8fafc;
-    border-color: #64748b;
+    background: rgba(61, 107, 179, 0.05);
+    border-color: #3d6bb3;
+    color: #3d6bb3;
     transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(61, 107, 179, 0.1);
 }
 
+.placeholderContent {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+}
 
-@media (max-width: 1700px) {
-    .settingsContent {
-        margin-left: 22rem;
-    }
-    .formGrid {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-    }
+.placeholderCard {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(61, 107, 179, 0.1);
+    border-radius: 20px;
+    padding: 3rem;
+    text-align: center;
+    max-width: 400px;
+    box-shadow: 0 20px 60px rgba(61, 107, 179, 0.1);
+}
+
+.placeholderIcon {
+    font-size: 3rem;
+    color: #3d6bb3;
+    margin-bottom: 1.5rem;
+    opacity: 0.7;
+}
+
+.placeholderCard h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 0.75rem 0;
+}
+
+.placeholderCard p {
+    color: #64748b;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin: 0;
 }
 
 @media (max-width: 1200px) {
     .settingsContent {
         margin-left: 22rem;
     }
+
     .formGrid {
         grid-template-columns: 1fr;
         gap: 1.5rem;
     }
 }
-
 
 @media (max-width: 1024px) {
     .settingsContent {
@@ -179,55 +416,192 @@
 
 @media (max-width: 768px) {
     .settingsContent {
-        margin-left: 18rem;
+        margin-left: 0;
+        margin-top: 80px;
     }
+
     .settingsHeader {
-        padding: 1.5rem;
+        padding: 1.5rem 1.5rem 0;
     }
 
     .settingsMain {
         padding: 1.5rem;
     }
 
+    .settingsTabs {
+        margin: 0 1.5rem;
+    }
+
     .formSection {
         padding: 1.5rem;
+    }
+
+    .pageTitle {
+        font-size: 2rem;
+    }
+
+    .formActions {
+        padding: 1.25rem;
+    }
+
+    .actionsContainer {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+    }
+
+    .actionButtons {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .saveButton,
+    .cancelButton {
+        width: 100%;
+        min-width: auto;
+    }
+
+    .headerStats {
+        flex-direction: column;
+    }
+
+    .tabButton {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .settingsHeader {
+        padding: 1.25rem 1.25rem 0;
+    }
+
+    .settingsMain {
+        padding: 1.25rem;
+    }
+
+    .formSection {
+        padding: 1.25rem;
     }
 
     .pageTitle {
         font-size: 1.75rem;
     }
 
-    .formActions {
-        flex-direction: column-reverse;
-        padding: 1.5rem 0 0 0;
+    .tabButton {
+        padding: 0.75rem;
+        font-size: 0.85rem;
     }
 
-    .saveButton,
-    .cancelButton {
-        width: 100%;
-        max-width: 300px;
-        min-width: auto;
-        justify-content: center;
+    .tabIcon {
+        display: none;
     }
 }
 
-@media (max-width: 480px) {
-    .settingsContent {
-        margin-left: 18.5rem;
-    }
-    .settingsHeader {
-        padding: 1.25rem;
+.generalTab {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.bottomActions {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.dangerZone {
+    background: linear-gradient(135deg, rgba(254, 226, 226, 0.9), rgba(254, 202, 202, 0.9));
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 12px;
+    padding: 1rem;
+    position: relative;
+    overflow: hidden;
+    margin-top: 1rem;
+}
+
+.dangerZone::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(239, 68, 68, 0.3), transparent);
+}
+
+.dangerHeader {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.dangerIcon {
+    color: #ef4444;
+    font-size: 1rem;
+}
+
+.dangerTitle {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #dc2626;
+    margin: 0;
+}
+
+.dangerDescription {
+    color: #b91c1c;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    margin: 0 0 1rem 0;
+    font-weight: 500;
+}
+
+.deleteProjectButton {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1rem;
+    background: linear-gradient(135deg, #ef4444, #f87171);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+    width: 100%;
+    justify-content: center;
+}
+
+.deleteProjectButton:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+    background: linear-gradient(135deg, #dc2626, #ef4444);
+}
+
+.deleteIcon {
+    font-size: 0.8rem;
+}
+
+@media (max-width: 768px) {
+    .dangerZone {
+        padding: 0.875rem;
+        margin-top: 0.75rem;
     }
 
-    .settingsMain {
-        padding: 1.25rem;
+    .dangerTitle {
+        font-size: 0.9rem;
     }
 
-    .formSection {
-        padding: 1.25rem;
+    .dangerDescription {
+        font-size: 0.8rem;
+        margin-bottom: 0.875rem;
     }
 
-    .pageTitle {
-        font-size: 1.5rem;
+    .deleteProjectButton {
+        padding: 0.5rem 0.875rem;
+        font-size: 0.8rem;
     }
 }

@@ -1,19 +1,34 @@
-import { Field, ErrorMessage } from 'formik';
-import { FaInfoCircle } from 'react-icons/fa';
+import { Field, ErrorMessage, useFormikContext } from 'formik';
+import { FaInfoCircle, FaLightbulb, FaChartLine } from 'react-icons/fa';
 import styles from './ProjectInfoSection.module.css';
+import { motion } from 'framer-motion';
 
 const ProjectInfoSection = () => {
+    const { values } = useFormikContext<any>();
+
     return (
         <div className={styles.projectInfoSection}>
-            <div className={styles.sectionHeader}>
-                <h3 className={styles.sectionTitle}>Основная информация</h3>
+            <motion.div
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.1 }}
+                className={styles.sectionHeader}
+            >
+                <h3 className={styles.sectionTitle}>
+                    Основная информация
+                </h3>
                 <p className={styles.sectionSubtitle}>
                     Настройте базовые параметры вашего проекта
                 </p>
-            </div>
+            </motion.div>
 
             <div className={styles.formContent}>
-                <div className={styles.formGroup}>
+                <motion.div
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className={styles.formGroup}
+                >
                     <label htmlFor="projectName" className={styles.label}>
                         Название проекта *
                     </label>
@@ -25,9 +40,14 @@ const ProjectInfoSection = () => {
                         className={styles.input}
                     />
                     <ErrorMessage name="projectName" component="div" className={styles.error} />
-                </div>
+                </motion.div>
 
-                <div className={styles.formGroup}>
+                <motion.div
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                    className={styles.formGroup}
+                >
                     <label htmlFor="description" className={styles.label}>
                         Описание проекта
                     </label>
@@ -41,24 +61,44 @@ const ProjectInfoSection = () => {
                     />
                     <div className={styles.textareaFooter}>
                         <div className={styles.helperText}>
+                            <FaLightbulb className={styles.helperIcon} />
                             Расскажите о проекте новым участникам
                         </div>
                         <div className={styles.charCount}>
-                            <Field>
-                                {({ form }: any) => `${form.values.description?.length || 0}/500`}
-                            </Field>
+                            <motion.span
+                                key={values.description?.length || 0}
+                                initial={{ scale: 1.2 }}
+                                animate={{ scale: 1 }}
+                                className={values.description?.length > 450 ? styles.charWarning : ''}
+                            >
+                                {values.description?.length || 0}/500
+                            </motion.span>
                         </div>
                     </div>
                     <ErrorMessage name="description" component="div" className={styles.error} />
-                </div>
+                </motion.div>
 
-                <div className={styles.infoCard}>
-                    <FaInfoCircle className={styles.infoIcon} />
+                <motion.div
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                    className={styles.infoCard}
+                >
+                    <div className={styles.infoHeader}>
+                        <FaInfoCircle className={styles.infoIcon} />
+                        <span className={styles.infoTitle}>Совет по оптимизации</span>
+                    </div>
                     <div className={styles.infoContent}>
-                        <strong>Совет:</strong> Подробное описание помогает новым участникам
+                        Подробное описание помогает новым участникам
                         быстрее понять цели проекта и начать эффективную работу.
                     </div>
-                </div>
+                    <div className={styles.infoStats}>
+                        <div className={styles.statItem}>
+                            <FaChartLine className={styles.statIcon} />
+                            <span>+40% к пониманию задач</span>
+                        </div>
+                    </div>
+                </motion.div>
             </div>
         </div>
     );

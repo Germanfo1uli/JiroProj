@@ -1,0 +1,854 @@
+.rolesSection {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    width: 100%;
+}
+
+.sectionHeader {
+    text-align: left;
+    margin-bottom: 1rem;
+}
+
+.sectionTitle {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #1e293b;
+    margin: 0 0 0.75rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: linear-gradient(135deg, #1e293b 0%, #3d6bb3 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.titleIcon {
+    font-size: 1.5rem;
+}
+
+.sectionSubtitle {
+    color: #64748b;
+    font-size: 1rem;
+    margin: 0;
+    line-height: 1.5;
+    max-width: 800px;
+}
+
+.rolesContent {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.rolesHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(61, 107, 179, 0.1);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(61, 107, 179, 0.08);
+}
+
+.headerInfo {
+    flex: 1;
+}
+
+.headerTitle {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 0.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.headerIcon {
+    color: #3d6bb3;
+    font-size: 1.1rem;
+}
+
+.headerDescription {
+    color: #64748b;
+    font-size: 0.95rem;
+    margin: 0;
+    font-weight: 500;
+}
+
+.createButton {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 1.5rem;
+    background: linear-gradient(135deg, #10b981, #34d399);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.createButton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+}
+
+.buttonIcon {
+    font-size: 0.9rem;
+}
+
+.rolesGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .rolesGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.roleCard {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(61, 107, 179, 0.1);
+    border-radius: 16px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 32px rgba(61, 107, 179, 0.08);
+    position: relative;
+    overflow: hidden;
+}
+
+.roleCard:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(61, 107, 179, 0.12);
+    border-color: rgba(61, 107, 179, 0.2);
+}
+
+.roleCard::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(61, 107, 179, 0.3), transparent);
+}
+
+.roleHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.roleTitle {
+    flex: 1;
+}
+
+.roleName {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 0.75rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.roleIcon {
+    color: #3d6bb3;
+    font-size: 1rem;
+}
+
+.defaultBadge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.25rem 0.5rem;
+    background: linear-gradient(135deg, #3d6bb3, #60a5fa);
+    color: white;
+    border-radius: 6px;
+    margin-left: 0.5rem;
+}
+
+.roleStats {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.statItem {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.85rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.statIcon {
+    font-size: 0.8rem;
+    opacity: 0.7;
+}
+
+.roleActions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.editButton, .deleteButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.editButton {
+    background: rgba(61, 107, 179, 0.1);
+    color: #3d6bb3;
+}
+
+.editButton:hover {
+    background: rgba(61, 107, 179, 0.2);
+}
+
+.deleteButton {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.deleteButton:hover {
+    background: rgba(239, 68, 68, 0.2);
+}
+
+.roleDescription {
+    color: #64748b;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin: 0 0 1.5rem 0;
+    min-height: 40px;
+}
+
+.permissionsPreview {
+    border-top: 1px solid rgba(61, 107, 179, 0.1);
+    padding-top: 1.25rem;
+}
+
+.permissionsHeader {
+    margin-bottom: 0.75rem;
+}
+
+.permissionsTitle {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.permissionsIcon {
+    font-size: 0.85rem;
+    color: #3d6bb3;
+}
+
+.permissionsList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.permissionItem {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.permissionActive {
+    background: rgba(16, 185, 129, 0.1);
+    color: #059669;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.permissionInactive {
+    background: rgba(148, 163, 184, 0.1);
+    color: #64748b;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.permissionLabel {
+    font-size: 0.75rem;
+}
+
+.morePermissions {
+    font-size: 0.75rem;
+    color: #3d6bb3;
+    font-weight: 600;
+    padding: 0.5rem 0.75rem;
+    background: rgba(61, 107, 179, 0.05);
+    border-radius: 8px;
+    border: 1px dashed rgba(61, 107, 179, 0.2);
+}
+
+.permissionsInfo {
+    margin-top: 1rem;
+}
+
+.infoCard {
+    display: flex;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, rgba(61, 107, 179, 0.05), rgba(96, 165, 250, 0.05));
+    border: 1px solid rgba(61, 107, 179, 0.15);
+    border-radius: 16px;
+}
+
+.infoIcon {
+    font-size: 1.5rem;
+    color: #3d6bb3;
+    flex-shrink: 0;
+    margin-top: 0.25rem;
+}
+
+.infoContent {
+    flex: 1;
+}
+
+.infoTitle {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 0.75rem 0;
+}
+
+.infoText {
+    color: #475569;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin: 0 0 1rem 0;
+}
+
+.infoTips {
+    margin: 0;
+    padding-left: 1.25rem;
+    color: #64748b;
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+.infoTips li {
+    margin-bottom: 0.5rem;
+}
+
+.infoTips li:last-child {
+    margin-bottom: 0;
+}
+
+.editModal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+.modalContent {
+    background: white;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 800px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+}
+
+.modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid rgba(61, 107, 179, 0.1);
+    background: linear-gradient(135deg, #3d6bb3, #60a5fa);
+}
+
+.modalTitle {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: white;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.modalIcon {
+    font-size: 1.1rem;
+}
+
+.modalClose {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.modalClose:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.modalBody {
+    flex: 1;
+    overflow-y: auto;
+    padding: 2rem;
+}
+
+.roleForm {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.formGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.formLabel {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.formInput {
+    padding: 0.875rem 1rem;
+    border: 1.5px solid rgba(61, 107, 179, 0.2);
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: white;
+    width: 100%;
+}
+
+.formInput:focus {
+    outline: none;
+    border-color: #3d6bb3;
+    box-shadow: 0 0 0 3px rgba(61, 107, 179, 0.1);
+}
+
+.formTextarea {
+    padding: 0.875rem 1rem;
+    border: 1.5px solid rgba(61, 107, 179, 0.2);
+    border-radius: 12px;
+    font-size: 1rem;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 80px;
+    transition: all 0.3s ease;
+    background: white;
+    line-height: 1.5;
+    width: 100%;
+}
+
+.formTextarea:focus {
+    outline: none;
+    border-color: #3d6bb3;
+    box-shadow: 0 0 0 3px rgba(61, 107, 179, 0.1);
+}
+
+.permissionsSection {
+    border-top: 1px solid rgba(61, 107, 179, 0.1);
+    padding-top: 2rem;
+}
+
+.permissionsTitle {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 0.75rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.permissionsTitleIcon {
+    font-size: 1rem;
+    color: #3d6bb3;
+}
+
+.permissionsCount {
+    margin-left: auto;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #64748b;
+    background: rgba(148, 163, 184, 0.1);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+}
+
+.permissionsDescription {
+    color: #64748b;
+    font-size: 0.9rem;
+    margin: 0 0 1.5rem 0;
+    line-height: 1.5;
+}
+
+.permissionsGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.permissionCategory {
+    border: 1px solid rgba(61, 107, 179, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.categoryHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    background: rgba(61, 107, 179, 0.05);
+    border-bottom: 1px solid rgba(61, 107, 179, 0.1);
+}
+
+.categoryTitle {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.categoryCount {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #3d6bb3;
+    background: white;
+    padding: 0.125rem 0.5rem;
+    border-radius: 12px;
+    border: 1px solid rgba(61, 107, 179, 0.2);
+}
+
+.categoryActions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.categoryAction {
+    padding: 0.375rem 0.75rem;
+    background: white;
+    border: 1px solid rgba(61, 107, 179, 0.2);
+    border-radius: 6px;
+    font-size: 0.8rem;
+    color: #3d6bb3;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.categoryAction:hover {
+    background: rgba(61, 107, 179, 0.1);
+}
+
+.categoryPermissions {
+    padding: 1rem;
+}
+
+.permissionOption {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.875rem;
+    border-bottom: 1px solid rgba(61, 107, 179, 0.05);
+}
+
+.permissionOption:last-child {
+    border-bottom: none;
+}
+
+.permissionInfo {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    flex: 1;
+}
+
+.permissionIcon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(61, 107, 179, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #3d6bb3;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.permissionDetails {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.permissionName {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.permissionDesc {
+    font-size: 0.85rem;
+    color: #64748b;
+    line-height: 1.4;
+}
+
+.permissionToggle {
+    position: relative;
+    display: inline-block;
+    width: 52px;
+    height: 28px;
+}
+
+.toggleInput {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggleSlider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #e2e8f0;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.toggleSlider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+.toggleInput:checked + .toggleSlider {
+    background-color: #3d6bb3;
+}
+
+.toggleInput:checked + .toggleSlider:before {
+    transform: translateX(24px);
+}
+
+.modalFooter {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding: 1.5rem 2rem;
+    border-top: 1px solid rgba(61, 107, 179, 0.1);
+    background: #f8fafc;
+}
+
+.modalCancel {
+    padding: 0.875rem 1.5rem;
+    background: transparent;
+    color: #64748b;
+    border: 1.5px solid rgba(100, 116, 139, 0.2);
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.modalCancel:hover {
+    background: rgba(100, 116, 139, 0.05);
+    border-color: #64748b;
+}
+
+.modalSave {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 2rem;
+    background: linear-gradient(135deg, #3d6bb3, #60a5fa);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(61, 107, 179, 0.3);
+}
+
+.modalSave:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(61, 107, 179, 0.4);
+}
+
+.saveIcon {
+    font-size: 0.9rem;
+}
+
+.deleteModal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1001;
+    padding: 1rem;
+}
+
+.deleteContent {
+    background: white;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 500px;
+    padding: 2rem;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+}
+
+.deleteHeader {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.deleteIcon {
+    font-size: 3rem;
+    color: #ef4444;
+    margin-bottom: 1rem;
+}
+
+.deleteTitle {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+
+.deleteBody {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.deleteText {
+    color: #1e293b;
+    font-size: 1rem;
+    margin: 0 0 1rem 0;
+    font-weight: 500;
+}
+
+.deleteWarning {
+    color: #ef4444;
+    font-size: 0.9rem;
+    margin: 0;
+    line-height: 1.5;
+    font-weight: 500;
+}
+
+.deleteFooter {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.deleteCancel {
+    padding: 0.875rem 2rem;
+    background: transparent;
+    color: #64748b;
+    border: 1.5px solid rgba(100, 116, 139, 0.2);
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.deleteCancel:hover {
+    background: rgba(100, 116, 139, 0.05);
+    border-color: #64748b;
+}
+
+.deleteConfirm {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 2rem;
+    background: linear-gradient(135deg, #ef4444, #f87171);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.deleteConfirm:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(239, 68, 68, 0.4);
+}
+
+.deleteConfirmIcon {
+    font-size: 0.9rem;
+}
