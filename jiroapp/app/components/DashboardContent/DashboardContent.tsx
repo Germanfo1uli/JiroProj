@@ -11,7 +11,7 @@ import ConfirmationModal from './components/modal/ConfirmationModal';
 import BoardManagerModal from './components/modal/BoardManagerModal';
 import EditCardModal from './components/modal/ EditCardModal';
 
-export const DashboardContent = () => {
+const DashboardContent = () => {
     const {
         boards,
         state,
@@ -119,3 +119,5 @@ export const DashboardContent = () => {
         </div>
     );
 };
+
+export default DashboardContent;

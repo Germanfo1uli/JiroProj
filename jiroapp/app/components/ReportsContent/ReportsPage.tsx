@@ -14,7 +14,6 @@ import {
 } from './components/Charts';
 import styles from './ReportsPage.module.css';
 
-
 const MemoizedStatsCards = memo(StatsCards);
 
 const MemoizedDevelopersStats = memo(({ developerStats }: { developerStats: any[] }) =>
@@ -45,7 +44,7 @@ const MemoizedProgressGauge = memo(({ completionRate }: { completionRate: number
     <ProgressGauge completionRate={completionRate} />
 );
 
-export const ReportsPage = () => {
+const ReportsPage = () => {
     const {
         stats,
         developerStats,
@@ -139,3 +138,5 @@ export const ReportsPage = () => {
         </div>
     );
 };
+
+export default ReportsPage;

@@ -1,89 +1,134 @@
+:root {
+    --form-color-primary: #2a5599;
+    --form-color-secondary: #3a8de8;
+    --form-color-text: #2d3748;
+    --form-color-text-muted: #a0aec0;
+    --form-color-border: #e2e8f0;
+    --form-color-error: #e53e3e;
+    --form-color-error-bg: #fff5f5;
+    --form-transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --form-radius: 0.75rem;
+    --form-radius-sm: 0.5rem;
+}
+
 .authForm {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
+    contain: layout style paint;
 }
 
 .formGroup {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    will-change: transform;
 }
 
 .formLabel {
-    color: #2d3748;
+    color: var(--form-color-text);
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: clamp(0.8rem, 1.5vw, 0.9rem);
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    user-select: none;
 }
 
 .inputIcon {
-    color: #3a8de8;
+    color: var(--form-color-secondary);
     font-size: 0.9rem;
+    transition: color var(--form-transition);
+}
+
+.formGroup:focus-within .inputIcon {
+    color: var(--form-color-primary);
+    transform: scale(1.1);
 }
 
 .formInput {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.75rem;
-    padding: 1rem;
-    color: #2d3748;
-    font-size: 1rem;
-    transition: all 0.3s ease;
     width: 100%;
+    background: #ffffff;
+    border: 1px solid var(--form-color-border);
+    border-radius: var(--form-radius);
+    padding: 1rem;
+    color: var(--form-color-text);
+    font-size: 1rem;
+    transition: all var(--form-transition);
     box-sizing: border-box;
+    font-family: inherit;
+    will-change: border-color, box-shadow;
 }
 
 .formInput::placeholder {
-    color: #a0aec0;
+    color: var(--form-color-text-muted);
+    transition: transform 0.2s;
+}
+
+.formInput:focus::placeholder {
+    transform: translateX(5px);
+    opacity: 0.7;
 }
 
 .formInput:focus {
     outline: none;
-    border-color: #3a8de8;
+    border-color: var(--form-color-secondary);
     box-shadow: 0 0 0 3px rgba(58, 141, 232, 0.1);
 }
 
 .formInput.error {
-    border-color: #e53e3e;
-    background: #fff5f5;
+    border-color: var(--form-color-error);
+    background: var(--form-color-error-bg);
+    animation: shake 0.4s var(--form-transition);
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
 }
 
 .passwordInputWrapper {
     position: relative;
     width: 100%;
+    display: flex;
+    align-items: center;
 }
 
 .passwordToggle {
     position: absolute;
     right: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
     background: none;
     border: none;
     border-radius: 50%;
-    color: #a0aec0;
+    color: var(--form-color-text-muted);
     cursor: pointer;
     padding: 0.25rem;
-    transition: color 0.3s ease;
+    transition: all var(--form-transition);
     width: 24px;
     height: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 }
 
 .passwordToggle:hover {
-    color: #3a8de8;
+    color: var(--form-color-secondary);
     background: #f7fafc;
 }
 
+.passwordToggle:focus-visible {
+    outline: 2px solid var(--form-color-secondary);
+    outline-offset: 2px;
+}
+
 .errorMessage {
-    color: #e53e3e;
+    color: var(--form-color-error);
     font-size: 0.8rem;
     font-weight: 500;
+    margin-top: 0.25rem;
+    overflow: hidden;
 }
 
 .forgotPassword {
@@ -94,28 +139,38 @@
 .forgotPasswordButton {
     background: none;
     border: none;
-    color: #3a8de8;
+    color: var(--form-color-secondary);
     cursor: pointer;
     font-size: 0.85rem;
     text-decoration: underline;
-    transition: color 0.3s ease;
+    transition: color var(--form-transition);
     font-weight: 500;
+    padding: 0.25rem 0;
 }
 
 .forgotPasswordButton:hover {
-    color: #2a5599;
+    color: var(--form-color-primary);
+}
+
+.forgotPasswordButton:focus-visible {
+    outline: 2px solid var(--form-color-secondary);
+    outline-offset: 2px;
+    border-radius: var(--form-radius-sm);
 }
 
 .formActions {
     margin-top: 1rem;
+    will-change: transform;
 }
 
 .submitButton {
-    background: linear-gradient(135deg, #2a5599 0%, #3a8de8 100%);
+    position: relative;
+    width: 100%;
+    background: linear-gradient(135deg, var(--form-color-primary) 0%, var(--form-color-secondary) 100%);
     border: none;
-    border-radius: 1rem;
+    border-radius: var(--form-radius);
     padding: 1rem 2rem;
-    color: #ffffff;
+    color: white;
     font-weight: 700;
     font-size: 1rem;
     display: flex;
@@ -123,11 +178,10 @@
     justify-content: center;
     gap: 0.5rem;
     cursor: pointer;
-    transition: all 0.4s ease;
-    position: relative;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
-    width: 100%;
     box-shadow: 0 4px 15px rgba(58, 141, 232, 0.3);
+    will-change: transform, box-shadow;
 }
 
 .submitButton::before {
@@ -141,7 +195,7 @@
     transition: left 0.6s ease;
 }
 
-.submitButton:hover::before {
+.submitButton:hover:not(:disabled)::before {
     left: 100%;
 }
 
@@ -154,13 +208,14 @@
     opacity: 0.7;
     cursor: not-allowed;
     transform: none;
+    filter: saturate(0.5);
 }
 
 .submitIcon {
-    transition: transform 0.3s ease;
+    transition: transform var(--form-transition);
 }
 
-.submitButton:hover .submitIcon {
+.submitButton:hover:not(:disabled) .submitIcon {
     transform: translateX(4px);
 }
 
@@ -168,16 +223,40 @@
     width: 20px;
     height: 20px;
     border: 2px solid transparent;
-    border-top: 2px solid #ffffff;
+    border-top: 2px solid white;
     border-radius: 50%;
     animation: spin 1s linear infinite;
+    will-change: transform;
 }
 
 @keyframes spin {
-    0% {
-        transform: rotate(0deg);
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+    .authForm {
+        gap: 1.2rem;
     }
-    100% {
-        transform: rotate(360deg);
+
+    .formInput {
+        padding: 0.8rem;
+        font-size: 0.9rem;
+    }
+
+    .submitButton {
+        padding: 0.8rem 1.5rem;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .authForm {
+        gap: 1rem;
+    }
+
+    .formInput {
+        padding: 0.7rem;
+        font-size: 0.85rem;
     }
 }

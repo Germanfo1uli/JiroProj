@@ -1,16 +1,34 @@
+:root {
+    --auth-color-primary: #2a5599;
+    --auth-color-secondary: #3a8de8;
+    --auth-color-text: #1a202c;
+    --auth-color-text-muted: #718096;
+    --auth-color-border: #e2e8f0;
+    --auth-color-error: #e53e3e;
+    --auth-color-bg: #ffffff;
+    --auth-shadow-sm: 0 4px 6px rgba(42, 85, 153, 0.1);
+    --auth-shadow-md: 0 10px 40px rgba(42, 85, 153, 0.1);
+    --auth-transition-default: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --auth-radius-sm: 0.75rem;
+    --auth-radius-md: 1rem;
+    --auth-radius-lg: 1.5rem;
+}
+
 .authContainer {
     min-height: 100vh;
     position: relative;
     overflow: hidden;
-    background: #ffffff;
+    background: var(--auth-color-bg);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 2rem;
+    contain: layout style paint;
+    will-change: transform;
 }
 
-.authHeaderLogo {
+.logoWrapper {
     position: absolute;
     top: 2rem;
     left: 2rem;
@@ -21,27 +39,32 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    font-size: 2rem;
+    font-size: clamp(1.5rem, 3vw, 2rem);
     font-weight: 800;
-    color: #2a5599;
-    margin-left: 35px;
+    color: var(--auth-color-primary);
     transform: translateX(-30px);
-    transition: all 0.8s ease 0.4s;
+    will-change: transform;
 }
 
 .logoIcon {
-    color: #3a8de8;
-    font-size: 2.5rem;
+    color: var(--auth-color-secondary);
+    font-size: clamp(2rem, 4vw, 2.5rem);
+    filter: drop-shadow(0 2px 4px rgba(58, 141, 232, 0.2));
+    will-change: transform;
+}
+
+.logo:hover .logoIcon {
+    transform: rotate(15deg) scale(1.1);
+    transition: transform 0.6s var(--auth-transition-default);
 }
 
 .authContent {
-    position: relative;
-    z-index: 2;
     width: 100%;
     max-width: 450px;
     opacity: 0;
     transform: translateY(30px);
     transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    will-change: transform, opacity;
 }
 
 .authContent.visible {
@@ -50,32 +73,34 @@
 }
 
 .backButton {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 1rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+    border: 1px solid var(--auth-color-border);
+    border-radius: var(--auth-radius-md);
     padding: 0.75rem 1.5rem;
-    color: #2a5599;
+    color: var(--auth-color-primary);
     display: flex;
     align-items: center;
     gap: 0.5rem;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all var(--auth-transition-default);
     margin-bottom: 2rem;
     font-size: 0.9rem;
     font-weight: 600;
-    box-shadow: 0 2px 10px rgba(42, 85, 153, 0.1);
+    box-shadow: var(--auth-shadow-sm);
+    will-change: transform, box-shadow;
 }
 
 .backButton:hover {
-    background: #3a8de8;
+    background: linear-gradient(135deg, var(--auth-color-primary) 0%, var(--auth-color-secondary) 100%);
     color: white;
     transform: translateX(-5px);
-    box-shadow: 0 4px 15px rgba(58, 141, 232, 0.3);
+    box-shadow: 0 6px 20px rgba(58, 141, 232, 0.3);
+    border-color: transparent;
 }
 
 .backIcon {
     transform: rotate(180deg);
-    transition: transform 0.3s ease;
+    transition: transform var(--auth-transition-default);
 }
 
 .backButton:hover .backIcon {
@@ -83,16 +108,15 @@
 }
 
 .authCard {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 1.5rem;
+    background: var(--auth-color-bg);
+    border: 1px solid var(--auth-color-border);
+    border-radius: var(--auth-radius-lg);
     padding: 2.5rem;
-    box-shadow: 0 10px 40px rgba(42, 85, 153, 0.1);
-    animation: cardAppear 0.6s ease-out;
-    display: flex;
-    flex-direction: column;
+    box-shadow: var(--auth-shadow-md);
     position: relative;
     overflow: hidden;
+    contain: layout style paint;
+    will-change: transform, box-shadow;
 }
 
 .authCard::before {
@@ -102,7 +126,18 @@
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(135deg, #2a5599 0%, #3a8de8 50%, #2a5599 100%);
+    background: linear-gradient(135deg, var(--auth-color-primary) 0%, var(--auth-color-secondary) 50%, var(--auth-color-primary) 100%);
+    will-change: background-position;
+    background-size: 200% 100%;
+}
+
+.authCard:hover::before {
+    animation: gradientShift 3s ease infinite;
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
 }
 
 .authHeader {
@@ -111,25 +146,30 @@
 }
 
 .authTitle {
-    font-size: 1.75rem;
+    font-size: clamp(1.5rem, 2vw, 1.75rem);
     font-weight: 700;
-    color: #1a202c;
+    color: var(--auth-color-text);
     margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, var(--auth-color-text) 0%, var(--auth-color-primary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .authSubtitle {
-    color: #718096;
-    font-size: 0.95rem;
+    color: var(--auth-color-text-muted);
+    font-size: clamp(0.85rem, 1.5vw, 0.95rem);
     font-weight: 500;
 }
 
 .authTabs {
     display: flex;
     background: #f7fafc;
-    border-radius: 1rem;
+    border-radius: var(--auth-radius-md);
     padding: 0.25rem;
     margin-bottom: 2rem;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--auth-color-border);
+    gap: 0.25rem;
 }
 
 .tabButton {
@@ -137,300 +177,48 @@
     padding: 0.75rem 1rem;
     border: none;
     background: transparent;
-    color: #718096;
+    color: var(--auth-color-text-muted);
     font-weight: 600;
     cursor: pointer;
-    border-radius: 0.75rem;
-    transition: all 0.3s ease;
-    font-size: 0.9rem;
+    border-radius: calc(var(--auth-radius-md) - 4px);
+    transition: all var(--auth-transition-default);
+    font-size: clamp(0.85rem, 1.5vw, 0.9rem);
+    will-change: transform, box-shadow;
 }
 
 .tabButton.active {
-    background: linear-gradient(135deg, #2a5599 0%, #3a8de8 100%);
-    color: #ffffff;
+    background: linear-gradient(135deg, var(--auth-color-primary) 0%, var(--auth-color-secondary) 100%);
+    color: white;
     box-shadow: 0 4px 15px rgba(58, 141, 232, 0.3);
 }
 
-.authForm {
+.tabButton:hover:not(.active) {
+    background: rgba(58, 141, 232, 0.05);
+    color: var(--auth-color-secondary);
+}
+
+.errorContainer {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
-}
-
-.formGroup {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.formLabel {
-    color: #2d3748;
-    font-weight: 600;
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.inputIcon {
-    color: #3a8de8;
-    font-size: 0.9rem;
-}
-
-.formInput {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.75rem;
-    padding: 1rem;
-    color: #2d3748;
-    font-size: 1rem;
-    transition: all 0.3s ease;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-.formInput::placeholder {
-    color: #a0aec0;
-}
-
-.formInput:focus {
-    outline: none;
-    border-color: #3a8de8;
-    box-shadow: 0 0 0 3px rgba(58, 141, 232, 0.1);
-}
-
-.formInput.error {
-    border-color: #e53e3e;
-    background: #fff5f5;
-}
-
-.passwordInputWrapper {
-    position: relative;
-    width: 100%;
-}
-
-.passwordToggle {
-    position: absolute;
-    right: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    border-radius: 50%;
-    color: #a0aec0;
-    cursor: pointer;
-    padding: 0.25rem;
-    transition: color 0.3s ease;
-    width: 24px;
-    height: 24px;
-    display: flex;
     align-items: center;
     justify-content: center;
-}
-
-.passwordToggle:hover {
-    color: #3a8de8;
-    background: #f7fafc;
-}
-
-.errorMessage {
-    color: #e53e3e;
-    font-size: 0.8rem;
-    font-weight: 500;
-}
-
-.forgotPassword {
-    text-align: right;
-    margin-top: -0.5rem;
-}
-
-.forgotPasswordButton {
-    background: none;
-    border: none;
-    color: #3a8de8;
-    cursor: pointer;
-    font-size: 0.85rem;
-    text-decoration: underline;
-    transition: color 0.3s ease;
-    font-weight: 500;
-}
-
-.forgotPasswordButton:hover {
-    color: #2a5599;
-}
-
-.formActions {
-    margin-top: 1rem;
-}
-
-.submitButton {
-    background: linear-gradient(135deg, #2a5599 0%, #3a8de8 100%);
-    border: none;
-    border-radius: 1rem;
-    padding: 1rem 2rem;
-    color: #ffffff;
-    font-weight: 700;
-    font-size: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    cursor: pointer;
-    transition: all 0.4s ease;
-    position: relative;
-    overflow: hidden;
-    width: 100%;
-    box-shadow: 0 4px 15px rgba(58, 141, 232, 0.3);
-}
-
-.submitButton::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.6s ease;
-}
-
-.submitButton:hover::before {
-    left: 100%;
-}
-
-.submitButton:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(58, 141, 232, 0.4);
-}
-
-.submitButton:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-    transform: none;
-}
-
-.submitIcon {
-    transition: transform 0.3s ease;
-}
-
-.submitButton:hover .submitIcon {
-    transform: translateX(4px);
-}
-
-.loadingSpinner {
-    width: 20px;
-    height: 20px;
-    border: 2px solid transparent;
-    border-top: 2px solid #ffffff;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-.socialLogin {
-    margin-top: 2rem;
-}
-
-.divider {
-    display: flex;
-    align-items: center;
-    margin: 1.5rem 0;
-    color: #718096;
-    font-size: 0.85rem;
-}
-
-.divider::before,
-.divider::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: #e2e8f0;
-}
-
-.divider span {
-    padding: 0 1rem;
-}
-
-.socialButtons {
-    display: flex;
     gap: 1rem;
+    padding: 2rem;
+    text-align: center;
 }
 
-.socialButton {
-    flex: 1;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.75rem;
-    padding: 0.75rem;
-    color: #4a5568;
-    font-weight: 600;
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
+.errorContainer button {
+    background: var(--auth-color-secondary);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--auth-radius-sm);
     cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.socialButton:hover {
-    background: #f7fafc;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    border-color: #3a8de8;
-}
-
-.socialIcon {
-    font-weight: 700;
-    font-size: 1rem;
-}
-
-.socialButton.google .socialIcon {
-    color: #ea4335;
-}
-
-.socialButton.github .socialIcon {
-    color: #2d3748;
-}
-
-@keyframes cardAppear {
-    0% {
-        opacity: 0;
-        transform: translateY(30px) scale(0.95);
-    }
-    100% {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-
-@keyframes spin {
-    0% {
-        transform: rotate(0deg);
-    }
-    100% {
-        transform: rotate(360deg);
-    }
 }
 
 @media (max-width: 1024px) {
     .authCard {
         padding: 2.2rem;
-    }
-
-    .authTitle {
-        font-size: 1.65rem;
-    }
-
-    .authSubtitle {
-        font-size: 0.9rem;
-    }
-
-    .formInput {
-        padding: 0.9rem;
-    }
-
-    .submitButton {
-        padding: 0.9rem 1.8rem;
     }
 }
 
@@ -439,7 +227,7 @@
         padding: 1rem;
     }
 
-    .authHeaderLogo {
+    .logoWrapper {
         display: none;
     }
 
@@ -447,71 +235,9 @@
         padding: 1.8rem 1.5rem;
     }
 
-    .authTitle {
-        font-size: 1.5rem;
-    }
-
-    .authSubtitle {
+    .backButton {
+        padding: 0.6rem 1.2rem;
         font-size: 0.85rem;
-    }
-
-    .authTabs {
-        margin-bottom: 1.5rem;
-    }
-
-    .tabButton {
-        padding: 0.6rem 0.8rem;
-        font-size: 0.85rem;
-    }
-
-    .formGroup {
-        gap: 0.4rem;
-    }
-
-    .formLabel {
-        font-size: 0.85rem;
-    }
-
-    .formInput {
-        padding: 0.8rem;
-        font-size: 0.9rem;
-    }
-
-    .passwordToggle {
-        width: 22px;
-        height: 22px;
-    }
-
-    .errorMessage {
-        font-size: 0.75rem;
-    }
-
-    .forgotPasswordButton {
-        font-size: 0.8rem;
-    }
-
-    .submitButton {
-        padding: 0.8rem 1.5rem;
-        font-size: 0.9rem;
-    }
-
-    .socialLogin {
-        margin-top: 1.5rem;
-    }
-
-    .divider {
-        font-size: 0.8rem;
-        margin: 1.2rem 0;
-    }
-
-    .socialButton {
-        padding: 0.6rem;
-        font-size: 0.85rem;
-    }
-
-    .socialButtons {
-        flex-direction: column;
-        gap: 0.8rem;
     }
 }
 
@@ -522,138 +248,27 @@
 
     .authCard {
         padding: 1.5rem 1.2rem;
-        border-radius: 1.2rem;
-    }
-
-    .authTitle {
-        font-size: 1.3rem;
-        margin-bottom: 0.4rem;
-    }
-
-    .authSubtitle {
-        font-size: 0.8rem;
-    }
-
-    .authTabs {
-        padding: 0.2rem;
-        margin-bottom: 1.3rem;
-        border-radius: 0.8rem;
-    }
-
-    .tabButton {
-        padding: 0.5rem 0.7rem;
-        font-size: 0.8rem;
-        border-radius: 0.6rem;
-    }
-
-    .formGroup {
-        gap: 0.3rem;
-    }
-
-    .formLabel {
-        font-size: 0.8rem;
-    }
-
-    .inputIcon {
-        font-size: 0.8rem;
-    }
-
-    .formInput {
-        padding: 0.7rem;
-        font-size: 0.85rem;
-        border-radius: 0.6rem;
-    }
-
-    .passwordToggle {
-        right: 0.8rem;
-        width: 20px;
-        height: 20px;
-    }
-
-    .errorMessage {
-        font-size: 0.7rem;
-    }
-
-    .forgotPasswordButton {
-        font-size: 0.75rem;
-    }
-
-    .formActions {
-        margin-top: 0.8rem;
-    }
-
-    .submitButton {
-        padding: 0.7rem 1.3rem;
-        font-size: 0.85rem;
-        border-radius: 0.8rem;
-    }
-
-    .submitIcon {
-        font-size: 0.9rem;
-    }
-
-    .socialLogin {
-        margin-top: 1.2rem;
-    }
-
-    .divider {
-        font-size: 0.75rem;
-        margin: 1rem 0;
-    }
-
-    .divider span {
-        padding: 0 0.8rem;
-    }
-
-    .socialButton {
-        padding: 0.5rem;
-        font-size: 0.8rem;
-        border-radius: 0.6rem;
-    }
-
-    .socialIcon {
-        font-size: 0.9rem;
+        border-radius: calc(var(--auth-radius-lg) - 0.3rem);
     }
 }
 
 @media (max-width: 360px) {
-    .authContainer {
-        padding: 0.6rem;
-    }
-
     .authCard {
         padding: 1.3rem 1rem;
     }
+}
 
-    .authTitle {
-        font-size: 1.2rem;
+@media (prefers-reduced-motion: reduce) {
+    :global(*) {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
     }
+}
 
-    .authSubtitle {
-        font-size: 0.75rem;
-    }
-
-    .tabButton {
-        font-size: 0.75rem;
-        padding: 0.45rem 0.6rem;
-    }
-
-    .formLabel {
-        font-size: 0.75rem;
-    }
-
-    .formInput {
-        padding: 0.65rem;
-        font-size: 0.8rem;
-    }
-
-    .submitButton {
-        padding: 0.65rem 1.2rem;
-        font-size: 0.8rem;
-    }
-
-    .socialButton {
-        font-size: 0.75rem;
-        padding: 0.45rem;
+@media (prefers-contrast: high) {
+    .tabButton,
+    .backButton,
+    .authCard {
+        border-width: 2px;
     }
 }

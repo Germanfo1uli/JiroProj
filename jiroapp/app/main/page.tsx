@@ -2,21 +2,37 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useState, lazy, Suspense } from 'react'
 import VerticalNavbar from '../components/VerticalNavbar/VerticalNavbar'
 import ControlPanel from '../components/ControlPanel/ControlPanel'
-import BoardsContent from '../components/BoardsContent/BoardsContent'
-import { DashboardContent } from '@/app/components/DashboardContent'
-import { DevelopersPage } from '@/app/components/DevelopersContent'
-import { ReportsPage } from '../components/ReportsContent/ReportsPage'
-import SettingsContent from '../components/SettingsContent/SettingsContent'
 import styles from './MainPage.module.css'
+import BoardsContent from '../components/BoardsContent/BoardsContent'
 
-type ActivePage = 'dashboard' | 'board' | 'developers' | 'settings' | 'reports' // Добавьте 'reports'
+const DashboardContent = lazy(() => import('../components/DashboardContent/DashboardContent'))
+const DevelopersPage = lazy(() => import('../components/DevelopersContent/DevelopersPage'))
+const ReportsPage = lazy(() => import('../components/ReportsContent/ReportsPage'))
+const SettingsContent = lazy(() => import('../components/SettingsContent/SettingsContent'))
+
+type ActivePage = 'dashboard' | 'board' | 'developers' | 'settings' | 'reports'
+
+// Улучшенный компонент для загрузки
+const LoadingFallback = () => (
+    <div className={styles.loadingFallback}>
+        <div className={styles.loadingContainer}>
+            <div className={styles.pulseLoader}>
+                <div className={styles.pulseDot}></div>
+                <div className={styles.pulseDot}></div>
+                <div className={styles.pulseDot}></div>
+            </div>
+            <p className={styles.loadingText}>Загружаем контент...</p>
+        </div>
+    </div>
+)
 
 const MainPage = () => {
     const [activePage, setActivePage] = useState<ActivePage>('board')
     const [isControlPanelOpen, setIsControlPanelOpen] = useState(true)
+    const [loadedComponents, setLoadedComponents] = useState<Set<ActivePage>>(new Set(['board']))
     const router = useRouter()
 
     useEffect(() => {
@@ -27,6 +43,7 @@ const MainPage = () => {
     }, [router])
 
     const handlePageChange = (page: ActivePage) => {
+        setLoadedComponents(prev => new Set([...prev, page]))
         setActivePage(page)
     }
 
@@ -35,20 +52,15 @@ const MainPage = () => {
     }
 
     const renderContent = () => {
-        switch (activePage) {
-            case 'dashboard':
-                return <DashboardContent />
-            case 'board':
-                return <BoardsContent />
-            case 'developers':
-                return <DevelopersPage />
-            case 'reports': // Добавьте этот case
-                return <ReportsPage />
-            case 'settings':
-                return <SettingsContent onBackClick={() => setActivePage('board')} />
-            default:
-                return <BoardsContent />
-        }
+        return (
+            <Suspense fallback={<LoadingFallback />}>
+                {activePage === 'dashboard' && <DashboardContent />}
+                {activePage === 'board' && <BoardsContent />}
+                {activePage === 'developers' && <DevelopersPage />}
+                {activePage === 'reports' && <ReportsPage />}
+                {activePage === 'settings' && <SettingsContent onBackClick={() => setActivePage('board')} />}
+            </Suspense>
+        )
     }
 
     return (

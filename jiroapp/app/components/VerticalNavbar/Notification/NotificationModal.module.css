@@ -38,7 +38,7 @@
     align-items: center;
     padding: 1.25rem 1.5rem;
     border-bottom: 1px solid rgba(61, 107, 179, 0.1);
-    background: linear-gradient(135deg, #2a5298 0%, #3d6bb3 100%);
+    background: linear-gradient(135deg, #3d6bb3 0%, #4facfe 100%);
 }
 
 .modalTitle {

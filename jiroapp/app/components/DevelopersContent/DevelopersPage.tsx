@@ -13,7 +13,7 @@ import { useDeveloperProjects } from './hooks/useDeveloperProjects';
 import { useDashboard } from '../DashboardContent/hooks/useDashboard';
 import styles from './DevelopersPage.module.css';
 
-export const DevelopersPage = () => {
+const DevelopersPage = () => {
     const [developers, setDevelopers] = useState<Developer[]>(mockDevelopers);
     const [isAddDeveloperOpen, setIsAddDeveloperOpen] = useState(false);
     const [isEditDeveloperOpen, setIsEditDeveloperOpen] = useState(false);
@@ -289,3 +289,5 @@ export const DevelopersPage = () => {
         </div>
     );
 };
+
+export default DevelopersPage;
