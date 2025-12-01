@@ -9,9 +9,6 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class OpenApiRoutes {
 
-    @Value("${user.service.url:http://localhost:8081}")
-    private String userServiceUrl;
-
     @Bean
     public RouteLocator swaggerRouteLocator(RouteLocatorBuilder builder) {
         return builder.routes()
