@@ -21,22 +21,68 @@ services:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASS}
     ports: ["5050:80"]
-    depends_on: [postgres]
+    depends_on:
+      postgres:
+        condition: service_healthy
     volumes:
       - ./servers.json:/pgadmin4/servers.json
+
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  gateway-service:
+    build:
+      context: ./gateway-service
+      dockerfile: Dockerfile.dev
+    ports: ["8000:8080"]
+    depends_on:
+      user-service:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8080
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      USER_SERVICE_URL: http://user-service:8081
+      JWT_SECRET: your-super-secret-jwt-key-256-bit-minimum!!
+      GATEWAY_SECRET: dev-secret-key-change-in-prod 
+      GATEWAY_SECRET_HEADER_NAME: X-Gateway-Source
+      SPRING_PROFILES_ACTIVE: dev
+    volumes:
+      - ./gateway-service/src:/app/src:ro
+      - maven-cache:/root/.m2
 
   user-service:
     build:
       context: ./user-service
       dockerfile: Dockerfile.dev
-    ports: ["8001:8080"]
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
+      SERVER_PORT: 8081
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}?currentSchema=user_service_schema
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+    volumes:
+      - ./user-service/src:/app/src:ro
+      - maven-cache:/root/.m2
 
 volumes:
   pg_data:
+  redis_data:
+  maven-cache:

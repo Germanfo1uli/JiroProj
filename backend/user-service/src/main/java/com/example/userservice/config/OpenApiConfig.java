@@ -14,10 +14,10 @@ import org.springframework.context.annotation.Configuration;
                 version = "1.0",
                 description = "API для управления пользователями и аутентификацией"
         ),
-        servers = @Server(
-                url = "http://localhost:8000",
-                description = "Gateway Service"
-        )
+        servers = {
+                @Server(url = "http://localhost:8000", description = "Local Gateway"),
+                @Server(url = "http://gateway-service:8080", description = "Docker Gateway")
+        }
 )
 @SecurityScheme(
         name = "bearerAuth",
