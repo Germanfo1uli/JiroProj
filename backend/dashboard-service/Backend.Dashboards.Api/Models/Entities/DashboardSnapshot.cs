@@ -7,22 +7,22 @@ namespace Backend.Dashboard.Api.Models.Entities;
 public class DashboardSnapshot
 {
     [Key]
-    [Column("id")]
     public long Id { get; set; }
 
-    [Column("project_id")]
+    [Required]
+    [ForeignKey("project_id")]
     public long ProjectId { get; set; }
 
-    [Column("snapshot_date")]
+    [Required]
     public DateTime SnapshotDate { get; set; }
 
-    [Column("metric_name")]
+    [Required]
     [MaxLength(100)]
-    public string MetricName { get; set; } = string.Empty;
+    public string MetricName { get; set; }
 
-    [Column("metric_value")]
+    [Required]
     public decimal MetricValue { get; set; }
 
-    [Column("created_at")]
+    [Required]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

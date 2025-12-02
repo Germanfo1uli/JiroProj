@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Backend.Shared.DTOs;
 
 namespace Backend.Dashboard.Api.Models.Entities;
 
@@ -7,26 +8,36 @@ namespace Backend.Dashboard.Api.Models.Entities;
 public class ActivityLog
 {
     [Key]
-    [Column("id")]
     public long Id { get; set; }
-
-    [Column("project_id")]
+    
+    [Required]
+    [ForeignKey("project_id")]
     public long ProjectId { get; set; }
 
-    [Column("user_id")]
+    [Required]
+    [ForeignKey("user_id")]
     public long UserId { get; set; }
 
-    [Column("action_type")]
-    [MaxLength(50)]
-    public string ActionType { get; set; } = string.Empty;
+    [Required]
+    public ActivityActionType ActionType { get; set; }
 
-    [Column("entity_type")]
-    [MaxLength(50)]
-    public string EntityType { get; set; } = string.Empty;
+    [Required]
+    public EntityType EntityType { get; set; }
 
-    [Column("entity_id")]
+    [Required]
+    [ForeignKey("entity_id")]
     public long EntityId { get; set; }
 
-    [Column("created_at")]
+    [Required]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+}
+
+public enum ActivityActionType
+{
+    //дописать
+}
+
+public enum EntityType
+{
+    //дописать
 }

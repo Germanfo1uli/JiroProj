@@ -8,28 +8,26 @@ namespace Backend.Sprints.Api.Models.Entities;
 public class Sprint
 {
     [Key]
-    [Column("id")]
     public long Id { get; set; }
 
-    [Column("project_id")]
+    [Required]
+    [ForeignKey("project_id")]
     public long ProjectId { get; set; }
-
-    [Column("name")]
+    
     [Required]
     [MaxLength(255)]
     public string Name { get; set; } = string.Empty;
-
-    [Column("goal")]
+    
     [MaxLength(1000)]
     public string? Goal { get; set; }
 
-    [Column("start_date")]
+    [Required]
     public DateTime StartDate { get; set; }
 
-    [Column("end_date")]
+    [Required]
     public DateTime EndDate { get; set; }
 
-    [Column("status")]
+    [Required]
     public SprintStatus Status { get; set; } = SprintStatus.Planned;
 
 	public virtual ICollection<SprintIssue> SprintIssues { get; set; } = new List<SprintIssue>();
