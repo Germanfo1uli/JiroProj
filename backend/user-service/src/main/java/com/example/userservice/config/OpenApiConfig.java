@@ -15,8 +15,7 @@ import org.springframework.context.annotation.Configuration;
                 description = "API для управления пользователями и аутентификацией"
         ),
         servers = {
-                @Server(url = "http://localhost:8000", description = "Local Gateway"),
-                @Server(url = "http://gateway-service:8080", description = "Docker Gateway")
+                @Server(url = "http://localhost:8000", description = "Local Gateway")
         }
 )
 @SecurityScheme(

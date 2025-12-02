@@ -9,27 +9,20 @@ import org.springframework.context.annotation.Configuration;
 public class OpenApiRoutes {
 
     @Bean
-    public RouteLocator swaggerRouteLocator(RouteLocatorBuilder builder) {
+    public RouteLocator apiDocsRoutes(RouteLocatorBuilder builder) {
         return builder.routes()
-                .route("user-service-swagger-ui", r -> r
-                        .path("/api/swagger-ui/**")
-                        .filters(f -> f.rewritePath("/api/swagger-ui/(?<path>.*)", "/swagger-ui/${path}"))
-                        .uri("lb://user-service")
-                )
-                .route("user-service-docs-with-prefix", r -> r
-                        .path("/api/v3/api-docs/**")
-                        .filters(f -> f.stripPrefix(1))
-                        .uri("lb://user-service")
-                )
-                .route("user-service-docs-root", r -> r
-                        .path("/v3/api-docs", "/v3/api-docs/**")
-                        .uri("lb://user-service")
-                )
-                .route("user-service-swagger-resources", r -> r
-                        .path("/api/webjars/**", "/api/swagger-resources/**")
-                        .filters(f -> f.stripPrefix(1))
-                        .uri("lb://user-service")
-                )
+                .route("user-service-docs", r -> r
+                        .path("/v3/api-docs/user-service")
+                        .filters(f -> f.rewritePath("/v3/api-docs/user-service", "/v3/api-docs"))
+                        .uri("lb://user-service"))
+                .route("board-service-docs", r -> r
+                        .path("/v3/api-docs/board-service")
+                        .filters(f -> f.rewritePath("/v3/api-docs/board-service", "/v3/api-docs"))
+                        .uri("lb://board-service"))
+                .route("report-service-docs", r -> r
+                        .path("/v3/api-docs/report-service")
+                        .filters(f -> f.rewritePath("/v3/api-docs/report-service", "/v3/api-docs"))
+                        .uri("lb://report-service"))
                 .build();
     }
 }
