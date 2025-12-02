@@ -1,6 +1,6 @@
 package com.example.boardservice.security;
 
-import com.example.userservice.config.SecurityWhiteList;
+import com.example.boardservice.config.SecurityWhiteList;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
