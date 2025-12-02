@@ -3,7 +3,7 @@
 public class SprintDto
 {
     public long Id { get; set; }
-    public string Name { get; set; }
+    public string? Name { get; set; }
     public string? Goal { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
@@ -13,7 +13,7 @@ public class SprintDto
 
 public enum SprintStatus
 {
-    Planned,
-    Active, 
-    Completed
+    Planned = 1,
+    Active = 2, 
+    Completed = 3
 }

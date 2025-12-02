@@ -1,5 +1,4 @@
 using Backend.Dashboard.Api.Data;
-using Backend.Dashboard.Api.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,10 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddScoped<DashboardSnapshotRepository>();
-builder.Services.AddScoped<ActivityLogRepository>();
-builder.Services.AddScoped<IDashboardService, DashboardService>();
-builder.Services.AddScoped<IActivityLogService, ActivityLogService>();
+
 builder.Services.AddDbContext<DashboardDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default"),
         npgsqlOptions => npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "dashboard_service_schema")));

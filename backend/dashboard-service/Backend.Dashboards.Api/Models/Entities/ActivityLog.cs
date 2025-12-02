@@ -31,13 +31,3 @@ public class ActivityLog
     [Required]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
-
-public enum ActivityActionType
-{
-    //дописать
-}
-
-public enum EntityType
-{
-    //дописать
-}

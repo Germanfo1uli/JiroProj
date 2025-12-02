@@ -38,11 +38,6 @@ public class DashboardDbContext : DbContext
             entity.HasIndex(e => e.EntityType);
             entity.HasIndex(e => e.EntityId);
             entity.HasIndex(e => e.CreatedAt);
-            
-            entity.HasOne<DashboardSnapshot>()
-                .WithMany()
-                .HasForeignKey(a => a.project_id)
-                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }
