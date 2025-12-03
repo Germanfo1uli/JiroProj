@@ -59,7 +59,7 @@ public class RoleService {
         ProjectRole role = roleRepository.findById(roleId).orElseThrow();
 
         if (!matrixProps.isAllowed(entity, action)) {
-            throw new IllegalArgumentException("Invalid combo: " + entity + "+" + action);
+            throw new IllegalArgumentException("Invalid permission: " + entity + "+" + action);
         }
 
         role.getPermissions().add(new PermissionEntry(entity, action));
