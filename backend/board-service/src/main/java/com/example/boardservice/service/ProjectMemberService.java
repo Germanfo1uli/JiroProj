@@ -37,6 +37,25 @@ public class ProjectMemberService {
     }
 
     @Transactional
+    public ProjectMember addDefaultMember(Long userId, Long projectId) {
+        if (memberRepository.existsByProject_IdAndUserId(projectId, userId)) {
+            throw new AlreadyMemberException("You are already a project member");
+        }
+
+        Project project = Project.builder().id(projectId).build();
+        ProjectRole role = roleRepository.findByProject_IdAndIsDefaultTrue(projectId)
+                .orElseThrow(() -> new RoleNotFoundException("Default role not found"));
+
+        ProjectMember member = ProjectMember.builder()
+                .project(project)
+                .userId(userId)
+                .role(role)
+                .build();
+
+        return memberRepository.save(member);
+    }
+
+    @Transactional
     public ProjectMember addOwner(Project project, Long ownerId, ProjectRole ownerRole) {
         return addMember(project.getId(), ownerId, ownerRole.getId());
     }
