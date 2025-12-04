@@ -84,6 +84,7 @@ public class ProjectRoleService {
                 .project(Project.builder().id(projectId).build())
                 .name(roleName)
                 .isDefault(isDefault)
+                .isOwner(false)
                 .build();
 
         role = roleRepository.save(role);

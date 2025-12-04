@@ -1,7 +1,6 @@
 package com.example.boardservice.controller;
 
 import com.example.boardservice.dto.request.CreateUpdateRoleRequest;
-import com.example.boardservice.dto.response.CreateProjectResponse;
 import com.example.boardservice.dto.response.RoleResponse;
 import com.example.boardservice.security.JwtUser;
 import com.example.boardservice.service.ProjectRoleService;
@@ -28,7 +27,7 @@ public class RoleController {
             summary = "Создание роли",
             security = @SecurityRequirement(name = "bearerAuth")
     )
-    @PostMapping("/projects/{projectId}/roles")
+    @PostMapping("/{projectId}/roles")
     public ResponseEntity<RoleResponse> createRole(
             @Valid @RequestBody CreateUpdateRoleRequest request,
             @PathVariable Long projectId,
@@ -44,7 +43,7 @@ public class RoleController {
             summary = "Обновление роли",
             security = @SecurityRequirement(name = "bearerAuth")
     )
-    @PatchMapping("/projects/{projectId}/roles/{roleId}")
+    @PatchMapping("/{projectId}/roles/{roleId}")
     public ResponseEntity<RoleResponse> updateRole(
             @Valid @RequestBody CreateUpdateRoleRequest request,
             @PathVariable Long projectId,
