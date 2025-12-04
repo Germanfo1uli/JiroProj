@@ -1,0 +1,41 @@
+package com.example.boardservice.service;
+
+import com.example.boardservice.dto.models.Project;
+import com.example.boardservice.dto.models.ProjectRole;
+import com.example.boardservice.dto.response.CreateProjectResponse;
+import com.example.boardservice.dto.response.GetProjectResponse;
+import com.example.boardservice.repository.ProjectRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@RequiredArgsConstructor
+public class ProjectService {
+    private final ProjectRepository projectRepository;
+    private final ProjectInviteService inviteService;
+    private final ProjectMemberService memberService;
+    private final ProjectRoleService roleService;
+
+    @Transactional
+    public CreateProjectResponse createProject(Long ownerId, String name, String key) {
+        Project project = Project.builder()
+                .name(name)
+                .key(key)
+                .ownerId(ownerId)
+                .inviteToken(inviteService.generateSecureToken())
+                .build();
+        project = projectRepository.save(project);
+
+        ProjectRole ownerRole = roleService.createDefaultRoles(project.getId());
+
+        memberService.addOwner(project, ownerId, ownerRole);
+
+        return new CreateProjectResponse(project.getId(), project.getName(), project.getKey());
+    }
+
+    @Transactional
+    public GetProjectResponse getProjectById(Long projectId) {
+        return new GetProjectResponse();
+    }
+}
