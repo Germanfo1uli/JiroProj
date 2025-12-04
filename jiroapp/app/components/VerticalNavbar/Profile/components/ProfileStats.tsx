@@ -1,4 +1,6 @@
+import { memo } from 'react';
 import { FaTasks, FaProjectDiagram, FaCalendarAlt } from 'react-icons/fa';
+import { motion } from 'framer-motion';
 import styles from './ProfileStats.module.css';
 
 interface ProfileStatsProps {
@@ -7,8 +9,9 @@ interface ProfileStatsProps {
     joinDate: string;
 }
 
-export const ProfileStats = ({ completedTasks, activeProjects, joinDate }: ProfileStatsProps) => {
+export const ProfileStats = memo(({ completedTasks, activeProjects, joinDate }: ProfileStatsProps) => {
     const formatJoinDate = (dateString: string) => {
+        if (!dateString) return 'Не указано';
         return new Date(dateString).toLocaleDateString('ru-RU', {
             year: 'numeric',
             month: 'long',
@@ -37,12 +40,48 @@ export const ProfileStats = ({ completedTasks, activeProjects, joinDate }: Profi
         }
     ];
 
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.08
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, x: -12 },
+        visible: {
+            opacity: 1,
+            x: 0,
+            transition: {
+                type: 'spring',
+                stiffness: 320,
+                damping: 24
+            }
+        }
+    };
+
     return (
         <div className={styles.profileStats}>
             <h3 className={styles.statsTitle}>Статистика активности</h3>
-            <div className={styles.statsGrid}>
+            <motion.div
+                className={styles.statsGrid}
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+            >
                 {stats.map((stat, index) => (
-                    <div key={index} className={styles.statItem}>
+                    <motion.div
+                        key={stat.label}
+                        className={styles.statItem}
+                        variants={itemVariants}
+                        whileHover={{
+                            y: -2,
+                            transition: { type: 'spring', stiffness: 400, damping: 20 }
+                        }}
+                    >
                         <div
                             className={styles.statIconWrapper}
                             style={{ background: `linear-gradient(135deg, ${stat.color} 0%, ${stat.color}99 100%)` }}
@@ -53,9 +92,11 @@ export const ProfileStats = ({ completedTasks, activeProjects, joinDate }: Profi
                             <h3>{stat.value}</h3>
                             <p>{stat.label}</p>
                         </div>
-                    </div>
+                    </motion.div>
                 ))}
-            </div>
+            </motion.div>
         </div>
     );
-};
+});
+
+ProfileStats.displayName = 'ProfileStats';

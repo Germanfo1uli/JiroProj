@@ -92,6 +92,12 @@
     background: rgba(255, 255, 255, 0.1);
     transform: rotate(90deg);
 }
+
+.closeButton:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.5);
+    outline-offset: 2px;
+}
+
 .modalBody {
     padding: 1rem;
     overflow-y: auto;
@@ -273,6 +279,12 @@
     transform: translateY(-1px);
 }
 
+.textInput:disabled,
+.textarea:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 .textarea {
     min-height: 100px;
 }
@@ -334,17 +346,35 @@
     box-shadow: none;
 }
 
+.createButton:focus-visible {
+    outline: 2px solid rgba(42, 82, 152, 0.5);
+    outline-offset: 2px;
+}
+
 .spinner {
     animation: spin 1s linear infinite;
 }
 
+.cropBadge {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    background: rgba(59, 130, 246, 0.9);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    backdrop-filter: blur(10px);
+    animation: fadeIn 0.2s ease;
+}
+
 @keyframes spin {
-    0% {
-        transform: rotate(0deg);
-    }
-    100% {
-        transform: rotate(360deg);
-    }
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 @keyframes fadeIn {
@@ -432,18 +462,40 @@
     }
 }
 
-.cropBadge {
-    position: absolute;
-    top: 0.5rem;
-    left: 0.5rem;
-    background: rgba(59, 130, 246, 0.9);
-    color: white;
-    padding: 0.25rem 0.5rem;
-    border-radius: 6px;
-    font-size: 0.75rem;
-    font-weight: 600;
+/* Добавить в конец файла */
+
+.errorText {
+    color: #ef4444;
+    font-size: 0.8rem;
+    font-weight: 500;
+    margin-top: 0.25rem;
+}
+
+.buttonContent {
     display: flex;
     align-items: center;
-    gap: 0.25rem;
-    backdrop-filter: blur(10px);
+    gap: 0.5rem;
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.textInput.error,
+.textarea.error {
+    border-color: #ef4444;
+}
+
+.textInput.error:focus,
+.textarea.error:focus {
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
 }

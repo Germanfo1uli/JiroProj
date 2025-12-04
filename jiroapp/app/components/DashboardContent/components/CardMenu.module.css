@@ -52,7 +52,7 @@
     border: 2px solid rgba(59, 130, 246, 0.15);
     border-radius: 16px;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
-    z-index: 1000;
+    z-index: 11111;
     overflow: hidden;
     animation: slideDown 0.2s ease;
 }
@@ -171,7 +171,6 @@
     }
 }
 
-/* Мобильная адаптация */
 @media (max-width: 768px) {
     .menuDropdown {
         width: 200px;

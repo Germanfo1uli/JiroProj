@@ -23,8 +23,9 @@ import {
     FaCode,
     FaImage
 } from 'react-icons/fa'
-import styles from './AddCardModal.module.css'
+import styles from './EditCardModal.module.css'
 
+// Типы
 type Priority = 'low' | 'medium' | 'high'
 
 interface Author {
@@ -38,6 +39,19 @@ interface Board {
     color: string
 }
 
+interface Card {
+    id: number
+    title: string
+    description: string
+    priority: Priority
+    priorityLevel: number
+    author: Author
+    tags: string[]
+    progress: number
+    comments: number
+    attachments: number
+}
+
 interface UploadedFile {
     id: string
     name: string
@@ -47,6 +61,7 @@ interface UploadedFile {
     preview?: string
 }
 
+// Схема валидации
 const schema = z.object({
     title: z.string().min(1, 'Название задачи обязательно').max(200, 'Слишком длинное название'),
     description: z.string().max(2000, 'Описание слишком длинное').optional(),
@@ -58,21 +73,25 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>
 
-interface AddCardModalProps {
+interface EditCardModalProps {
     isOpen: boolean
     onClose: () => void
-    onSave: (data: { card: any; boardIds: number[]; files: UploadedFile[] }) => void
+    onSave: (data: { card: Card; boardIds: number[]; files: UploadedFile[] }) => void
+    card: Card | null
     boards: Board[]
     authors: Author[]
+    currentBoardId: number
 }
 
-export default function AddCardModal({
-                                         isOpen,
-                                         onClose,
-                                         onSave,
-                                         boards,
-                                         authors,
-                                     }: AddCardModalProps) {
+export default function EditCardModal({
+                                          isOpen,
+                                          onClose,
+                                          onSave,
+                                          card,
+                                          boards,
+                                          authors,
+                                          currentBoardId,
+                                      }: EditCardModalProps) {
     const {
         register,
         handleSubmit,
@@ -89,29 +108,26 @@ export default function AddCardModal({
             priority: 'medium',
             authorId: authors[0]?.name || '',
             tags: [],
-            selectedBoards: [],
+            selectedBoards: [currentBoardId],
         },
     })
 
     useEffect(() => {
-        if (isOpen) {
+        if (card && isOpen) {
             reset({
-                title: '',
-                description: '',
-                priority: 'medium',
-                authorId: authors[0]?.name || '',
-                tags: [],
-                selectedBoards: [],
+                title: card.title,
+                description: card.description,
+                priority: card.priority,
+                authorId: card.author.name,
+                tags: [...card.tags],
+                selectedBoards: [currentBoardId],
             })
-            setUploadedFiles([])
         }
-    }, [isOpen, authors, reset])
+    }, [card, currentBoardId, isOpen, reset])
 
     useEffect(() => {
         const handleEsc = (e: KeyboardEvent) => {
-            if (e.key === 'Escape' && isOpen) {
-                onClose()
-            }
+            if (e.key === 'Escape' && isOpen) onClose()
         }
         window.addEventListener('keydown', handleEsc)
         return () => window.removeEventListener('keydown', handleEsc)
@@ -229,34 +245,34 @@ export default function AddCardModal({
 
     const onSubmit = useCallback(
         (data: FormData) => {
+            if (!card) return
+
             const selectedAuthor = authors.find((a) => a.name === data.authorId) || authors[0]
 
-            const newCard = {
-                id: Date.now(),
+            const updatedCard: Card = {
+                ...card,
                 title: data.title,
                 description: data.description,
                 priority: data.priority,
                 priorityLevel: data.priority === 'high' ? 3 : data.priority === 'medium' ? 2 : 1,
                 author: selectedAuthor,
                 tags: data.tags,
-                progress: 0,
-                comments: 0,
                 attachments: uploadedFiles.length,
             }
 
             onSave({
-                card: newCard,
+                card: updatedCard,
                 boardIds: data.selectedBoards,
                 files: uploadedFiles,
             })
 
-            toast.success('Карточка успешно создана')
+            toast.success('Карточка успешно сохранена')
             onClose()
         },
-        [authors, uploadedFiles, onSave, onClose]
+        [card, authors, uploadedFiles, onSave, onClose]
     )
 
-    if (!isOpen) return null
+    if (!isOpen || !card) return null
 
     return (
         <>
@@ -281,7 +297,7 @@ export default function AddCardModal({
                         >
                             <div className={styles.modalHeader}>
                                 <h2 id="modal-title" className={styles.modalTitle}>
-                                    Создать новую карточку
+                                    Редактировать карточку
                                 </h2>
                                 <motion.button
                                     className={styles.closeButton}
@@ -554,7 +570,7 @@ export default function AddCardModal({
                                         whileTap={{ scale: 0.98 }}
                                     >
                                         <FaSave className={styles.saveIcon} />
-                                        {isSubmitting ? 'Создание...' : 'Создать карточку'}
+                                        {isSubmitting ? 'Сохранение...' : 'Сохранить изменения'}
                                     </motion.button>
                                 </div>
                             </form>

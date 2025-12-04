@@ -1,11 +1,24 @@
+:root {
+    --color-primary: #3d6bb3;
+    --color-primary-light: #4facfe;
+    --color-text: #1e293b;
+    --color-text-muted: #64748b;
+    --color-bg: #ffffff;
+    --color-bg-soft: #f8fafc;
+    --color-border: rgba(61, 107, 179, 0.2);
+    --color-drag: rgba(79, 172, 254, 0.1);
+    --color-danger: #ef4444;
+    --transition-fast: 0.2s ease;
+    --transition-medium: 0.3s ease;
+}
+
 .avatarUploadContainer {
     display: flex;
     justify-content: center;
-    margin-bottom: 0;
-    position: relative;
-    flex-direction: column;
     align-items: center;
+    flex-direction: column;
     gap: 0.5rem;
+    position: relative;
 }
 
 .avatarUploadArea {
@@ -14,22 +27,21 @@
     height: 70px;
     border-radius: 50%;
     cursor: pointer;
-    transition: all 0.3s ease;
-    border: 2px solid rgba(61, 107, 179, 0.2);
+    transition: var(--transition-medium);
+    border: 2px solid var(--color-border);
     background: rgba(255, 255, 255, 0.9);
     overflow: hidden;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .avatarUploadArea:hover {
-    border-color: #3d6bb3;
-    transform: scale(1.05);
+    border-color: var(--color-primary);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
 
 .avatarUploadArea.dragOver {
-    border-color: #4facfe;
-    background: rgba(79, 172, 254, 0.1);
+    border-color: var(--color-primary-light);
+    background: var(--color-drag);
     transform: scale(1.05);
 }
 
@@ -50,6 +62,7 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: var(--transition-medium);
 }
 
 .avatarOverlay {
@@ -63,7 +76,7 @@
     align-items: center;
     justify-content: center;
     opacity: 0;
-    transition: opacity 0.3s ease;
+    transition: opacity var(--transition-fast);
 }
 
 .avatarUploadArea:hover .avatarOverlay {
@@ -73,6 +86,11 @@
 .overlayIcon {
     color: white;
     font-size: 0.9rem;
+    transition: transform var(--transition-fast);
+}
+
+.avatarUploadArea:hover .overlayIcon {
+    transform: scale(1.1);
 }
 
 .avatarPlaceholder {
@@ -82,19 +100,23 @@
     justify-content: center;
     width: 100%;
     height: 100%;
-    color: #64748b;
-    transition: all 0.3s ease;
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    color: var(--color-text-muted);
+    transition: var(--transition-fast);
+    background: linear-gradient(135deg, var(--color-bg-soft) 0%, #e2e8f0 100%);
 }
 
 .avatarUploadArea:hover .avatarPlaceholder {
-    color: #3d6bb3;
-    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    color: var(--color-primary);
 }
 
 .placeholderIcon {
     font-size: 1.75rem;
     margin-bottom: 0.1rem;
+    transition: transform var(--transition-medium);
+}
+
+.avatarUploadArea:hover .placeholderIcon {
+    transform: scale(1.05);
 }
 
 .placeholderText {
@@ -115,13 +137,14 @@
     align-items: center;
     justify-content: center;
     border-radius: 50%;
+    backdrop-filter: blur(4px);
 }
 
 .loadingSpinner {
     width: 18px;
     height: 18px;
     border: 2px solid rgba(61, 107, 179, 0.2);
-    border-top: 2px solid #3d6bb3;
+    border-top: 2px solid var(--color-primary);
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
@@ -138,11 +161,11 @@
     background: rgba(239, 68, 68, 0.1);
     border: 1px solid rgba(239, 68, 68, 0.2);
     border-radius: 6px;
-    color: #dc2626;
+    color: var(--color-danger);
     font-size: 0.75rem;
     font-weight: 500;
     max-width: 200px;
-    animation: slideDown 0.3s ease;
+    overflow: hidden;
 }
 
 .errorIcon {
@@ -153,9 +176,9 @@
 .errorCloseButton {
     background: none;
     border: none;
-    color: #dc2626;
+    color: var(--color-danger);
     cursor: pointer;
-    font-size: 1rem;
+    font-size: 1.25rem;
     font-weight: bold;
     padding: 0;
     margin-left: auto;
@@ -165,22 +188,11 @@
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    transition: background-color 0.2s ease;
+    transition: var(--transition-fast);
 }
 
 .errorCloseButton:hover {
     background: rgba(239, 68, 68, 0.2);
-}
-
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
 }
 
 @keyframes spin {

@@ -1,5 +1,7 @@
 'use client'
 
+import { useEffect, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { FaExclamationTriangle, FaTimes, FaTrash, FaCheck } from 'react-icons/fa'
 import styles from './ConfirmationModal.module.css'
 
@@ -11,59 +13,157 @@ interface ConfirmationModalProps {
     message: string
     confirmText?: string
     cancelText?: string
+    isDestructive?: boolean
 }
 
-const ConfirmationModal = ({
-                               isOpen,
-                               onClose,
-                               onConfirm,
-                               title,
-                               message,
-                               confirmText = "Удалить",
-                               cancelText = "Отмена"
-                           }: ConfirmationModalProps) => {
-    if (!isOpen) return null
+export default function ConfirmationModal({
+                                              isOpen,
+                                              onClose,
+                                              onConfirm,
+                                              title,
+                                              message,
+                                              confirmText = 'Удалить',
+                                              cancelText = 'Отмена',
+                                              isDestructive = true,
+                                          }: ConfirmationModalProps) {
+    const confirmButtonRef = useRef<HTMLButtonElement>(null)
+
+
+    useEffect(() => {
+        const handleEsc = (e: KeyboardEvent) => {
+            if (e.key === 'Escape' && isOpen) {
+                onClose()
+            }
+        }
+        window.addEventListener('keydown', handleEsc)
+        return () => window.removeEventListener('keydown', handleEsc)
+    }, [isOpen, onClose])
+
+
+    useEffect(() => {
+        if (isOpen) {
+            setTimeout(() => {
+                confirmButtonRef.current?.focus()
+            }, 100)
+        }
+    }, [isOpen])
 
     const handleConfirm = () => {
         onConfirm()
         onClose()
     }
 
+    if (!isOpen) return null
+
     return (
-        <div className={styles.modalOverlay} onClick={onClose}>
-            <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-                <div className={styles.modalHeader}>
-                    <div className={styles.titleSection}>
-                        <FaExclamationTriangle className={styles.warningIcon} />
-                        <h3 className={styles.modalTitle}>{title}</h3>
-                    </div>
-                    <button className={styles.closeButton} onClick={onClose}>
-                        <FaTimes />
-                    </button>
-                </div>
-
-                <div className={styles.modalBody}>
-                    <p className={styles.message}>{message}</p>
-                </div>
-
-                <div className={styles.modalActions}>
-                    <button
-                        className={styles.cancelButton}
-                        onClick={onClose}
+        <AnimatePresence>
+            {isOpen && (
+                <motion.div
+                    className={styles.modalOverlay}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={onClose}
+                >
+                    <motion.div
+                        className={styles.modalContent}
+                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                        onClick={(e) => e.stopPropagation()}
+                        role="alertdialog"
+                        aria-modal="true"
+                        aria-labelledby="modal-title"
+                        aria-describedby="modal-description"
                     >
-                        {cancelText}
-                    </button>
-                    <button
-                        className={styles.confirmButton}
-                        onClick={handleConfirm}
-                    >
-                        <FaTrash className={styles.confirmIcon} />
-                        {confirmText}
-                    </button>
-                </div>
-            </div>
-        </div>
+                        <motion.div
+                            className={styles.modalHeader}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.1 }}
+                        >
+                            <div className={styles.titleSection}>
+                                <motion.div
+                                    initial={{ scale: 0, rotate: -180 }}
+                                    animate={{ scale: 1, rotate: 0 }}
+                                    transition={{ type: 'spring', damping: 20, stiffness: 300, delay: 0.2 }}
+                                >
+                                    <FaExclamationTriangle className={styles.warningIcon} />
+                                </motion.div>
+                                <motion.h3
+                                    id="modal-title"
+                                    className={styles.modalTitle}
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ delay: 0.3 }}
+                                >
+                                    {title}
+                                </motion.h3>
+                            </div>
+                            <motion.button
+                                className={styles.closeButton}
+                                onClick={onClose}
+                                whileHover={{ scale: 1.1, rotate: 90 }}
+                                whileTap={{ scale: 0.9 }}
+                                aria-label="Закрыть"
+                            >
+                                <FaTimes />
+                            </motion.button>
+                        </motion.div>
+
+                        <motion.div
+                            className={styles.modalBody}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
+                        >
+                            <motion.p
+                                id="modal-description"
+                                className={styles.message}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ delay: 0.25 }}
+                            >
+                                {message}
+                            </motion.p>
+                        </motion.div>
+
+                        <motion.div
+                            className={styles.modalActions}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.3 }}
+                        >
+                            <motion.button
+                                className={styles.cancelButton}
+                                onClick={onClose}
+                                whileHover={{ y: -2 }}
+                                whileTap={{ scale: 0.98 }}
+                            >
+                                {cancelText}
+                            </motion.button>
+                            <motion.button
+                                ref={confirmButtonRef}
+                                className={`${styles.confirmButton} ${isDestructive ? styles.destructive : ''}`}
+                                onClick={handleConfirm}
+                                whileHover={{ y: -2 }}
+                                whileTap={{ scale: 0.98 }}
+                                autoFocus
+                            >
+                                <motion.span
+                                    className={styles.confirmIconWrapper}
+                                    whileHover={{ rotate: 360 }}
+                                    transition={{ duration: 0.5 }}
+                                >
+                                    {isDestructive ? <FaTrash className={styles.confirmIcon} /> : <FaCheck className={styles.confirmIcon} />}
+                                </motion.span>
+                                {confirmText}
+                            </motion.button>
+                        </motion.div>
+                    </motion.div>
+                </motion.div>
+            )}
+        </AnimatePresence>
     )
 }
-
-export default ConfirmationModal

@@ -72,7 +72,6 @@
     flex: 1;
 }
 
-/* Кастомный скроллбар */
 .modalForm::-webkit-scrollbar {
     width: 8px;
 }
@@ -94,7 +93,6 @@
     background: linear-gradient(135deg, #2563eb, #3b82f6);
 }
 
-/* Для Firefox */
 .modalForm {
     scrollbar-width: thin;
     scrollbar-color: #3b82f6 rgba(59, 130, 246, 0.1);
@@ -212,7 +210,6 @@
     transform: scale(1.2);
 }
 
-/* Стили для иконок файлов */
 .fileIconPdf {
     color: #ef4444;
 }
@@ -247,7 +244,6 @@
     flex-shrink: 0;
 }
 
-/* Стили для загрузки файлов */
 .fileUploadArea {
     position: relative;
     border: 2px dashed rgba(59, 130, 246, 0.3);
@@ -522,7 +518,6 @@
     }
 }
 
-/* Мобильная адаптация */
 @media (max-width: 768px) {
     .modalContent {
         margin: 1rem;
@@ -608,4 +603,44 @@
     .fileSize {
         font-size: 0.7rem;
     }
+}
+
+.textInput.error, .textarea.error, .select.error {
+    border-color: #ef4444;
+}
+
+.errorText {
+    color: #ef4444;
+    font-size: 0.8rem;
+    font-weight: 500;
+    margin-top: 0.25rem;
+}
+
+.fileUploadArea.dragActive {
+    border-color: #3b82f6;
+    background: rgba(59, 130, 246, 0.1);
+    transform: scale(1.01);
+}
+
+.tagsWrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.addTagButton:hover, .removeFileButton:hover, .removeTagButton:hover {
+    transform: translateY(-1px);
+}
+
+.fileItem:hover {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(59, 130, 246, 0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+}
+
+.boardCheckboxLabel:hover {
+    border-color: rgba(59, 130, 246, 0.3);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
 }

@@ -1,6 +1,9 @@
+
+
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
+import {AnimatePresence, motion } from 'framer-motion'
 import { FaCheck, FaTimes } from 'react-icons/fa'
 import { CropArea } from './types/types'
 import styles from './ImageCropper.module.css'
@@ -12,7 +15,10 @@ interface ImageCropperProps {
     onCancel: () => void;
 }
 
-const ImageCropper = ({ imageUrl, onCropChange, onConfirm, onCancel }: ImageCropperProps) => {
+const MIN_CROP_SIZE = 80
+const ASPECT_RATIO = 1
+
+export default function ImageCropper({ imageUrl, onCropChange, onConfirm, onCancel }: ImageCropperProps) {
     const [crop, setCrop] = useState<CropArea>({ x: 0, y: 0, width: 100, height: 100 })
     const [isDragging, setIsDragging] = useState(false)
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
@@ -20,9 +26,6 @@ const ImageCropper = ({ imageUrl, onCropChange, onConfirm, onCancel }: ImageCrop
     const [containerSize, setContainerSize] = useState({ width: 0, height: 0 })
     const containerRef = useRef<HTMLDivElement>(null)
     const imageRef = useRef<HTMLImageElement>(null)
-
-    const MIN_CROP_SIZE = 80
-    const ASPECT_RATIO = 1
 
     useEffect(() => {
         const updateContainerSize = () => {
@@ -75,9 +78,9 @@ const ImageCropper = ({ imageUrl, onCropChange, onConfirm, onCancel }: ImageCrop
                 }
             }
         }
-    }, [imageUrl])
+    }, [imageUrl, onCropChange])
 
-    const getImageDisplaySize = () => {
+    const getImageDisplaySize = useCallback(() => {
         if (!imageSize.width || !imageSize.height || !containerRef.current) {
             return { width: 0, height: 0 }
         }
@@ -96,9 +99,9 @@ const ImageCropper = ({ imageUrl, onCropChange, onConfirm, onCancel }: ImageCrop
             width: imageSize.width * scale,
             height: imageSize.height * scale
         }
-    }
+    }, [imageSize])
 
-    const handleMouseDown = (e: React.MouseEvent) => {
+    const handleMouseDown = useCallback((e: React.MouseEvent | React.TouchEvent) => {
         e.preventDefault()
         e.stopPropagation()
 
@@ -106,8 +109,11 @@ const ImageCropper = ({ imageUrl, onCropChange, onConfirm, onCancel }: ImageCrop
         if (!container) return
 
         const rect = container.getBoundingClientRect()
-        const mouseX = e.clientX - rect.left
-        const mouseY = e.clientY - rect.top
+        const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
+        const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY
+
+        const mouseX = clientX - rect.left
+        const mouseY = clientY - rect.top
 
         if (mouseX >= crop.x && mouseX <= crop.x + crop.width &&
             mouseY >= crop.y && mouseY <= crop.y + crop.height) {
@@ -117,15 +123,18 @@ const ImageCropper = ({ imageUrl, onCropChange, onConfirm, onCancel }: ImageCrop
                 y: mouseY - crop.y
             })
         }
-    }
+    }, [crop])
 
-    const handleMouseMove = (e: React.MouseEvent) => {
+    const handleMouseMove = useCallback((e: React.MouseEvent | React.TouchEvent) => {
         if (!isDragging || !containerRef.current) return
 
         const container = containerRef.current
         const rect = container.getBoundingClientRect()
-        const mouseX = e.clientX - rect.left
-        const mouseY = e.clientY - rect.top
+        const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
+        const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY
+
+        const mouseX = clientX - rect.left
+        const mouseY = clientY - rect.top
 
         const displaySize = getImageDisplaySize()
 
@@ -138,24 +147,27 @@ const ImageCropper = ({ imageUrl, onCropChange, onConfirm, onCancel }: ImageCrop
         const newCrop = { ...crop, x: newX, y: newY }
         setCrop(newCrop)
         onCropChange(getRealCropCoordinates(newCrop))
-    }
+    }, [isDragging, dragStart, crop, getImageDisplaySize, onCropChange])
 
-    const handleMouseUp = () => {
+    const handleMouseUp = useCallback(() => {
         setIsDragging(false)
-    }
+    }, [])
 
-    const handleResize = (e: React.MouseEvent, corner: string) => {
+    const handleResize = useCallback((e: React.MouseEvent | React.TouchEvent, corner: string) => {
         e.preventDefault()
         e.stopPropagation()
 
-        const startX = e.clientX
-        const startY = e.clientY
+        const startX = 'touches' in e ? e.touches[0].clientX : e.clientX
+        const startY = 'touches' in e ? e.touches[0].clientY : e.clientY
         const startCrop = { ...crop }
         const displaySize = getImageDisplaySize()
 
-        const handleMouseMove = (moveEvent: MouseEvent) => {
-            const deltaX = moveEvent.clientX - startX
-            const deltaY = moveEvent.clientY - startY
+        const handleMove = (moveEvent: MouseEvent | TouchEvent) => {
+            const clientX = 'touches' in moveEvent ? moveEvent.touches[0].clientX : moveEvent.clientX
+            const clientY = 'touches' in moveEvent ? moveEvent.touches[0].clientY : moveEvent.clientY
+
+            const deltaX = clientX - startX
+            const deltaY = clientY - startY
 
             let newCrop = { ...startCrop }
 
@@ -202,16 +214,20 @@ const ImageCropper = ({ imageUrl, onCropChange, onConfirm, onCancel }: ImageCrop
             onCropChange(getRealCropCoordinates(newCrop))
         }
 
-        const handleMouseUp = () => {
-            document.removeEventListener('mousemove', handleMouseMove)
-            document.removeEventListener('mouseup', handleMouseUp)
+        const handleUp = () => {
+            document.removeEventListener('mousemove', handleMove as any)
+            document.removeEventListener('mouseup', handleUp)
+            document.removeEventListener('touchmove', handleMove as any)
+            document.removeEventListener('touchend', handleUp)
         }
 
-        document.addEventListener('mousemove', handleMouseMove)
-        document.addEventListener('mouseup', handleMouseUp)
-    }
+        document.addEventListener('mousemove', handleMove as any)
+        document.addEventListener('mouseup', handleUp)
+        document.addEventListener('touchmove', handleMove as any, { passive: false })
+        document.addEventListener('touchend', handleUp)
+    }, [crop, getImageDisplaySize, onCropChange])
 
-    const getRealCropCoordinates = (displayCrop: CropArea) => {
+    const getRealCropCoordinates = useCallback((displayCrop: CropArea) => {
         const displaySize = getImageDisplaySize()
 
         if (!displaySize.width || !displaySize.height || !imageSize.width || !imageSize.height) {
@@ -227,16 +243,26 @@ const ImageCropper = ({ imageUrl, onCropChange, onConfirm, onCancel }: ImageCrop
             width: displayCrop.width * scaleX,
             height: displayCrop.height * scaleY
         }
-    }
+    }, [imageSize, getImageDisplaySize])
 
     const displaySize = getImageDisplaySize()
 
     return (
-        <div className={styles.cropperContainer}>
-            <div className={styles.cropperHeader}>
+        <motion.div
+            className={styles.cropperContainer}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+        >
+            <motion.div
+                className={styles.cropperHeader}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+            >
                 <h3>Выберите область для обложки</h3>
                 <p>Перетащите и измените размер выделенной области</p>
-            </div>
+            </motion.div>
 
             <div
                 ref={containerRef}
@@ -245,65 +271,103 @@ const ImageCropper = ({ imageUrl, onCropChange, onConfirm, onCancel }: ImageCrop
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseUp}
+                onTouchStart={handleMouseDown}
+                onTouchMove={handleMouseMove}
+                onTouchEnd={handleMouseUp}
             >
                 <img
                     ref={imageRef}
                     src={imageUrl}
-                    alt="Crop preview"
+                    alt="Изображение для обрезки"
                     className={styles.cropImage}
                     style={{
                         width: `${displaySize.width}px`,
                         height: `${displaySize.height}px`
                     }}
+                    draggable={false}
                 />
 
-                {displaySize.width > 0 && displaySize.height > 0 && (
-                    <div
-                        className={styles.cropArea}
-                        style={{
-                            left: `${crop.x}px`,
-                            top: `${crop.y}px`,
-                            width: `${crop.width}px`,
-                            height: `${crop.height}px`,
-                        }}
-                    >
-                        <div className={styles.cropGrid}>
-                            <div className={styles.gridLine} style={{ top: '33%' }} />
-                            <div className={styles.gridLine} style={{ top: '66%' }} />
-                            <div className={styles.gridLine} style={{ left: '33%' }} />
-                            <div className={styles.gridLine} style={{ left: '66%' }} />
-                        </div>
+                <AnimatePresence>
+                    {displaySize.width > 0 && displaySize.height > 0 && (
+                        <motion.div
+                            className={styles.cropArea}
+                            style={{
+                                left: `${crop.x}px`,
+                                top: `${crop.y}px`,
+                                width: `${crop.width}px`,
+                                height: `${crop.height}px`,
+                            }}
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+                        >
+                            <div className={styles.cropGrid}>
+                                <div className={styles.gridLine} style={{ top: '33%' }} />
+                                <div className={styles.gridLine} style={{ top: '66%' }} />
+                                <div className={styles.gridLine} style={{ left: '33%' }} />
+                                <div className={styles.gridLine} style={{ left: '66%' }} />
+                            </div>
 
-                        <div
-                            className={`${styles.resizeHandle} ${styles.topLeft}`}
-                            onMouseDown={(e) => handleResize(e, 'top-left')}
-                        />
-                        <div
-                            className={`${styles.resizeHandle} ${styles.topRight}`}
-                            onMouseDown={(e) => handleResize(e, 'top-right')}
-                        />
-                        <div
-                            className={`${styles.resizeHandle} ${styles.bottomLeft}`}
-                            onMouseDown={(e) => handleResize(e, 'bottom-left')}
-                        />
-                        <div
-                            className={`${styles.resizeHandle} ${styles.bottomRight}`}
-                            onMouseDown={(e) => handleResize(e, 'bottom-right')}
-                        />
-                    </div>
-                )}
+                            <motion.div
+                                className={`${styles.resizeHandle} ${styles.topLeft}`}
+                                onMouseDown={(e) => handleResize(e, 'top-left')}
+                                onTouchStart={(e) => handleResize(e, 'top-left')}
+                                whileHover={{ scale: 1.2 }}
+                                whileTap={{ scale: 0.9 }}
+                                aria-label="Сжать слева сверху"
+                            />
+                            <motion.div
+                                className={`${styles.resizeHandle} ${styles.topRight}`}
+                                onMouseDown={(e) => handleResize(e, 'top-right')}
+                                onTouchStart={(e) => handleResize(e, 'top-right')}
+                                whileHover={{ scale: 1.2 }}
+                                whileTap={{ scale: 0.9 }}
+                                aria-label="Сжать справа сверху"
+                            />
+                            <motion.div
+                                className={`${styles.resizeHandle} ${styles.bottomLeft}`}
+                                onMouseDown={(e) => handleResize(e, 'bottom-left')}
+                                onTouchStart={(e) => handleResize(e, 'bottom-left')}
+                                whileHover={{ scale: 1.2 }}
+                                whileTap={{ scale: 0.9 }}
+                                aria-label="Сжать слева снизу"
+                            />
+                            <motion.div
+                                className={`${styles.resizeHandle} ${styles.bottomRight}`}
+                                onMouseDown={(e) => handleResize(e, 'bottom-right')}
+                                onTouchStart={(e) => handleResize(e, 'bottom-right')}
+                                whileHover={{ scale: 1.2 }}
+                                whileTap={{ scale: 0.9 }}
+                                aria-label="Сжать справа снизу"
+                            />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
 
-            <div className={styles.cropperActions}>
-                <button className={styles.cancelButton} onClick={onCancel}>
+            <motion.div
+                className={styles.cropperActions}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+            >
+                <motion.button
+                    className={styles.cancelButton}
+                    onClick={onCancel}
+                    whileHover={{ y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                >
                     <FaTimes /> Отмена
-                </button>
-                <button className={styles.confirmButton} onClick={onConfirm}>
+                </motion.button>
+                <motion.button
+                    className={styles.confirmButton}
+                    onClick={onConfirm}
+                    whileHover={{ y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                >
                     <FaCheck /> Применить
-                </button>
-            </div>
-        </div>
+                </motion.button>
+            </motion.div>
+        </motion.div>
     )
 }
-
-export default ImageCropper

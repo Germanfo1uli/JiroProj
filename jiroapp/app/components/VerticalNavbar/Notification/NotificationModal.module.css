@@ -1,10 +1,9 @@
 .modalOverlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     z-index: 2000;
+    pointer-events: auto;
+    background: rgba(0, 0, 0, 0.05);
 }
 
 .modalContent {
@@ -12,24 +11,14 @@
     top: 80px;
     left: 90px;
     width: 320px;
-    background: rgba(255, 255, 255, 0.95);
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
     backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(61, 107, 179, 0.2);
     border-radius: 16px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
     overflow: hidden;
-    animation: modalAppear 0.3s ease-out;
-}
-
-@keyframes modalAppear {
-    0% {
-        opacity: 0;
-        transform: translateY(-10px) scale(0.95);
-    }
-    100% {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
+    display: flex;
+    flex-direction: column;
 }
 
 .modalHeader {
@@ -46,6 +35,7 @@
     font-weight: 700;
     color: #ffffff;
     margin: 0;
+    letter-spacing: -0.025em;
 }
 
 .closeButton {
@@ -53,22 +43,17 @@
     border: none;
     color: #ffffff;
     cursor: pointer;
-    padding: 0.75rem;
-    border-radius: 50%;
-    transition: all 0.3s ease;
-    font-size: 1.4rem;
-    position: relative;
-    z-index: 1;
-    width: 36px;
-    height: 36px;
+    padding: 0.5rem;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1.1rem;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .closeButton:hover {
-    background: rgba(255, 255, 255, 0.1);
-    transform: rotate(90deg);
+    background: rgba(255, 255, 255, 0.15);
 }
 
 .modalBody {
@@ -86,7 +71,6 @@
 .sadIcon {
     font-size: 3rem;
     color: #cbd5e1;
-    margin-bottom: 0.5rem;
 }
 
 .emptyText {

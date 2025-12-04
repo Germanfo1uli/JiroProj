@@ -1,11 +1,8 @@
 .modalOverlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px);
+    backdrop-filter: blur(8px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -15,26 +12,15 @@
 
 .helpModal {
     position: relative;
-    background: rgba(255, 255, 255, 0.95);
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
     backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
     padding: 2rem;
     max-width: 380px;
     width: 100%;
-    animation: modalAppear 0.3s ease-out;
-}
-
-@keyframes modalAppear {
-    0% {
-        opacity: 0;
-        transform: scale(0.9) translateY(-20px);
-    }
-    100% {
-        opacity: 1;
-        transform: scale(1) translateY(0);
-    }
+    overflow: hidden;
 }
 
 .closeButton {
@@ -51,17 +37,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
+    z-index: 1;
 }
 
 .closeButton:hover {
     background: rgba(61, 107, 179, 0.2);
     color: #475569;
-    transform: scale(1.1);
-}
-
-.closeIcon {
-    font-size: 0.9rem;
 }
 
 .modalContent {
@@ -85,13 +67,9 @@
     overflow: hidden;
     border: 4px solid rgba(61, 107, 179, 0.1);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    transition: all 0.3s ease;
-}
-
-.catImageWrapper:hover {
-    border-color: rgba(61, 107, 179, 0.2);
-    transform: scale(1.02);
-    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .catImage {
@@ -114,23 +92,20 @@
 .helpTitle {
     font-size: 1.5rem;
     font-weight: 700;
-    color: #1E293B;
+    color: #1e293b;
     margin: 0;
     background: linear-gradient(135deg, #2a5298, #3d6bb3);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    letter-spacing: -0.025em;
 }
 
 .helpText {
     font-size: 1rem;
-    color: #64748B;
+    color: #64748b;
     line-height: 1.5;
     margin: 0;
-}
-
-.helpActions {
-    margin-top: 0.5rem;
 }
 
 .helpButton {
@@ -141,19 +116,14 @@
     color: white;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     box-shadow: 0 4px 12px rgba(42, 82, 152, 0.3);
     font-size: 0.95rem;
 }
 
 .helpButton:hover {
-    transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(42, 82, 152, 0.4);
     background: linear-gradient(135deg, #3d6bb3, #4facfe);
-}
-
-.helpButton:active {
-    transform: translateY(0);
 }
 
 @media (max-width: 768px) {
@@ -176,6 +146,11 @@
     }
 
     .helpText {
+        font-size: 0.9rem;
+    }
+
+    .helpButton {
+        padding: 0.65rem 1.75rem;
         font-size: 0.9rem;
     }
 }
@@ -204,7 +179,7 @@
     }
 
     .helpButton {
-        padding: 0.65rem 1.75rem;
-        font-size: 0.9rem;
+        padding: 0.65rem 1.5rem;
+        font-size: 0.85rem;
     }
 }

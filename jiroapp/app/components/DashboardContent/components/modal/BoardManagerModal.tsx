@@ -1,7 +1,12 @@
 'use client'
 
-import { useState } from 'react'
-import { FaPlus, FaTrash, FaEdit, FaTimes, FaSave } from 'react-icons/fa'
+import { useEffect, useCallback, useState, useMemo } from 'react'
+import { useForm, Controller } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { motion, AnimatePresence } from 'framer-motion'
+import toast from 'react-hot-toast'
+import { z } from 'zod'
+import { FaPlus, FaTrash, FaEdit, FaTimes, FaSave, FaCheck } from 'react-icons/fa'
 import styles from './BoardManagerModal.module.css'
 
 interface Board {
@@ -10,221 +15,418 @@ interface Board {
     color: string
 }
 
+const schema = z.object({
+    title: z.string().min(1, 'Выберите название доски'),
+    color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Неверный формат цвета'),
+})
+
+type FormData = z.infer<typeof schema>
+
 interface BoardManagerModalProps {
     isOpen: boolean
     onClose: () => void
     boards: Board[]
     onSave: (boards: Board[]) => void
-    getAvailableBoardTitles: () => Array<{title: string, available: boolean}>
+    getAvailableBoardTitles: () => Array<{ title: string; available: boolean }>
 }
 
-const BoardManagerModal = ({ isOpen, onClose, boards, onSave, getAvailableBoardTitles }: BoardManagerModalProps) => {
+const MAX_BOARDS = 10
+
+const predefinedColors = [
+    '#3b82f6',
+    '#f59e0b',
+    '#8b5cf6',
+    '#10b981',
+    '#ef4444',
+    '#ec4899',
+    '#06b6d4',
+    '#f97316',
+]
+
+export default function BoardManagerModal({
+                                              isOpen,
+                                              onClose,
+                                              boards,
+                                              onSave,
+                                              getAvailableBoardTitles,
+                                          }: BoardManagerModalProps) {
     const [boardsList, setBoardsList] = useState<Board[]>([...boards])
-    const [selectedBoardTitle, setSelectedBoardTitle] = useState('')
-    const [newBoardColor, setNewBoardColor] = useState('#3b82f6')
     const [editingBoardId, setEditingBoardId] = useState<number | null>(null)
-    const [editBoardTitle, setEditBoardTitle] = useState('')
-    const [editBoardColor, setEditBoardColor] = useState('')
 
-    const predefinedColors = [
-        '#3b82f6',
-        '#f59e0b',
-        '#8b5cf6',
-        '#10b981',
-        '#ef4444',
-        '#ec4899',
-        '#06b6d4',
-        '#f97316',
-    ]
+    const {
+        control: addControl,
+        handleSubmit: handleAddSubmit,
+        reset: resetAddForm,
+        formState: { errors: addErrors, isSubmitting: isAdding },
+    } = useForm<FormData>({
+        resolver: zodResolver(schema),
+        defaultValues: {
+            title: '',
+            color: '#3b82f6',
+        },
+    })
 
-    const availableTitles = getAvailableBoardTitles()
+    const {
+        control: editControl,
+        handleSubmit: handleEditSubmit,
+        formState: { errors: editErrors },
+    } = useForm<FormData>({
+        resolver: zodResolver(schema),
+    })
 
-    const handleAddBoard = () => {
-        if (selectedBoardTitle) {
+    useEffect(() => {
+        if (isOpen) {
+            setBoardsList([...boards])
+            resetAddForm()
+            setEditingBoardId(null)
+        }
+    }, [isOpen, boards, resetAddForm])
+
+    useEffect(() => {
+        const handleEsc = (e: KeyboardEvent) => {
+            if (e.key === 'Escape' && isOpen) onClose()
+        }
+        window.addEventListener('keydown', handleEsc)
+        return () => window.removeEventListener('keydown', handleEsc)
+    }, [isOpen, onClose])
+
+    const availableTitles = useMemo(() => getAvailableBoardTitles(), [getAvailableBoardTitles, boardsList])
+
+    const handleAddBoard = useCallback(
+        (data: FormData) => {
+            if (boardsList.length >= MAX_BOARDS) {
+                toast.error(`Максимум ${MAX_BOARDS} досок`)
+                return
+            }
+
             const newBoard: Board = {
                 id: Date.now(),
-                title: selectedBoardTitle,
-                color: newBoardColor,
+                title: data.title,
+                color: data.color,
             }
-            setBoardsList([...boardsList, newBoard])
-            setSelectedBoardTitle('')
-            setNewBoardColor('#3b82f6')
+
+            setBoardsList((prev) => [...prev, newBoard])
+            resetAddForm()
+            toast.success('Доска добавлена')
+        },
+        [boardsList.length, resetAddForm]
+    )
+
+    const handleDeleteBoard = useCallback((id: number) => {
+        const board = boardsList.find((b) => b.id === id)
+        if (!board) return
+
+        if (confirm(`Удалить доску "${board.title}"?`)) {
+            setBoardsList((prev) => prev.filter((b) => b.id !== id))
+            toast.success('Доска удалена')
         }
-    }
+    }, [boardsList])
 
-    const handleDeleteBoard = (id: number) => {
-        setBoardsList(boardsList.filter(board => board.id !== id))
-    }
-
-    const startEditingBoard = (board: Board) => {
+    const startEditingBoard = useCallback((board: Board) => {
         setEditingBoardId(board.id)
-        setEditBoardTitle(board.title)
-        setEditBoardColor(board.color)
-    }
+    }, [])
 
-    const saveEditedBoard = () => {
-        if (editingBoardId !== null && editBoardTitle) {
-            setBoardsList(boardsList.map(board =>
-                board.id === editingBoardId
-                    ? { ...board, title: editBoardTitle, color: editBoardColor }
-                    : board
-            ))
-            cancelEditing()
-        }
-    }
+    const handleEditBoard = useCallback(
+        (data: FormData) => {
+            if (editingBoardId === null) return
 
-    const cancelEditing = () => {
+            setBoardsList((prev) =>
+                prev.map((board) =>
+                    board.id === editingBoardId
+                        ? { ...board, title: data.title, color: data.color }
+                        : board
+                )
+            )
+            setEditingBoardId(null)
+            toast.success('Доска обновлена')
+        },
+        [editingBoardId]
+    )
+
+    const cancelEditing = useCallback(() => {
         setEditingBoardId(null)
-        setEditBoardTitle('')
-        setEditBoardColor('')
-    }
+    }, [])
 
-    const handleSave = () => {
+    const handleSave = useCallback(() => {
         onSave(boardsList)
+        toast.success('Изменения сохранены')
         onClose()
-    }
+    }, [boardsList, onSave, onClose])
+
+    const hasDuplicates = useMemo(() => {
+        const titles = boardsList.map((b) => b.title)
+        return new Set(titles).size !== titles.length
+    }, [boardsList])
 
     if (!isOpen) return null
 
     return (
-        <div className={styles.modalOverlay} onClick={onClose}>
-            <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-                <div className={styles.modalHeader}>
-                    <h2 className={styles.modalTitle}>Управление досками</h2>
-                    <button className={styles.closeButton} onClick={onClose}>
-                        <FaTimes />
-                    </button>
-                </div>
-
-                <div className={styles.modalBody}>
-                    <div className={styles.addBoardSection}>
-                        <h3 className={styles.sectionTitle}>Добавить новую доску</h3>
-                        <div className={styles.addBoardForm}>
-                            <select
-                                className={styles.boardSelect}
-                                value={selectedBoardTitle}
-                                onChange={(e) => setSelectedBoardTitle(e.target.value)}
-                            >
-                                <option value="">Выберите название доски</option>
-                                {availableTitles.map(({ title, available }) => (
-                                    <option
-                                        key={title}
-                                        value={title}
-                                        disabled={!available}
-                                        className={!available ? styles.disabledOption : ''}
-                                    >
-                                        {title} {!available ? '(уже используется)' : ''}
-                                    </option>
-                                ))}
-                            </select>
-                            <div className={styles.colorPicker}>
-                                {predefinedColors.map(color => (
-                                    <button
-                                        key={color}
-                                        className={`${styles.colorOption} ${newBoardColor === color ? styles.selected : ''}`}
-                                        style={{ backgroundColor: color }}
-                                        onClick={() => setNewBoardColor(color)}
-                                    />
-                                ))}
+        <>
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div
+                        className={styles.modalOverlay}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={onClose}
+                    >
+                        <motion.div
+                            className={styles.modalContent}
+                            initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 30, scale: 0.95 }}
+                            onClick={(e) => e.stopPropagation()}
+                            role="dialog"
+                            aria-modal="true"
+                            aria-labelledby="modal-title"
+                        >
+                            <div className={styles.modalHeader}>
+                                <h2 id="modal-title" className={styles.modalTitle}>
+                                    Управление досками
+                                </h2>
+                                <motion.button
+                                    className={styles.closeButton}
+                                    onClick={onClose}
+                                    whileHover={{ scale: 1.1, rotate: 90 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    aria-label="Закрыть"
+                                >
+                                    <FaTimes />
+                                </motion.button>
                             </div>
-                            <button
-                                className={`${styles.addButton} ${!selectedBoardTitle ? styles.disabled : ''}`}
-                                onClick={handleAddBoard}
-                                disabled={!selectedBoardTitle}
-                            >
-                                <FaPlus /> Добавить доску
-                            </button>
-                        </div>
-                    </div>
 
-                    <div className={styles.boardsListSection}>
-                        <h3 className={styles.sectionTitle}>Существующие доски</h3>
-                        <div className={styles.boardsList}>
-                            {boardsList.map(board => (
-                                <div key={board.id} className={styles.boardItem}>
-                                    {editingBoardId === board.id ? (
-                                        <div className={styles.editBoardForm}>
-                                            <select
-                                                className={styles.boardSelect}
-                                                value={editBoardTitle}
-                                                onChange={(e) => setEditBoardTitle(e.target.value)}
-                                            >
-                                                {availableTitles.map(({ title, available }) => (
-                                                    <option
-                                                        key={title}
-                                                        value={title}
-                                                        disabled={!available && title !== board.title}
-                                                        className={!available && title !== board.title ? styles.disabledOption : ''}
+                            <div className={styles.modalBody}>
+                                <motion.div
+                                    className={styles.addBoardSection}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.1 }}
+                                >
+                                    <h3 className={styles.sectionTitle}>Добавить новую доску</h3>
+                                    <form onSubmit={handleAddSubmit(handleAddBoard)} className={styles.addBoardForm}>
+                                        <Controller
+                                            name="title"
+                                            control={addControl}
+                                            render={({ field }) => (
+                                                <div className={styles.formGroup}>
+                                                    <select
+                                                        {...field}
+                                                        className={`${styles.boardSelect} ${addErrors.title ? styles.error : ''}`}
+                                                        onChange={(e) => field.onChange(e.target.value)}
                                                     >
-                                                        {title} {!available && title !== board.title ? '(уже используется)' : ''}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                            <div className={styles.colorPicker}>
-                                                {predefinedColors.map(color => (
-                                                    <button
-                                                        key={color}
-                                                        className={`${styles.colorOption} ${editBoardColor === color ? styles.selected : ''}`}
-                                                        style={{ backgroundColor: color }}
-                                                        onClick={() => setEditBoardColor(color)}
-                                                    />
-                                                ))}
-                                            </div>
-                                            <div className={styles.editActions}>
-                                                <button
-                                                    className={`${styles.saveButton} ${!editBoardTitle ? styles.disabled : ''}`}
-                                                    onClick={saveEditedBoard}
-                                                    disabled={!editBoardTitle}
-                                                >
-                                                    <FaSave />
-                                                </button>
-                                                <button className={styles.cancelButton} onClick={cancelEditing}>
-                                                    <FaTimes />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <>
-                                            <div className={styles.boardInfo}>
-                                                <div
-                                                    className={styles.boardColorIndicator}
-                                                    style={{ backgroundColor: board.color }}
-                                                />
-                                                <span className={styles.boardTitle}>{board.title}</span>
-                                            </div>
-                                            <div className={styles.boardActions}>
-                                                <button
-                                                    className={styles.editButton}
-                                                    onClick={() => startEditingBoard(board)}
-                                                >
-                                                    <FaEdit />
-                                                </button>
-                                                <button
-                                                    className={styles.deleteButton}
-                                                    onClick={() => handleDeleteBoard(board.id)}
-                                                >
-                                                    <FaTrash />
-                                                </button>
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
+                                                        <option value="">Выберите название доски</option>
+                                                        {availableTitles.map(({ title, available }) => (
+                                                            <option
+                                                                key={title}
+                                                                value={title}
+                                                                disabled={!available}
+                                                                className={!available ? styles.disabledOption : ''}
+                                                            >
+                                                                {title} {!available ? '(уже используется)' : ''}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                    {addErrors.title && (
+                                                        <span className={styles.errorText}>{addErrors.title.message}</span>
+                                                    )}
+                                                </div>
+                                            )}
+                                        />
 
-                <div className={styles.modalActions}>
-                    <button className={styles.cancelButton} onClick={onClose}>
-                        Отмена
-                    </button>
-                    <button className={styles.saveButton} onClick={handleSave}>
-                        Сохранить изменения
-                    </button>
-                </div>
-            </div>
-        </div>
+                                        <Controller
+                                            name="color"
+                                            control={addControl}
+                                            render={({ field }) => (
+                                                <div className={styles.colorPicker}>
+                                                    {predefinedColors.map((color) => (
+                                                        <motion.button
+                                                            key={color}
+                                                            type="button"
+                                                            className={`${styles.colorOption} ${field.value === color ? styles.selected : ''}`}
+                                                            style={{ backgroundColor: color }}
+                                                            onClick={() => field.onChange(color)}
+                                                            whileHover={{ scale: 1.1 }}
+                                                            whileTap={{ scale: 0.9 }}
+                                                            aria-label={`Выбрать цвет ${color}`}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            )}
+                                        />
+
+                                        <motion.button
+                                            type="submit"
+                                            className={`${styles.addButton} ${boardsList.length >= MAX_BOARDS ? styles.disabled : ''}`}
+                                            disabled={isAdding}
+                                            whileHover={{ y: -2 }}
+                                            whileTap={{ scale: 0.98 }}
+                                        >
+                                            <FaPlus />
+                                            {isAdding ? 'Добавление...' : 'Добавить доску'}
+                                        </motion.button>
+                                    </form>
+                                </motion.div>
+
+                                <motion.div
+                                    className={styles.boardsListSection}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.2 }}
+                                >
+                                    <h3 className={styles.sectionTitle}>Существующие доски</h3>
+                                    <div className={styles.boardsList}>
+                                        <AnimatePresence>
+                                            {boardsList.map((board, index) => (
+                                                <motion.div
+                                                    key={board.id}
+                                                    className={styles.boardItem}
+                                                    initial={{ opacity: 0, x: -20 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    exit={{ opacity: 0, x: 20 }}
+                                                    transition={{ delay: index * 0.05 }}
+                                                >
+                                                    {editingBoardId === board.id ? (
+                                                        <form
+                                                            onSubmit={handleEditSubmit(handleEditBoard)}
+                                                            className={styles.editBoardForm}
+                                                        >
+                                                            <Controller
+                                                                name="title"
+                                                                control={editControl}
+                                                                defaultValue={board.title}
+                                                                render={({ field }) => (
+                                                                    <select
+                                                                        {...field}
+                                                                        className={`${styles.boardSelect} ${editErrors.title ? styles.error : ''}`}
+                                                                        onChange={(e) => field.onChange(e.target.value)}
+                                                                    >
+                                                                        {availableTitles.map(({ title, available }) => (
+                                                                            <option
+                                                                                key={title}
+                                                                                value={title}
+                                                                                disabled={!available && title !== board.title}
+                                                                                className={!available && title !== board.title ? styles.disabledOption : ''}
+                                                                            >
+                                                                                {title} {!available && title !== board.title ? '(уже используется)' : ''}
+                                                                            </option>
+                                                                        ))}
+                                                                    </select>
+                                                                )}
+                                                            />
+
+                                                            <Controller
+                                                                name="color"
+                                                                control={editControl}
+                                                                defaultValue={board.color}
+                                                                render={({ field }) => (
+                                                                    <div className={styles.colorPicker}>
+                                                                        {predefinedColors.map((color) => (
+                                                                            <motion.button
+                                                                                key={color}
+                                                                                type="button"
+                                                                                className={`${styles.colorOption} ${field.value === color ? styles.selected : ''}`}
+                                                                                style={{ backgroundColor: color }}
+                                                                                onClick={() => field.onChange(color)}
+                                                                                whileHover={{ scale: 1.1 }}
+                                                                                whileTap={{ scale: 0.9 }}
+                                                                            />
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+                                                            />
+
+                                                            <div className={styles.editActions}>
+                                                                <motion.button
+                                                                    type="submit"
+                                                                    className={styles.saveButton}
+                                                                    whileHover={{ scale: 1.1 }}
+                                                                    whileTap={{ scale: 0.9 }}
+                                                                    aria-label="Сохранить"
+                                                                >
+                                                                    <FaCheck />
+                                                                </motion.button>
+                                                                <motion.button
+                                                                    type="button"
+                                                                    className={styles.cancelButton}
+                                                                    onClick={cancelEditing}
+                                                                    whileHover={{ scale: 1.1 }}
+                                                                    whileTap={{ scale: 0.9 }}
+                                                                    aria-label="Отмена"
+                                                                >
+                                                                    <FaTimes />
+                                                                </motion.button>
+                                                            </div>
+                                                        </form>
+                                                    ) : (
+                                                        <>
+                                                            <div className={styles.boardInfo}>
+                                                                <motion.div
+                                                                    className={styles.boardColorIndicator}
+                                                                    style={{ backgroundColor: board.color }}
+                                                                    whileHover={{ scale: 1.2 }}
+                                                                />
+                                                                <span className={styles.boardTitle}>{board.title}</span>
+                                                            </div>
+                                                            <div className={styles.boardActions}>
+                                                                <motion.button
+                                                                    className={styles.editButton}
+                                                                    onClick={() => startEditingBoard(board)}
+                                                                    whileHover={{ scale: 1.1 }}
+                                                                    whileTap={{ scale: 0.9 }}
+                                                                    aria-label="Редактировать"
+                                                                >
+                                                                    <FaEdit />
+                                                                </motion.button>
+                                                                <motion.button
+                                                                    className={styles.deleteButton}
+                                                                    onClick={() => handleDeleteBoard(board.id)}
+                                                                    whileHover={{ scale: 1.1 }}
+                                                                    whileTap={{ scale: 0.9 }}
+                                                                    aria-label="Удалить"
+                                                                >
+                                                                    <FaTrash />
+                                                                </motion.button>
+                                                            </div>
+                                                        </>
+                                                    )}
+                                                </motion.div>
+                                            ))}
+                                        </AnimatePresence>
+                                    </div>
+                                </motion.div>
+                            </div>
+
+                            <motion.div
+                                className={styles.modalActions}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.3 }}
+                            >
+                                <motion.button
+                                    className={styles.cancelButton}
+                                    onClick={onClose}
+                                    whileHover={{ y: -2 }}
+                                    whileTap={{ scale: 0.98 }}
+                                >
+                                    Отмена
+                                </motion.button>
+                                <motion.button
+                                    className={styles.saveButton}
+                                    onClick={handleSave}
+                                    disabled={hasDuplicates}
+                                    whileHover={{ y: -2 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    title={hasDuplicates ? 'Исправьте дубликаты названий' : ''}
+                                >
+                                    <FaSave />
+                                    Сохранить изменения
+                                </motion.button>
+                            </motion.div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </>
     )
 }
-
-export default BoardManagerModal

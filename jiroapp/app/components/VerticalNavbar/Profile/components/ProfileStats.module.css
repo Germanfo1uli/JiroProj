@@ -1,38 +1,51 @@
+:root {
+    --color-primary: #3d6bb3;
+    --color-primary-light: #4facfe;
+    --color-success: #10b981;
+    --color-text: #1e293b;
+    --color-text-muted: #64748b;
+    --color-bg: rgba(255, 255, 255, 0.9);
+    --color-border: rgba(61, 107, 179, 0.1);
+    --transition-fast: 0.2s ease;
+    --transition-medium: 0.3s ease;
+}
+
 .profileStats {
-    background: rgba(255, 255, 255, 0.9);
+    background: var(--color-bg);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(61, 107, 179, 0.1);
+    border: 1px solid var(--color-border);
     border-radius: 16px;
     padding: 1.25rem;
-    margin-bottom: 0;
+    height: 100%;
 }
 
 .statsTitle {
     font-size: 1rem;
     font-weight: 700;
-    color: #1e293b;
+    color: var(--color-text);
     margin: 0 0 1rem 0;
     padding-bottom: 0.75rem;
-    border-bottom: 1px solid rgba(61, 107, 179, 0.1);
+    border-bottom: 1px solid var(--color-border);
 }
 
 .statsGrid {
-    display: grid;
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 0.875rem;
 }
 
 .statItem {
     background: rgba(255, 255, 255, 0.8);
-    border: 1px solid rgba(61, 107, 179, 0.08);
+    border: 1px solid var(--color-border);
     border-radius: 12px;
     padding: 0.875rem;
     display: flex;
     align-items: center;
     gap: 0.875rem;
-    transition: all 0.3s ease;
+    transition: var(--transition-fast);
     position: relative;
     overflow: hidden;
+    cursor: default;
 }
 
 .statItem::before {
@@ -42,14 +55,13 @@
     left: 0;
     width: 4px;
     height: 100%;
-    background: linear-gradient(135deg, #3d6bb3 0%, #4facfe 100%);
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
     opacity: 0;
-    transition: opacity 0.3s ease;
+    transition: opacity var(--transition-medium);
 }
 
 .statItem:hover {
-    border-color: rgba(61, 107, 179, 0.2);
-    transform: translateY(-2px);
+    border-color: var(--color-primary);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
 
@@ -65,11 +77,11 @@
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    transition: all 0.3s ease;
+    transition: var(--transition-medium);
 }
 
 .statItem:hover .statIconWrapper {
-    transform: scale(1.1);
+    transform: scale(1.05);
 }
 
 .statIcon {
@@ -80,14 +92,14 @@
 .statInfo h3 {
     font-size: 1rem;
     font-weight: 700;
-    color: #1e293b;
+    color: var(--color-text);
     margin: 0 0 0.2rem 0;
     line-height: 1.2;
 }
 
 .statInfo p {
     font-size: 0.75rem;
-    color: #64748b;
+    color: var(--color-text-muted);
     margin: 0;
     font-weight: 500;
 }
@@ -95,10 +107,6 @@
 @media (max-width: 768px) {
     .profileStats {
         padding: 1rem;
-    }
-
-    .statsGrid {
-        gap: 0.75rem;
     }
 
     .statItem {
@@ -112,15 +120,5 @@
 
     .statIcon {
         font-size: 1rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .statsGrid {
-        grid-template-columns: 1fr;
-    }
-
-    .statItem {
-        padding: 0.75rem;
     }
 }
