@@ -4,6 +4,7 @@ import com.example.boardservice.dto.models.Project;
 import com.example.boardservice.dto.models.ProjectMember;
 import com.example.boardservice.dto.models.ProjectRole;
 import com.example.boardservice.dto.response.CreateProjectResponse;
+import com.example.boardservice.dto.response.GetProjectResponse;
 import com.example.boardservice.repository.ProjectMemberRepository;
 import com.example.boardservice.repository.ProjectRepository;
 import lombok.RequiredArgsConstructor;
@@ -41,10 +42,10 @@ public class ProjectService {
                 project.getName(),
                 project.getKey()
         );
-    };
+    }
 
     @Transactional
-    public Project getProjectById() {
-        return new Project();
+    public GetProjectResponse getProjectById(Long projectId) {
+        return new GetProjectResponse();
     }
 }

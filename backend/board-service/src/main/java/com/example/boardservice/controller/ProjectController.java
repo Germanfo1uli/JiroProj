@@ -2,6 +2,7 @@ package com.example.boardservice.controller;
 
 import com.example.boardservice.dto.request.CreateProjectRequest;
 import com.example.boardservice.dto.response.CreateProjectResponse;
+import com.example.boardservice.dto.response.GetProjectResponse;
 import com.example.boardservice.security.JwtUser;
 import com.example.boardservice.service.ProjectService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,6 +35,19 @@ public class ProjectController {
 
         CreateProjectResponse response = projectService.createProject(
                 principal.userId(), request.name(), request.key());
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(
+            summary = "Создание проекта",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @GetMapping("/{projectId}")
+    public ResponseEntity<GetProjectResponse> getProjectById(
+            @PathVariable Long projectId,
+            @AuthenticationPrincipal JwtUser principal) {
+
+        GetProjectResponse response = projectService.getProjectById(projectId);
         return ResponseEntity.ok(response);
     }
 }
