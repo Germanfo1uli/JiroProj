@@ -421,6 +421,9 @@ healthchecksdb
 # Backup folder for Package Reference Convert tool in Visual Studio 2017
 MigrationBackup/
 
+# Local properties fo Java Spring
+application-local.properties
+
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 
@@ -527,3 +530,11 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# JS modules
+.node_modules/
+.next/
+next-env.d.ts
+
+# Env. files
+servers.json
