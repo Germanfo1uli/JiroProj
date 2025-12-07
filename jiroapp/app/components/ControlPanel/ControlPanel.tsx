@@ -7,11 +7,27 @@ interface ControlPanelProps {
     activePage: string
     onPageChange: (page: string) => void
     isOpen?: boolean
+    hasActiveProject?: boolean
+    onBackToProjects?: () => void
 }
 
-const ControlPanel = ({ activePage, onPageChange, isOpen = true }: ControlPanelProps) => {
+const ControlPanel = ({
+                          activePage,
+                          onPageChange,
+                          isOpen = true,
+                          hasActiveProject = false,
+                          onBackToProjects
+                      }: ControlPanelProps) => {
     const handleNavClick = (page: string) => {
         onPageChange(page)
+    }
+
+    const handleHomeClick = () => {
+        if (hasActiveProject && onBackToProjects) {
+            onBackToProjects()
+        } else {
+            onPageChange('board')
+        }
     }
 
     return (
@@ -28,11 +44,13 @@ const ControlPanel = ({ activePage, onPageChange, isOpen = true }: ControlPanelP
 
             <nav className={styles.panelNav}>
                 <button
-                    className={`${styles.panelNavButton} ${activePage === 'board' ? styles.active : ''}`}
-                    onClick={() => handleNavClick('board')}
+                    className={`${styles.panelNavButton} ${activePage === 'board' || activePage === 'project' ? styles.active : ''}`}
+                    onClick={handleHomeClick}
                 >
                     <FaHome className={styles.panelNavIcon} />
-                    <span className={styles.panelNavText}>Главная</span>
+                    <span className={styles.panelNavText}>
+                        {hasActiveProject ? 'Проект' : 'Главная'}
+                    </span>
                 </button>
 
                 <button

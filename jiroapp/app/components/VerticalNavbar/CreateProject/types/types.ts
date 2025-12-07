@@ -4,8 +4,18 @@ export interface Project {
     description: string;
     image: string | null;
     createdAt: Date;
+    members?: number; // Делаем необязательным
+    tasks?: number; // Делаем необязательным
+    progress?: number; // Делаем необязательным
+    tags?: string[]; // Делаем необязательным
+    owner?: { // Делаем необязательным
+        id: string;
+        name: string;
+        avatar?: string;
+    };
 }
 
+// Остальные типы остаются без изменений
 export interface CreateProjectFormData {
     name: string;
     description: string;
@@ -29,4 +39,11 @@ export interface CropArea {
     y: number;
     width: number;
     height: number;
+}
+
+export interface ImageUploadState {
+    previewUrl: string | null;
+    selectedFile: File | null;
+    cropArea: CropArea | null;
+    isCropping: boolean;
 }

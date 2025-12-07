@@ -7,15 +7,16 @@ import VerticalNavbar from '../components/VerticalNavbar/VerticalNavbar'
 import ControlPanel from '../components/ControlPanel/ControlPanel'
 import styles from './MainPage.module.css'
 import BoardsContent from '../components/BoardsContent/BoardsContent'
+import { Project } from '../components/VerticalNavbar/CreateProject/types/types'
 
 const DashboardContent = lazy(() => import('../components/DashboardContent/DashboardContent'))
 const DevelopersPage = lazy(() => import('../components/DevelopersContent/DevelopersPage'))
 const ReportsPage = lazy(() => import('../components/ReportsContent/ReportsPage'))
 const SettingsContent = lazy(() => import('../components/SettingsContent/SettingsContent'))
+const ProjectContent = lazy(() => import('../components/ProjectContent/ProjectContent'))
 
-type ActivePage = 'dashboard' | 'board' | 'developers' | 'settings' | 'reports'
+type ActivePage = 'dashboard' | 'board' | 'developers' | 'settings' | 'reports' | 'project'
 
-// Улучшенный компонент для загрузки
 const LoadingFallback = () => (
     <div className={styles.loadingFallback}>
         <div className={styles.loadingContainer}>
@@ -33,6 +34,7 @@ const MainPage = () => {
     const [activePage, setActivePage] = useState<ActivePage>('board')
     const [isControlPanelOpen, setIsControlPanelOpen] = useState(true)
     const [loadedComponents, setLoadedComponents] = useState<Set<ActivePage>>(new Set(['board']))
+    const [activeProject, setActiveProject] = useState<Project | null>(null)
     const router = useRouter()
 
     useEffect(() => {
@@ -43,8 +45,23 @@ const MainPage = () => {
     }, [router])
 
     const handlePageChange = (page: ActivePage) => {
-        setLoadedComponents(prev => new Set([...prev, page]))
-        setActivePage(page)
+        if (page === 'board' && activeProject) {
+            // Если есть активный проект и нажали "Главная", показываем проект
+            setActivePage('project')
+        } else {
+            setLoadedComponents(prev => new Set([...prev, page]))
+            setActivePage(page)
+        }
+    }
+
+    const handleProjectSelect = (project: Project) => {
+        setActiveProject(project)
+        setActivePage('project')
+    }
+
+    const handleBackToDashboard = () => {
+        setActiveProject(null)
+        setActivePage('board')
     }
 
     const handleToggleControlPanel = () => {
@@ -59,6 +76,12 @@ const MainPage = () => {
                 {activePage === 'developers' && <DevelopersPage />}
                 {activePage === 'reports' && <ReportsPage />}
                 {activePage === 'settings' && <SettingsContent onBackClick={() => setActivePage('board')} />}
+                {activePage === 'project' && activeProject && (
+                    <ProjectContent
+                        project={activeProject}
+                        onBackToDashboard={handleBackToDashboard}
+                    />
+                )}
             </Suspense>
         )
     }
@@ -68,11 +91,14 @@ const MainPage = () => {
             <VerticalNavbar
                 onToggleControlPanel={handleToggleControlPanel}
                 isControlPanelOpen={isControlPanelOpen}
+                onProjectSelect={handleProjectSelect}
             />
             <ControlPanel
                 activePage={activePage}
                 onPageChange={handlePageChange}
                 isOpen={isControlPanelOpen}
+                hasActiveProject={!!activeProject}
+                onBackToProjects={handleBackToDashboard}
             />
 
             <div className={`${styles.mainContentWrapper} ${!isControlPanelOpen ? styles.panelCollapsed : ''}`}>

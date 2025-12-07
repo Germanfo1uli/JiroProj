@@ -12,7 +12,9 @@ interface CardMenuProps {
 
 const CardMenu = ({ onEdit, onDelete, onClose }: CardMenuProps) => {
     const [isOpen, setIsOpen] = useState(false)
+    const [position, setPosition] = useState<'bottom' | 'top'>('bottom')
     const menuRef = useRef<HTMLDivElement>(null)
+    const triggerRef = useRef<HTMLButtonElement>(null)
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -28,6 +30,16 @@ const CardMenu = ({ onEdit, onDelete, onClose }: CardMenuProps) => {
         }
     }, [onClose])
 
+    useEffect(() => {
+        if (isOpen && triggerRef.current) {
+            const triggerRect = triggerRef.current.getBoundingClientRect()
+            const spaceBelow = window.innerHeight - triggerRect.bottom
+            const spaceAbove = triggerRect.top
+
+            setPosition(spaceBelow < 200 && spaceAbove > spaceBelow ? 'top' : 'bottom')
+        }
+    }, [isOpen])
+
     const handleEdit = () => {
         onEdit()
         setIsOpen(false)
@@ -41,6 +53,7 @@ const CardMenu = ({ onEdit, onDelete, onClose }: CardMenuProps) => {
     return (
         <div className={styles.cardMenuContainer} ref={menuRef}>
             <button
+                ref={triggerRef}
                 className={styles.menuTrigger}
                 onClick={(e) => {
                     e.stopPropagation()
@@ -51,7 +64,13 @@ const CardMenu = ({ onEdit, onDelete, onClose }: CardMenuProps) => {
             </button>
 
             {isOpen && (
-                <div className={styles.menuDropdown}>
+                <div
+                    className={`${styles.menuDropdown} ${position === 'top' ? styles.menuTop : styles.menuBottom}`}
+                    style={{
+                        [position === 'top' ? 'bottom' : 'top']: position === 'top' ? '100%' : '100%',
+                        right: 0
+                    }}
+                >
                     <div className={styles.menuHeader}>
                         <span className={styles.menuTitle}>Действия с карточкой</span>
                         <button

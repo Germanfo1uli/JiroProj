@@ -60,7 +60,6 @@ const TaskCard = ({ card, getPriorityColor, getPriorityBgColor, onEdit, onDelete
     }
 
     const handleMenuClose = () => {
-        // Дополнительные действия при закрытии меню, если нужны
     }
 
     return (

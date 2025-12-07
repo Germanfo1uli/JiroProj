@@ -13,9 +13,14 @@ import styles from './VerticalNavbar.module.css'
 interface VerticalNavbarProps {
     onToggleControlPanel?: () => void;
     isControlPanelOpen?: boolean;
+    onProjectSelect?: (project: Project) => void;
 }
 
-const VerticalNavbar = ({ onToggleControlPanel, isControlPanelOpen = true }: VerticalNavbarProps) => {
+const VerticalNavbar = ({
+                            onToggleControlPanel,
+                            isControlPanelOpen = true,
+                            onProjectSelect
+                        }: VerticalNavbarProps) => {
     const [isNotificationOpen, setIsNotificationOpen] = useState(false)
     const [isSearchOpen, setIsSearchOpen] = useState(false)
     const [isHelpOpen, setIsHelpOpen] = useState(false)
@@ -66,6 +71,12 @@ const VerticalNavbar = ({ onToggleControlPanel, isControlPanelOpen = true }: Ver
     const handleToggleControlPanel = () => {
         if (onToggleControlPanel) {
             onToggleControlPanel()
+        }
+    }
+
+    const handleProjectClick = (project: Project) => {
+        if (onProjectSelect) {
+            onProjectSelect(project)
         }
     }
 
@@ -126,6 +137,7 @@ const VerticalNavbar = ({ onToggleControlPanel, isControlPanelOpen = true }: Ver
                                     key={project.id}
                                     className={styles.projectButton}
                                     aria-label={`Проект: ${project.name}`}
+                                    onClick={() => handleProjectClick(project)}
                                 >
                                     {project.image ? (
                                         <img

@@ -104,9 +104,9 @@ const DashboardContent = () => {
                 subtitle="Управляйте задачами и отслеживайте прогресс по проектам"
                 stats={{
                     totalBoards: boards.length,
-                    totalTasks: boards.reduce((sum, board) => sum + board.cards.length, 0),
+                    totalTasks: boards.reduce((sum, board) => sum + (board.cards?.length || 0), 0),
                     completedTasks: boards.reduce((sum, board) => {
-                        if (board.title === 'Done') return sum + board.cards.length
+                        if (board.title === 'Done') return sum + (board.cards?.length || 0)
                         return sum
                     }, 0)
                 }}

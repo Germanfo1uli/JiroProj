@@ -17,12 +17,23 @@ export const useCreateProject = () => {
                 imageUrl = URL.createObjectURL(formData.image);
             }
 
+            // Создаем проект с полными данными
             const project: Project = {
                 id: Math.random().toString(36).substr(2, 9),
                 name: formData.name,
                 description: formData.description,
                 image: imageUrl,
-                createdAt: new Date()
+                createdAt: new Date(),
+                // Добавляем обязательные поля для страницы проекта
+                members: 1,
+                tasks: 0,
+                progress: 0,
+                tags: ['Новый проект', 'Планирование'],
+                owner: {
+                    id: 'current-user-id',
+                    name: 'Вы',
+                    avatar: 'https://ui-avatars.com/api/?name=Вы&background=3d6bb3&color=fff'
+                }
             };
 
             return project;
