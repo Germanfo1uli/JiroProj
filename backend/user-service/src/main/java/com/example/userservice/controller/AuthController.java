@@ -1,7 +1,7 @@
 package com.example.userservice.controller;
 
-import com.example.userservice.models.dto.request.*;
-import com.example.userservice.models.dto.response.*;
+import com.example.userservice.dto.request.*;
+import com.example.userservice.dto.response.*;
 import com.example.userservice.security.JwtUser;
 import com.example.userservice.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
@@ -20,6 +21,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("api/auth")
 @RequiredArgsConstructor
+@Slf4j
 @Validated
 @SecurityRequirement(name = "bearerAuth")
 @Tag(name = "Auth Management", description = "Управление авторизацией, аутентификацией, сессиями и тд.")
@@ -77,6 +79,7 @@ public class AuthController {
                 principal.userId(), request.oldPassword(),
                 request.newPassword(), request.refreshToken(),
                 deviceFingerprint);
+
         return ResponseEntity.ok(response);
     }
 

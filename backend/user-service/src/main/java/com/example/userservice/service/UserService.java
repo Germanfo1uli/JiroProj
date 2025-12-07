@@ -1,11 +1,11 @@
 package com.example.userservice.service;
 
 import com.example.userservice.exception.*;
-import com.example.userservice.models.dto.data.UserFlags;
-import com.example.userservice.models.dto.response.ChangeProfileResponse;
-import com.example.userservice.models.dto.response.MyProfileResponse;
-import com.example.userservice.models.dto.response.PublicProfileResponse;
-import com.example.userservice.models.entity.User;
+import com.example.userservice.dto.data.UserFlags;
+import com.example.userservice.dto.response.ChangeProfileResponse;
+import com.example.userservice.dto.response.MyProfileResponse;
+import com.example.userservice.dto.response.PublicProfileResponse;
+import com.example.userservice.dto.models.User;
 import com.example.userservice.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;

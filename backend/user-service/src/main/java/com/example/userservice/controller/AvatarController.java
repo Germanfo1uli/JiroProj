@@ -1,6 +1,6 @@
 package com.example.userservice.controller;
 
-import com.example.userservice.models.entity.Avatar;
+import com.example.userservice.dto.models.Avatar;
 import com.example.userservice.security.JwtUser;
 import com.example.userservice.service.AvatarService;
 import com.example.userservice.service.AvatarValidator;
@@ -12,7 +12,6 @@ import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;

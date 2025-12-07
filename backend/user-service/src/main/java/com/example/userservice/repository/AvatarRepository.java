@@ -1,6 +1,6 @@
 package com.example.userservice.repository;
 
-import com.example.userservice.models.entity.Avatar;
+import com.example.userservice.dto.models.Avatar;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

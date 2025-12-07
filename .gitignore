@@ -531,10 +531,14 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 
+<<<<<<< HEAD
 # JS modules
 .node_modules/
 .next/
 next-env.d.ts
 
 # Env. files
+=======
+# server.json
+>>>>>>> backend-GD
 servers.json

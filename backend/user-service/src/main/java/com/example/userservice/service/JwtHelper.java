@@ -1,7 +1,7 @@
 package com.example.userservice.service;
 
 import com.example.userservice.config.JwtConfig;
-import com.example.userservice.models.entity.User;
+import com.example.userservice.dto.models.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;

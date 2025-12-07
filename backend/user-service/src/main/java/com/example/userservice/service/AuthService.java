@@ -1,10 +1,10 @@
 package com.example.userservice.service;
 
+import com.example.userservice.dto.response.*;
 import com.example.userservice.exception.*;
-import com.example.userservice.models.dto.response.*;
-import com.example.userservice.models.entity.RefreshToken;
-import com.example.userservice.models.entity.SystemRole;
-import com.example.userservice.models.entity.User;
+import com.example.userservice.dto.models.RefreshToken;
+import com.example.userservice.dto.models.SystemRole;
+import com.example.userservice.dto.models.User;
 import com.example.userservice.repository.UserRepository;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -128,7 +128,7 @@ public class AuthService {
 
         user.setPasswordHash(passwordEncoder.encode(newPassword));
 
-        revocationService.revokeAllExcept(userId, currentRefresh);
+        revocationService.revokeAllByUser(userId);
         TokenPair pair = tokenService.createTokenPair(user, deviceFingerprint);
         return ChangePasswordResponse.of(userId, LocalDateTime.now(), pair);
     }
@@ -156,7 +156,7 @@ public class AuthService {
 
         user.setEmail(newEmail);
 
-        revocationService.revokeAllExcept(userId, currentRefresh);
+        revocationService.revokeAllByUser(userId);
         TokenPair pair = tokenService.createTokenPair(user, deviceFingerprint);
         return ChangeEmailResponse.of(userId, LocalDateTime.now(), newEmail, pair);
     }
