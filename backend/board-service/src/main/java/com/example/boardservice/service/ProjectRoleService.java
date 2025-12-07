@@ -1,5 +1,6 @@
 package com.example.boardservice.service;
 
+import com.example.boardservice.cache.RedisCacheService;
 import com.example.boardservice.config.PermissionMatrixProperties;
 import com.example.boardservice.dto.data.PermissionEntry;
 import com.example.boardservice.dto.models.RolePermission;
@@ -28,8 +29,7 @@ public class ProjectRoleService {
     private final ProjectRoleRepository roleRepository;
     private final RolePermissionRepository permissionRepository;
     private final PermissionMatrixProperties matrixProps;
-    private final RedisTemplate<String, String> redisTemplate;
-    private final RedisTemplate<String, Set<String>> redisSetTemplate;
+    private final RedisCacheService redisCacheService;
 
     @Transactional
     public ProjectRole createDefaultRoles(Long projectId) {
@@ -136,24 +136,6 @@ public class ProjectRoleService {
                 role.getIsDefault(),
                 request
         );
-    }
-
-    private void cacheRolePermissions(Long roleId, Set<RolePermission> permissions) {
-        String key = String.format(ROLE_PERMS_KEY, roleId);
-
-        // Преобразуем RolePermission → "ENTITY:ACTION"
-        Set<String> permStrings = permissions.stream()
-                .map(p -> p.getEntity().name() + ":" + p.getAction().name())
-                .collect(Collectors.toSet());
-
-        // Сохраняем в Redis Set
-        redisSetTemplate.opsForSet().add(key, permStrings.toArray(new String[0]));
-        redisSetTemplate.expire(key, ROLE_TTL);
-    }
-
-    private void invalidateRolePermissions(Long roleId) {
-        String key = String.format(ROLE_PERMS_KEY, roleId);
-        redisTemplate.delete(key);
     }
 
     @Transactional(readOnly = true)
