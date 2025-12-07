@@ -1,0 +1,63 @@
+package com.example.boardservice.service;
+
+import com.example.boardservice.cache.RedisCacheService;
+import com.example.boardservice.dto.models.enums.ActionType;
+import com.example.boardservice.dto.models.enums.EntityType;
+import com.example.boardservice.exception.AccessDeniedException;
+import com.example.boardservice.repository.ProjectMemberRepository;
+import com.example.boardservice.repository.RolePermissionRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+import java.util.Set;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class AuthService {
+    private final RedisCacheService redisCacheService;
+    private final RolePermissionRepository permissionRepository;
+    private final ProjectMemberRepository memberRepository;
+
+    public void checkPermission(Long userId, Long projectId, EntityType entity, ActionType action) {
+        Long roleId = redisCacheService.getUserRoleFromCache(userId, projectId);
+
+        if (roleId == null) {
+            roleId = memberRepository.findByUserIdAndProject_Id(userId, projectId)
+                    .orElseThrow(() -> new AccessDeniedException("User not in project"))
+                    .getRole().getId();
+            redisCacheService.cacheUserRole(userId, projectId, roleId);
+        }
+
+        Set<String> cachedPerms = redisCacheService.getRolePermissionsFromCache(roleId);
+
+        if (cachedPerms == null) {
+            cachedPerms = permissionRepository.findByRoleId(roleId).stream()
+                    .map(p -> p.getEntity().name() + ":" + p.getAction().name())
+                    .collect(Collectors.toSet());
+            redisCacheService.cacheRolePermissions(roleId, cachedPerms);
+        }
+
+        String requiredPermission = entity.name() + ":" + action.name();
+        if (!cachedPerms.contains(requiredPermission)) {
+            throw new AccessDeniedException(
+                    String.format("User %d has no %s permission on %s in project %d",
+                            userId, action, entity, projectId)
+            );
+        }
+
+        log.debug("Access granted: user {} has {} on {} in project {}",
+                userId, action, entity, projectId);
+    }
+
+    public boolean hasPermission(Long userId, Long projectId, EntityType entity, ActionType action) {
+        try {
+            checkPermission(userId, projectId, entity, action);
+            return true;
+        } catch (AccessDeniedException e) {
+            throw new AccessDeniedException(e.getMessage());
+        }
+    }
+}

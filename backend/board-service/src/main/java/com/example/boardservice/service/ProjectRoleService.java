@@ -1,7 +1,6 @@
 package com.example.boardservice.service;
 
 import com.example.boardservice.cache.RedisCacheService;
-import com.example.boardservice.config.PermissionMatrixProperties;
 import com.example.boardservice.dto.data.PermissionEntry;
 import com.example.boardservice.dto.models.ProjectMember;
 import com.example.boardservice.dto.models.RolePermission;
@@ -16,7 +15,6 @@ import com.example.boardservice.repository.ProjectRoleRepository;
 import com.example.boardservice.repository.RolePermissionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -35,7 +33,8 @@ public class ProjectRoleService {
     private final ProjectRoleRepository roleRepository;
     private final RolePermissionRepository permissionRepository;
     private final ProjectMemberRepository memberRepository;
-    private final PermissionMatrixProperties matrixProps;
+    private final PermissionMatrixService permissionMatrixService;
+    private final AuthService authService;
     private final RedisCacheService redisCacheService;
 
     @Transactional
@@ -57,7 +56,7 @@ public class ProjectRoleService {
         roleRepository.saveAll(List.of(owner, user));
 
         Set<RolePermission> ownerPerms = Arrays.stream(EntityType.values())
-                .flatMap(entity -> matrixProps.getAllowedActions(entity).stream()
+                .flatMap(entity -> permissionMatrixService.getAllowedActions(entity).stream()
                         .map(action -> RolePermission.builder()
                                 .role(owner)
                                 .entity(entity)
@@ -76,8 +75,8 @@ public class ProjectRoleService {
         permissionRepository.saveAll(ownerPerms);
         permissionRepository.saveAll(userPerms);
 
-        cacheRolePermissions(owner.getId(), ownerPerms);
-        cacheRolePermissions(user.getId(), userPerms);
+        cachePermissions(owner.getId(), ownerPerms);
+        cachePermissions(user.getId(), userPerms);
 
         log.info("Created default roles for project {}: Owner(ID:{}) and User(ID:{})",
                 projectId, owner.getId(), user.getId());
@@ -87,11 +86,13 @@ public class ProjectRoleService {
 
     @Transactional
     public RoleResponse createRole(Long userId, Long projectId, boolean isDefault, String roleName, Set<PermissionEntry> request) {
+        authService.checkPermission(userId, projectId, EntityType.PROJECT, ActionType.MANAGE);
+
         if (roleName == null || roleName.isBlank()) {
             throw new IllegalArgumentException("Role name is required");
         }
 
-        validatePermissions(request);
+        permissionMatrixService.validatePermissions(request);
 
         ProjectRole role = ProjectRole.builder()
                 .project(Project.builder().id(projectId).build())
@@ -105,9 +106,9 @@ public class ProjectRoleService {
         Set<RolePermission> permissions = createPermissions(role, request);
         permissionRepository.saveAll(permissions);
 
-        cacheRolePermissions(role.getId(), permissions);
+        cachePermissions(role.getId(), permissions);
 
-        log.info("Created role '{}' (ID:{}) in project {}", roleName, role.getId(), projectId);
+        log.info("User {} created role '{}' (ID:{}) in project {}", userId, roleName, role.getId(), projectId);
 
         return new RoleResponse(
                 role.getId(),
@@ -120,11 +121,13 @@ public class ProjectRoleService {
     @Transactional
     public RoleResponse updateRole(Long userId, Long roleId, Long projectId, boolean isDefault, String roleName, Set<PermissionEntry> request) {
 
+        authService.checkPermission(userId, projectId, EntityType.PROJECT, ActionType.MANAGE);
+
         ProjectRole role = roleRepository.findById(roleId)
-                .orElseThrow(() -> new RoleNotFoundException("Role with ID: " + roleId + " not found"));
+                .orElseThrow(() -> new RoleNotFoundException("Role ID: " + roleId + " not found"));
 
         if (!Objects.equals(role.getProject().getId(), projectId)) {
-            throw new RoleNotFoundException("Role with ID: " + roleId + " not found in project ID: " + projectId);
+            throw new IllegalArgumentException("Role " + roleId + " does not belong to project " + projectId);
         }
 
         if (roleName != null && !roleName.isBlank()) {
@@ -132,22 +135,20 @@ public class ProjectRoleService {
         }
 
         role.setIsDefault(isDefault);
-        validatePermissions(request);
+        permissionMatrixService.validatePermissions(request);
 
         redisCacheService.invalidateRolePermissions(roleId);
-
         permissionRepository.deleteByRoleId(roleId);
 
         Set<RolePermission> permissions = createPermissions(role, request);
         permissionRepository.saveAll(permissions);
         role.setPermissions(permissions);
 
-        invalidateUsersByRole(roleId);
+        invalidateUserCaches(roleId);
 
-        cacheRolePermissions(role.getId(), permissions);
+        cachePermissions(role.getId(), permissions);
 
-        log.info("Updated role '{}' (ID:{}) in project {}",
-                role.getName(), roleId, projectId);
+        log.info("User {} updated role '{}' (ID:{}) in project {}", userId, role.getName(), roleId, projectId);
 
         return new RoleResponse(
                 role.getId(),
@@ -159,23 +160,26 @@ public class ProjectRoleService {
 
     @Transactional
     public void deleteRole(Long userId, Long roleId, Long projectId) {
+
+        authService.checkPermission(userId, projectId, EntityType.PROJECT, ActionType.MANAGE);
+
         ProjectRole role = roleRepository.findById(roleId)
-                .orElseThrow(() -> new RoleNotFoundException("Role with ID: " + roleId + " not found"));
+                .orElseThrow(() -> new RoleNotFoundException("Role ID: " + roleId + " not found"));
 
         if (!Objects.equals(role.getProject().getId(), projectId)) {
-            throw new RoleNotFoundException("Role with ID: " + roleId + " not found in project ID: " + projectId);
+            throw new IllegalArgumentException("Role " + roleId + " does not belong to project " + projectId);
         }
 
-        List<ProjectMember> membersWithRole = memberRepository.findAllByRole_IdAndProject_Id(roleId, projectId);
+        List<ProjectMember> affectedMembers = memberRepository.findAllByRole_IdAndProject_Id(roleId, projectId);
         ProjectRole defaultRole = roleRepository.findByProject_IdAndIsDefaultTrue(projectId)
-                .orElseThrow(() -> new RoleNotFoundException("Default role not found in project " + projectId));
+                .orElseThrow(() -> new IllegalStateException("No default role in project " + projectId));
 
-        log.info("Deleting role {} in project {}, reassigning {} members to default role {}",
-                roleId, projectId, membersWithRole.size(), defaultRole.getId());
+        log.info("User {} deleting role {} in project {}, reassigning {} members to default role {}",
+                userId, roleId, projectId, affectedMembers.size(), defaultRole.getId());
 
-        if (!membersWithRole.isEmpty()) {
-            membersWithRole.forEach(member -> member.setRole(defaultRole));
-            memberRepository.saveAll(membersWithRole);
+        if (!affectedMembers.isEmpty()) {
+            affectedMembers.forEach(member -> member.setRole(defaultRole));
+            memberRepository.saveAll(affectedMembers);
         }
 
         permissionRepository.deleteByRoleId(roleId);
@@ -187,12 +191,11 @@ public class ProjectRoleService {
                     public void afterCommit() {
                         redisCacheService.invalidateRolePermissions(roleId);
 
-                        membersWithRole.forEach(member ->
+                        affectedMembers.forEach(member ->
                                 redisCacheService.invalidateUserRole(member.getUserId(), projectId)
                         );
 
-                        log.info("Transaction committed: invalidated caches for {} users and role {}",
-                                membersWithRole.size(), roleId);
+                        log.info("Role {} deleted, caches invalidated for {} members", roleId, affectedMembers.size());
                     }
                 }
         );
@@ -201,16 +204,6 @@ public class ProjectRoleService {
     @Transactional(readOnly = true)
     public List<ProjectRole> getRolesByProjectId(Long projectId) {
         return roleRepository.findByProject_Id(projectId);
-    }
-
-    private void validatePermissions(Set<PermissionEntry> permissions) {
-        for (PermissionEntry entry : permissions) {
-            if (!matrixProps.isAllowed(entry.getEntity(), entry.getAction())) {
-                throw new IllegalArgumentException(
-                        "Invalid permission: " + entry.getEntity() + "+" + entry.getAction()
-                );
-            }
-        }
     }
 
     private Set<RolePermission> createPermissions(ProjectRole role, Set<PermissionEntry> entries) {
@@ -223,28 +216,26 @@ public class ProjectRoleService {
                 .collect(Collectors.toSet());
     }
 
-    private void invalidateUsersByRole(Long roleId) {
+    private void cachePermissions(Long roleId, Set<RolePermission> permissions) {
+        Set<String> permStrings = permissionMatrixService.toCacheFormat(permissions);
+        redisCacheService.cacheRolePermissions(roleId, permStrings);
+    }
+
+    private void invalidateUserCaches(Long roleId) {
         List<ProjectMember> members = memberRepository.findAllByRoleId(roleId);
+        if (members.isEmpty()) return;
 
         TransactionSynchronizationManager.registerSynchronization(
                 new TransactionSynchronization() {
                     @Override
                     public void afterCommit() {
-                        members.forEach(member -> {
-                            redisCacheService.invalidateUserRole(member.getUserId(), member.getProject().getId());
-                        });
-                        log.info("Invalidated user-role caches for {} members with role {}",
+                        members.forEach(member ->
+                                redisCacheService.invalidateUserRole(member.getUserId(), member.getProject().getId())
+                        );
+                        log.debug("Invalidated user-role caches for {} members with role {}",
                                 members.size(), roleId);
                     }
                 }
         );
-    }
-
-    private void cacheRolePermissions(Long roleId, Set<RolePermission> permissions) {
-        Set<String> permStrings = permissions.stream()
-                .map(p -> p.getEntity().name() + ":" + p.getAction().name())
-                .collect(Collectors.toSet());
-
-        redisCacheService.cacheRolePermissions(roleId, permStrings);
     }
 }
