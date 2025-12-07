@@ -1,5 +1,6 @@
 package com.example.boardservice.service;
 
+import com.example.boardservice.cache.RedisCacheService;
 import com.example.boardservice.config.PermissionMatrixProperties;
 import com.example.boardservice.dto.data.PermissionEntry;
 import com.example.boardservice.dto.models.RolePermission;
@@ -12,6 +13,7 @@ import com.example.boardservice.exception.RoleNotFoundException;
 import com.example.boardservice.repository.ProjectRoleRepository;
 import com.example.boardservice.repository.RolePermissionRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +29,7 @@ public class ProjectRoleService {
     private final ProjectRoleRepository roleRepository;
     private final RolePermissionRepository permissionRepository;
     private final PermissionMatrixProperties matrixProps;
+    private final RedisCacheService redisCacheService;
 
     @Transactional
     public ProjectRole createDefaultRoles(Long projectId) {
@@ -93,6 +96,8 @@ public class ProjectRoleService {
         permissionRepository.saveAll(permissions);
 
         role.setPermissions(permissions);
+
+        cacheRolePermissions(role.getId(), permissions);
 
         return new RoleResponse(
                 role.getId(),
