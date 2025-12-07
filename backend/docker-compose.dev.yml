@@ -63,8 +63,8 @@ services:
     image: rabbitmq:3-management-alpine
     hostname: rabbitmq-node
     ports:
-      - "5672:5672"   # AMQP протокол
-      - "15672:15672" # Management UI
+      - "5672:5672"   
+      - "15672:15672" 
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-admin}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-secret}
@@ -142,6 +142,94 @@ services:
     volumes:
       - ./user-service/src:/app/src:ro
       - maven-cache:/root/.m2
+
+  sprints-service:
+    build:
+      context: .
+      dockerfile: sprints-service/Dockerfile.dev
+    ports:
+      - "8084:8084"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis: 
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    environment:
+      EUREKA__CLIENT__SERVICEURL: http://eureka-server:8761/eureka/
+      EUREKA__INSTANCE__HOSTNAME: sprints-service
+      EUREKA__INSTANCE__NONSECUREPORT: 8084
+      EUREKA__INSTANCE__LEASERENEWALINTERVALINSECONDS: 30
+      EUREKA__INSTANCE__LEASEEXPIRATIONDURATIONINSECONDS: 90
+      
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Search Path=sprints_service_schema
+      
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+
+      RABBITMQ__HOSTNAME: rabbitmq
+      RABBITMQ__PORT: 5672 
+      RABBITMQ__USERNAME: ${RABBITMQ_USER:-admin}
+      RABBITMQ__PASSWORD: ${RABBITMQ_PASS:-secret}
+
+      DOTNET_URLS: http://localhost:8084
+
+    volumes:
+      - ./sprints-service:/src/sprint-service
+      - ./shared-libs:/src/shared-libs
+
+  dashboard-service:
+    build:
+      context: .
+      dockerfile: dashboard-service/Dockerfile.dev
+    ports:
+      - "8085:8085"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    environment:
+      EUREKA__CLIENT__SERVICEURL: http://eureka-server:8761/eureka/
+      EUREKA__INSTANCE__HOSTNAME: dashboard-service
+      EUREKA__INSTANCE__NONSECUREPORT: 8085
+      EUREKA__INSTANCE__LEASERENEWALINTERVALINSECONDS: 30
+      EUREKA__INSTANCE__LEASEEXPIRATIONDURATIONINSECONDS: 90
+      
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Search Path=dashboard_service_schema
+      
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+
+      RABBITMQ__HOSTNAME: rabbitmq
+      RABBITMQ__PORT: 5672 
+      RABBITMQ__USERNAME: ${RABBITMQ_USER:-admin}
+      RABBITMQ__PASSWORD: ${RABBITMQ_PASS:-secret}
+      
+      DOTNET_URLS: http://localhost:8085
+      
+    volumes:
+      - ./dashboard-service:/src/dashboard-service
+      - ./shared-libs:/src/shared-libs
 
 volumes:
   pg_data:

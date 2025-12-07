@@ -58,8 +58,11 @@ public class DashboardService : IDashboardService
         {
             foreach (var metric in metrics)
             {
-                var trend = await GetMetricTrendAsync(projectId, metric, fromDate.Value, toDate.Value);
-                dashboardData.Trends[metric] = trend;
+                var dataPoints = await GetMetricTrendAsync(projectId, metric, fromDate.Value, toDate.Value);
+                dashboardData.Trends[metric] = new MetricTrendDto
+                {
+                    MetricName = metric
+                };
             }
         }
 

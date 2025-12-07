@@ -1,5 +1,9 @@
 using Backend.Sprints.Api.Data;
+using Backend.Sprints.Api.Data.Repositories;
+using Backend.Sprints.Api.Services;
 using Microsoft.EntityFrameworkCore;
+using Steeltoe.Discovery.Eureka;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +14,10 @@ builder.Services.AddScoped<SprintRepository>();
 builder.Services.AddScoped<SprintIssueRepository>();
 builder.Services.AddScoped<ISprintService, SprintService>();
 builder.Services.AddScoped<ISprintIssueService, SprintIssueService>();
+
+builder.Services.AddHealthChecks();
+builder.Services.AddEurekaDiscoveryClient();
+
 
 builder.Services.AddDbContext<SprintsDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default"),
@@ -22,6 +30,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.MapHealthChecks("/healthz");
 
 app.UseAuthorization();
 app.MapControllers();

@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Backend.Sprints.Api.Services;
-using Backend.Sprints.Api.Models.Entities;
 
 namespace Backend.Sprints.Api.Controllers;
 
@@ -15,23 +14,6 @@ public class SprintsController : ControllerBase
         _sprintService = sprintService;
     }
 
-    [HttpPost("projects/{projectId}/sprints")]
-    public async Task<IActionResult> CreateSprint(long projectId, [FromBody] CreateSprintRequest request)
-    {
-        try
-        {
-            var sprint = await _sprintService.CreateSprintAsync(projectId, request.Name, request.Goal, request.StartDate, request.EndDate);
-            return CreatedAtAction(nameof(GetSprint), new { id = sprint.Id }, sprint);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(ex.Message);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Conflict(ex.Message);
-        }
-    }
 
     [HttpGet("projects/{projectId}/sprints")]
     public async Task<IActionResult> GetSprintsByProject(long projectId)
@@ -49,27 +31,6 @@ public class SprintsController : ControllerBase
         return Ok(sprint);
     }
 
-    [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateSprint(long id, [FromBody] UpdateSprintRequest request)
-    {
-        try
-        {
-            var sprint = await _sprintService.UpdateSprintAsync(id, request.Name, request.Goal, request.StartDate, request.EndDate, request.Status);
-            return Ok(sprint);
-        }
-        catch (KeyNotFoundException)
-        {
-            return NotFound();
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(ex.Message);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Conflict(ex.Message);
-        }
-    }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteSprint(long id)
