@@ -1,7 +1,6 @@
 package com.example.boardservice.controller;
 
 import com.example.boardservice.dto.request.CreateUpdateRoleRequest;
-import com.example.boardservice.dto.request.InviteUserRequest;
 import com.example.boardservice.dto.request.RoleAssignRequest;
 import com.example.boardservice.dto.response.GetRolesResponse;
 import com.example.boardservice.dto.response.RoleResponse;
@@ -74,11 +73,11 @@ public class RoleController {
     }
 
     @Operation(
-            summary = "Получение роли",
+            summary = "Получение ролей проекта",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @GetMapping("/{projectId}/roles")
-    public ResponseEntity<GetRolesResponse> deleteRole(
+    public ResponseEntity<GetRolesResponse> getRoles(
             @PathVariable Long projectId,
             @AuthenticationPrincipal JwtUser principal) {
 

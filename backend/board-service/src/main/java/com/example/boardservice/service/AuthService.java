@@ -11,6 +11,7 @@ import com.example.boardservice.repository.RolePermissionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class AuthService {
     private final RedisCacheService redisCacheService;
     private final RolePermissionRepository permissionRepository;
@@ -27,19 +29,25 @@ public class AuthService {
     public void checkPermission(Long userId, Long projectId, EntityType entity, ActionType action) {
         Long roleId = redisCacheService.getUserRoleFromCache(userId, projectId);
 
+        log.info("Loading role from Redis: {}", roleId);
+
         if (roleId == null) {
             roleId = memberRepository.findByUserIdAndProject_Id(userId, projectId)
                     .orElseThrow(() -> new AccessDeniedException("User not in project"))
                     .getRole().getId();
+            log.info("Loading role from DB (cache miss): {}", roleId);
             redisCacheService.cacheUserRole(userId, projectId, roleId);
         }
 
         Set<String> cachedPerms = redisCacheService.getRolePermissionsFromCache(roleId);
 
+        log.info("Loading perms from Redis: {}", cachedPerms);
+
         if (cachedPerms == null) {
             cachedPerms = permissionRepository.findByRoleId(roleId).stream()
                     .map(p -> p.getEntity().name() + ":" + p.getAction().name())
                     .collect(Collectors.toSet());
+            log.info("Loading perms from DB (cache miss): {}", cachedPerms);
             redisCacheService.cacheRolePermissions(roleId, cachedPerms);
         }
 

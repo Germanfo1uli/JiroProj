@@ -72,6 +72,11 @@ public class RedisCacheService {
 
     public Set<String> getRolePermissionsFromCache(Long roleId) {
         String key = String.format(RedisConstants.ROLE_PERMS_KEY, roleId);
+
+        if (!redisTemplate.hasKey(key)) {
+            return null;
+        }
+
         return redisTemplate.opsForSet().members(key);
     }
 
