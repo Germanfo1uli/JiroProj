@@ -65,7 +65,7 @@ public class AuthService {
         Long roleId = redisCacheService.getUserRoleFromCache(userId, projectId);
 
         if (roleId == null) {
-            roleId = memberRepository.findRole_IdByUserIdAndProject_Id(userId, projectId)
+            roleId = memberRepository.findRoleIdByUserIdAndProjectId(userId, projectId)
                     .orElse(null);
             if (roleId != null) {
                 redisCacheService.cacheUserRole(userId, projectId, roleId);
