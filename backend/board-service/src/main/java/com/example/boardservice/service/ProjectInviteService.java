@@ -29,7 +29,7 @@ public class ProjectInviteService {
     @Transactional
     public String regenerateInvite(Long projectId, Long userId) {
 
-        // нужно проверить права
+        authService.checkOwnerOnly(userId, projectId);
 
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new ProjectNotFoundException(projectId));
@@ -44,6 +44,7 @@ public class ProjectInviteService {
 
     @Transactional
     public Long joinByInvite(String token, Long userId) {
+
         Project project = projectRepository.findByInviteToken(token)
                 .orElseThrow(() -> new InvalidInviteException("Project does not exists"));
 
@@ -57,7 +58,8 @@ public class ProjectInviteService {
     }
 
     @Transactional
-    public void inviteUser(Long userId, Long projectId, Long invitedUser) {
+    public void inviteUser(Long userId, Long projectId, Long invitedUser, Long roleId) {
+
         authService.checkOwnerOnly(userId, projectId);
 
         if (!projectRepository.existsById(projectId)) {
@@ -68,7 +70,7 @@ public class ProjectInviteService {
             throw new InvalidInviteException("User are already a project member");
         }
 
-        memberService.addDefaultMember(invitedUser, projectId);
+        memberService.addMember(invitedUser, projectId, roleId);
     }
 
     public String generateSecureToken() {

@@ -8,8 +8,10 @@ import com.example.boardservice.dto.models.Project;
 import com.example.boardservice.dto.models.ProjectRole;
 import com.example.boardservice.dto.models.enums.ActionType;
 import com.example.boardservice.dto.models.enums.EntityType;
+import com.example.boardservice.dto.response.GetRolesResponse;
 import com.example.boardservice.dto.response.RoleResponse;
 import com.example.boardservice.exception.RoleNotFoundException;
+import com.example.boardservice.exception.UserNotFoundException;
 import com.example.boardservice.repository.ProjectMemberRepository;
 import com.example.boardservice.repository.ProjectRoleRepository;
 import com.example.boardservice.repository.RolePermissionRepository;
@@ -114,6 +116,7 @@ public class ProjectRoleService {
         return new RoleResponse(
                 role.getId(),
                 role.getName(),
+                role.getIsOwner(),
                 role.getIsDefault(),
                 request
         );
@@ -154,6 +157,7 @@ public class ProjectRoleService {
         return new RoleResponse(
                 role.getId(),
                 role.getName(),
+                role.getIsOwner(),
                 role.getIsDefault(),
                 request
         );
@@ -202,9 +206,48 @@ public class ProjectRoleService {
         );
     }
 
+    @Transactional
+    public void assignRole(Long userId, Long projectId, Long assignedId, Long roleId) {
+
+        authService.checkOwnerOnly(userId, projectId);
+
+        ProjectRole role = roleRepository.findById(roleId)
+                .orElseThrow(() -> new RoleNotFoundException("Role ID: " + roleId + " not found"));
+
+        if (!Objects.equals(role.getProject().getId(), projectId)) {
+            throw new IllegalArgumentException("Role " + roleId + " does not belong to project " + projectId);
+        }
+
+        ProjectMember member = memberRepository.findByUserIdAndProject_Id(assignedId, projectId)
+                .orElseThrow(() -> new UserNotFoundException("User with Id: " + assignedId + " not found in project with Id: " + projectId));
+
+        member.setRole(role);
+        memberRepository.save(member);
+
+        redisCacheService.invalidateUserRole(userId, projectId);
+
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        redisCacheService.invalidateRolePermissions(roleId);
+
+                        redisCacheService.invalidateUserRole(member.getUserId(), projectId);
+
+                        log.info("Role {} deleted, caches invalidated for 1 members", roleId);
+                    }
+                }
+        );
+    }
+
     @Transactional(readOnly = true)
-    public List<ProjectRole> getRolesByProjectId(Long projectId) {
-        return roleRepository.findByProject_Id(projectId);
+    public GetRolesResponse getRolesByProjectId(Long userId, Long projectId) {
+
+        authService.checkPermission(userId, projectId, EntityType.PROJECT, ActionType.VIEW);
+
+        List<ProjectRole> roles = roleRepository.findByProject_IdWithPermissions(projectId);
+
+        return GetRolesResponse.fromEntities(projectId, roles);
     }
 
     private Set<RolePermission> createPermissions(ProjectRole role, Set<PermissionEntry> entries) {

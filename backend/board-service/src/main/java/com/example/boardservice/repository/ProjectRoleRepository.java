@@ -14,4 +14,6 @@ public interface ProjectRoleRepository extends JpaRepository<ProjectRole, Long> 
     List<ProjectRole> findByProject_Id(Long projectId);
     @Query("SELECT pr.isOwner FROM ProjectRole pr WHERE pr.id = :roleId")
     boolean isOwnerRole(@Param("roleId") Long roleId);
+    @Query("SELECT DISTINCT pr FROM ProjectRole pr LEFT JOIN FETCH pr.permissions WHERE pr.project.id = :projectId")
+    List<ProjectRole> findByProject_IdWithPermissions(@Param("projectId") Long projectId);
 }
