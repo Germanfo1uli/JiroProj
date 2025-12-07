@@ -12,6 +12,7 @@ import com.example.boardservice.exception.RoleNotFoundException;
 import com.example.boardservice.repository.ProjectRoleRepository;
 import com.example.boardservice.repository.RolePermissionRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +28,8 @@ public class ProjectRoleService {
     private final ProjectRoleRepository roleRepository;
     private final RolePermissionRepository permissionRepository;
     private final PermissionMatrixProperties matrixProps;
+    private final RedisTemplate<String, String> redisTemplate;
+    private final RedisTemplate<String, Set<String>> redisSetTemplate;
 
     @Transactional
     public ProjectRole createDefaultRoles(Long projectId) {
@@ -94,6 +97,8 @@ public class ProjectRoleService {
 
         role.setPermissions(permissions);
 
+        cacheRolePermissions(role.getId(), permissions);
+
         return new RoleResponse(
                 role.getId(),
                 role.getName(),
@@ -131,6 +136,24 @@ public class ProjectRoleService {
                 role.getIsDefault(),
                 request
         );
+    }
+
+    private void cacheRolePermissions(Long roleId, Set<RolePermission> permissions) {
+        String key = String.format(ROLE_PERMS_KEY, roleId);
+
+        // Преобразуем RolePermission → "ENTITY:ACTION"
+        Set<String> permStrings = permissions.stream()
+                .map(p -> p.getEntity().name() + ":" + p.getAction().name())
+                .collect(Collectors.toSet());
+
+        // Сохраняем в Redis Set
+        redisSetTemplate.opsForSet().add(key, permStrings.toArray(new String[0]));
+        redisSetTemplate.expire(key, ROLE_TTL);
+    }
+
+    private void invalidateRolePermissions(Long roleId) {
+        String key = String.format(ROLE_PERMS_KEY, roleId);
+        redisTemplate.delete(key);
     }
 
     @Transactional(readOnly = true)
