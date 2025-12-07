@@ -232,8 +232,19 @@ publish/
 # in these scripts will be unencrypted
 PublishScripts/
 
-# NuGet Packages
+# NuGet packages
 *.nupkg
+*.snupkg
+*.nuspec
+*.deps.json
+*.runtimeconfig.json
+
+# NuGet restore outputs (more precise)
+**/obj/*.nuget.*
+**/obj/project.assets.json
+**/obj/project.nuget.cache
+**/obj/*.props
+**/obj/*.targets
 # NuGet Symbol Packages
 *.snupkg
 # The packages folder can be ignored because of Package Restore
