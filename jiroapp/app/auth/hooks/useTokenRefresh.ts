@@ -1,8 +1,13 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 
 type TokenUpdater = (accessToken: string, refreshToken: string) => void;
 type LogoutHandler = () => void;
+
+interface FailedRequest {
+    resolve: (token: string) => void;
+    reject: (error: any) => void;
+}
 
 const api = axios.create({
     baseURL: 'http://localhost:8000/api',
@@ -12,17 +17,44 @@ const api = axios.create({
 });
 
 let isRefreshing = false;
-let failedQueue: any[] = [];
+let failedQueue: FailedRequest[] = [];
 
 const processQueue = (error: any, token: string | null = null) => {
     failedQueue.forEach(prom => {
         if (error) {
             prom.reject(error);
         } else {
-            prom.resolve(token);
+            prom.resolve(token!);
         }
     });
     failedQueue = [];
+};
+
+const getTokenExpiryTime = (token: string): number | null => {
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.exp * 1000;
+    } catch (e) {
+        console.error('Ошибка парсинга токена:', e);
+        return null;
+    }
+};
+
+const shouldRefreshToken = (token: string): boolean => {
+    const expiryTime = getTokenExpiryTime(token);
+    if (!expiryTime) return true;
+
+    const timeLeft = expiryTime - Date.now();
+    const oneMinute = 60 * 1000;
+
+    return timeLeft <= oneMinute;
+};
+
+const isTokenExpired = (token: string): boolean => {
+    const expiryTime = getTokenExpiryTime(token);
+    if (!expiryTime) return true;
+
+    return Date.now() >= expiryTime;
 };
 
 api.interceptors.request.use(
@@ -33,9 +65,7 @@ api.interceptors.request.use(
         }
         return config;
     },
-    (error) => {
-        return Promise.reject(error);
-    }
+    (error) => Promise.reject(error)
 );
 
 api.interceptors.response.use(
@@ -50,9 +80,7 @@ api.interceptors.response.use(
                 }).then(token => {
                     originalRequest.headers.Authorization = `Bearer ${token}`;
                     return api(originalRequest);
-                }).catch(err => {
-                    return Promise.reject(err);
-                });
+                }).catch(err => Promise.reject(err));
             }
 
             originalRequest._retry = true;
@@ -61,10 +89,10 @@ api.interceptors.response.use(
             try {
                 const refreshToken = localStorage.getItem('refreshToken');
                 if (!refreshToken) {
-                    throw new Error('No refresh token');
+                    throw new Error('Refresh token не найден');
                 }
 
-                const response = await axios.post('http://localhost:8080/api/auth/refresh', { refreshToken });
+                const response = await api.post('/auth/refresh', { refreshToken });
                 const { accessToken, refreshToken: newRefreshToken } = response.data;
 
                 if (accessToken && newRefreshToken) {
@@ -74,9 +102,11 @@ api.interceptors.response.use(
                     processQueue(null, accessToken);
                     originalRequest.headers.Authorization = `Bearer ${accessToken}`;
                     return api(originalRequest);
+                } else {
+                    throw new Error('Неверный ответ от сервера');
                 }
             } catch (refreshError) {
-                console.error('Token refresh failed:', refreshError);
+                console.error('Ошибка обновления токена:', refreshError);
                 processQueue(refreshError, null);
                 localStorage.removeItem('token');
                 localStorage.removeItem('refreshToken');
@@ -96,91 +126,76 @@ export const useTokenRefresh = (
 ) => {
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-    const refreshToken = async (): Promise<boolean> => {
+    const refreshTokens = useCallback(async (): Promise<boolean> => {
         const currentRefreshToken = localStorage.getItem('refreshToken');
+        const currentAccessToken = localStorage.getItem('token');
 
-        if (!currentRefreshToken) {
-            console.log('Refresh token not found.');
+        if (!currentRefreshToken || !currentAccessToken) {
+            console.warn('Токены не найдены');
             return false;
         }
 
+        if (!isTokenExpired(currentAccessToken) && !shouldRefreshToken(currentAccessToken)) {
+            const expiryTime = getTokenExpiryTime(currentAccessToken)!;
+            const minutesLeft = Math.round((expiryTime - Date.now()) / (60 * 1000));
+            console.log(`Токен валиден еще ${minutesLeft} минут`);
+            return true;
+        }
+
         try {
-            const response = await axios.post('http://localhost:8080/api/auth/refresh', {
+            console.log('Обновление токенов...');
+            const response = await api.post('/auth/refresh', {
                 refreshToken: currentRefreshToken
             });
 
-            if (response.data.accessToken && response.data.refreshToken) {
-                updateTokens(response.data.accessToken, response.data.refreshToken);
-                console.log('Token successfully refreshed.');
+            const { accessToken, refreshToken: newRefreshToken } = response.data;
+
+            if (accessToken && newRefreshToken) {
+                updateTokens(accessToken, newRefreshToken);
+                console.log('Токены успешно обновлены');
                 return true;
+            } else {
+                throw new Error('Неверный ответ сервера');
             }
         } catch (error) {
-            console.error('Failed to refresh token:', error);
+            console.error('Ошибка обновления токенов:', error);
             localStorage.removeItem('token');
             localStorage.removeItem('refreshToken');
             handleLogout();
             return false;
         }
-
-        return false;
-    };
+    }, [updateTokens, handleLogout]);
 
     useEffect(() => {
-        const startTokenRefreshTimer = () => {
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
+        refreshTokens();
+
+        const fifteenMinutes = 15 * 60 * 1000;
+
+        intervalRef.current = setInterval(() => {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                console.log('Токен не найден, пропуск проверки');
+                return;
             }
 
-            intervalRef.current = setInterval(async () => {
-                const token = localStorage.getItem('token');
-                if (!token) {
-                    return;
-                }
-
-                try {
-                    const payload = JSON.parse(atob(token.split('.')[1]));
-                    const expiryTime = payload.exp * 1000;
-                    const now = Date.now();
-                    const timeLeft = expiryTime - now;
-
-                    console.log(`Token expires in ${Math.round(timeLeft / 1000)} seconds`);
-
-                    if (timeLeft > 0 && timeLeft <= 10000) {
-                        console.log(`Token expires soon (${Math.round(timeLeft / 1000)}s). Refreshing...`);
-                        const success = await refreshToken();
-                        if (success) {
-                            console.log('Token refreshed successfully in background');
-                        } else {
-                            console.warn('Failed to refresh token in background');
-                        }
-                    } else if (timeLeft <= 0) {
-                        console.log('Token has expired. Refreshing now...');
-                        const success = await refreshToken();
-                        if (!success) {
-                            console.warn('Failed to refresh expired token');
-                        }
-                    }
-                } catch (e) {
-                    console.error('Failed to parse token payload:', e);
-                    const success = await refreshToken();
-                    if (!success) {
-                        console.warn('Failed to refresh token after parse error');
-                    }
-                }
-            }, 5000);
-        };
-
-        startTokenRefreshTimer();
+            if (shouldRefreshToken(token) || isTokenExpired(token)) {
+                console.log('Токен нужно обновить, запуск...');
+                refreshTokens();
+            }
+        }, fifteenMinutes);
 
         return () => {
             if (intervalRef.current) {
                 clearInterval(intervalRef.current);
-                console.log('Token refresh timer cleared.');
+                console.log('Интервал обновления токенов очищен');
             }
         };
-    }, [updateTokens, handleLogout]);
+    }, [refreshTokens]);
 
-    return { refreshToken, api };
+    return {
+        refreshToken: refreshTokens,
+        api
+    };
 };
 
 export { api };
