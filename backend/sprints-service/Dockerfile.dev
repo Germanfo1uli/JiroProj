@@ -4,12 +4,11 @@ WORKDIR /src
 
 COPY . .
 
-RUN dotnet restore ./sprints-service/Backend.Sprints.Api/Backend.Sprints.Api.csproj
-
 RUN apk add --no-cache curl
-
-EXPOSE 8084
 
 WORKDIR /src/sprints-service/Backend.Sprints.Api
 
-CMD ["dotnet", "run"]
+CMD ["sh", "-c", "\
+    sleep 5 && \
+    dotnet restore --force && \
+    dotnet run --urls http://*:8084"]

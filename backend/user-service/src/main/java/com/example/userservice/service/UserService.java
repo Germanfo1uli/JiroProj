@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -71,6 +72,23 @@ public class UserService {
                 user.getBio(),
                 user.getCreatedAt()
         );
+    }
+
+    public List<PublicProfileResponse> getProfilesByIds(List<Long> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // SELECT * FROM users WHERE id IN (1,2,3,...)
+        List<User> users = userRepository.findAllById(userIds);
+
+        if (users.size() != userIds.size()) {
+            log.warn("Some users not found: requested={}, found={}", userIds.size(), users.size());
+        }
+
+        return users.stream()
+                .map(PublicProfileResponse::fromUser)
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true) // метод для генерации уникального username + tag (10 попыток)
