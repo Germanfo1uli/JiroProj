@@ -9,7 +9,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 @Entity
-@Table(name = "avatars", schema = "user_service_schema")
+@Table(name = "project_avatars", schema = "board_service_schema")
 @Data
 @Builder(toBuilder = true)
 @NoArgsConstructor

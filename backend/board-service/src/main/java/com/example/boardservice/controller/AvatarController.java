@@ -23,11 +23,11 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @RestController
-@RequestMapping("api/users")
+@RequestMapping("api/projects")
 @RequiredArgsConstructor
 @Validated
 @SecurityRequirement(name = "bearerAuth")
-@Tag(name = "Avatar Management", description = "Управление аватарами пользователей")
+@Tag(name = "Avatar Management", description = "Управление аватарами проектов")
 public class AvatarController {
     public final ProjectAvatarService avatarService;
     public final AvatarValidator validator;
@@ -44,7 +44,7 @@ public class AvatarController {
 
         return ResponseEntity.ok(Map.of(
                 "message", "Avatar is uploaded",
-                "avatarUrl", "/api/users/me/avatar"
+                "avatarUrl", "/api/projects/" + projectId + "/avatar"
         ));
     }
 
