@@ -15,14 +15,12 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
-@RequestMapping("api")
+@RequestMapping("api/projects")
 @RequiredArgsConstructor
 @Validated
 @SecurityRequirement(name = "bearerAuth")
-@Tag(name = "Projects Management", description = "Управление проектами")
+@Tag(name = "Project Management", description = "Управление проектами")
 public class ProjectController {
     private final ProjectService projectService;
 
@@ -30,7 +28,7 @@ public class ProjectController {
             summary = "Создание проекта",
             security = @SecurityRequirement(name = "bearerAuth")
     )
-    @PostMapping("/projects")
+    @PostMapping
     public ResponseEntity<CreateProjectResponse> createProject(
             @Valid @RequestBody CreateProjectRequest request,
             @AuthenticationPrincipal JwtUser principal) {
@@ -40,15 +38,13 @@ public class ProjectController {
         return ResponseEntity.ok(response);
     }
 
-//    @Operation(summary = "Получение участников проекта по списку userId")
-//    @GetMapping("/users/batch")
-//    public ResponseEntity<List<PublicProfileResponse>> getProfilesByIds(
-//            @AuthenticationPrincipal SystemPrincipal principal,
-//            @RequestBody @Validated IdListRequest request) {
-//
-//        log.info("Service {} requested {} profiles", principal.getUsername(), request.userIds().size());
-//
-//        List<PublicProfileResponse> responses = userService.getProfilesByIds(request.userIds());
-//        return ResponseEntity.ok(responses);
-//    }
+    @Operation(
+            summary = "Получение информации о проектах пользователя",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @GetMapping("/me")
+    public ResponseEntity<GetProjectResponse> getProjectsByUser(
+            @AuthenticationPrincipal JwtUser principal) {
+
+    }
 }

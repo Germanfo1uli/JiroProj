@@ -1,21 +1,34 @@
 package com.example.boardservice.service;
 
+import com.example.boardservice.client.UserServiceClient;
+import com.example.boardservice.dto.data.UserBatchRequest;
 import com.example.boardservice.dto.models.Project;
 import com.example.boardservice.dto.models.ProjectMember;
 import com.example.boardservice.dto.models.ProjectRole;
+import com.example.boardservice.dto.response.ProjectMemberResponse;
+import com.example.boardservice.dto.response.PublicProfileResponse;
 import com.example.boardservice.exception.AlreadyMemberException;
 import com.example.boardservice.exception.RoleNotFoundException;
 import com.example.boardservice.repository.ProjectMemberRepository;
 import com.example.boardservice.repository.ProjectRoleRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ProjectMemberService {
     private final ProjectMemberRepository memberRepository;
     private final ProjectRoleRepository roleRepository;
+    private final UserServiceClient userServiceClient;
 
     @Transactional
     public ProjectMember addMember(Long userId, Long projectId, Long roleId) {
@@ -53,6 +66,47 @@ public class ProjectMemberService {
                 .build();
 
         return memberRepository.save(member);
+    }
+
+    public List<ProjectMemberResponse> getProjectMembersWithProfiles(Long userId, Long projectId) {
+        List<ProjectMember> members = memberRepository.findByProjectId(projectId);
+        if (members.isEmpty()) {
+            log.debug("No members found for project {}", projectId);
+            return List.of();
+        }
+
+        List<Long> userIds = members.stream().map(ProjectMember::getUserId).toList();
+        UserBatchRequest request = new UserBatchRequest(userIds);
+
+        log.info("Fetching {} user profiles from user-service for project {}", userIds.size(), projectId);
+        List<PublicProfileResponse> profiles = userServiceClient.getProfilesByIds(request);
+
+        Map<Long, PublicProfileResponse> profileMap = profiles.stream()
+                .collect(Collectors.toMap(PublicProfileResponse::id, p -> p));
+
+        return members.stream()
+                .map(member -> {
+                    PublicProfileResponse profile = profileMap.get(member.getUserId());
+                    if (profile == null) {
+                        log.warn("Profile not found for userId {} in project {}", member.getUserId(), projectId);
+                        return null;
+                    }
+
+                    String roleName = Optional.ofNullable(member.getRole())
+                            .map(ProjectRole::getName)
+                            .orElse("USER");
+
+                    return new ProjectMemberResponse(
+                            member.getUserId(),
+                            profile.username(),
+                            profile.tag(),
+                            profile.bio(),
+                            profile.createdAt(),
+                            roleName
+                    );
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     @Transactional
