@@ -1,10 +1,13 @@
 package com.example.boardservice.service;
 
+import com.example.boardservice.cache.RedisCacheService;
 import com.example.boardservice.client.UserServiceClient;
 import com.example.boardservice.dto.data.UserBatchRequest;
 import com.example.boardservice.dto.models.Project;
 import com.example.boardservice.dto.models.ProjectMember;
 import com.example.boardservice.dto.models.ProjectRole;
+import com.example.boardservice.dto.models.enums.ActionType;
+import com.example.boardservice.dto.models.enums.EntityType;
 import com.example.boardservice.dto.response.ProjectMemberResponse;
 import com.example.boardservice.dto.response.PublicProfileResponse;
 import com.example.boardservice.exception.AlreadyMemberException;
@@ -15,6 +18,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.List;
 import java.util.Map;
@@ -29,6 +34,8 @@ public class ProjectMemberService {
     private final ProjectMemberRepository memberRepository;
     private final ProjectRoleRepository roleRepository;
     private final UserServiceClient userServiceClient;
+    private final AuthService authService;
+    private final RedisCacheService redisCacheService;
 
     @Transactional
     public ProjectMember addMember(Long userId, Long projectId, Long roleId) {
@@ -68,7 +75,15 @@ public class ProjectMemberService {
         return memberRepository.save(member);
     }
 
+    @Transactional
+    public ProjectMember addOwner(Long ownerId, Project project, ProjectRole ownerRole) {
+        return addMember(ownerId, project.getId(), ownerRole.getId());
+    }
+
     public List<ProjectMemberResponse> getProjectMembersWithProfiles(Long userId, Long projectId) {
+
+        authService.checkPermission(userId, projectId, EntityType.PROJECT, ActionType.VIEW);
+
         List<ProjectMember> members = memberRepository.findByProjectId(projectId);
         if (members.isEmpty()) {
             log.debug("No members found for project {}", projectId);
@@ -110,7 +125,26 @@ public class ProjectMemberService {
     }
 
     @Transactional
-    public ProjectMember addOwner(Project project, Long ownerId, ProjectRole ownerRole) {
-        return addMember(project.getId(), ownerId, ownerRole.getId());
+    public void kickProjectMember(Long userId, Long kickedId, Long projectId) {
+
+        if (!userId.equals(kickedId)) {
+            authService.checkOwnerOnly(userId, projectId);
+        }
+
+        memberRepository.deleteByUserIdAndProject_Id(kickedId, projectId);
+
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        try {
+                            redisCacheService.invalidateUserRole(kickedId, projectId);
+                        } catch (Exception e) {
+                            log.error("Failed to invalidate cache for user {} in project {}: {}",
+                                    kickedId, projectId, e.getMessage());
+                        }
+                    }
+                }
+        );
     }
 }

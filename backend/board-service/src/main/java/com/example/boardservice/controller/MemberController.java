@@ -38,4 +38,15 @@ public class MemberController {
         List<ProjectMemberResponse> response = memberService.getProjectMembersWithProfiles(principal.userId(), projectId);
         return ResponseEntity.ok(response);
     }
+
+    @Operation(summary = "Получение полной информации об участниках проекта")
+    @GetMapping("/{projectId}/members/{userId}")
+    public ResponseEntity<List<ProjectMemberResponse>> kickProjectMember(
+            @PathVariable Long projectId,
+            @PathVariable Long userId,
+            @AuthenticationPrincipal JwtUser principal) {
+
+        memberService.kickProjectMember(principal.userId(), userId, projectId);
+        return ResponseEntity.noContent().build();
+    }
 }

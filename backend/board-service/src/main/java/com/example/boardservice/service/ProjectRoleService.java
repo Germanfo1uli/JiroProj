@@ -194,13 +194,14 @@ public class ProjectRoleService {
                 new TransactionSynchronization() {
                     @Override
                     public void afterCommit() {
-                        redisCacheService.invalidateRolePermissions(roleId);
+                        try {
+                            redisCacheService.invalidateAllUsersInProject(projectId);
 
-                        affectedMembers.forEach(member ->
-                                redisCacheService.invalidateUserRole(member.getUserId(), projectId)
-                        );
-
-                        log.info("Role {} deleted, caches invalidated for {} members", roleId, affectedMembers.size());
+                            log.info("Role {} deleted, caches invalidated for {} members", roleId, affectedMembers.size());
+                        } catch (Exception e) {
+                            log.error("Failed to invalidate cache for role {} in project {}: {}",
+                                    roleId, projectId, e.getMessage());
+                        }
                     }
                 }
         );
@@ -224,17 +225,18 @@ public class ProjectRoleService {
         member.setRole(role);
         memberRepository.save(member);
 
-        redisCacheService.invalidateUserRole(userId, projectId);
-
         TransactionSynchronizationManager.registerSynchronization(
                 new TransactionSynchronization() {
                     @Override
                     public void afterCommit() {
-                        redisCacheService.invalidateRolePermissions(roleId);
+                        try {
+                            redisCacheService.invalidateUserRole(member.getUserId(), projectId);
 
-                        redisCacheService.invalidateUserRole(member.getUserId(), projectId);
-
-                        log.info("Role {} deleted, caches invalidated for 1 members", roleId);
+                            log.info("Role {} deleted, caches invalidated for 1 members", roleId);
+                        } catch (Exception e) {
+                            log.error("Failed to invalidate cache for user {} in project {}: {}",
+                                    member.getUserId(), projectId, e.getMessage());
+                        }
                     }
                 }
         );
@@ -274,11 +276,17 @@ public class ProjectRoleService {
                 new TransactionSynchronization() {
                     @Override
                     public void afterCommit() {
-                        members.forEach(member ->
-                                redisCacheService.invalidateUserRole(member.getUserId(), member.getProject().getId())
-                        );
-                        log.debug("Invalidated user-role caches for {} members with role {}",
-                                members.size(), roleId);
+                        try {
+                            members.forEach(member ->
+                                    redisCacheService.invalidateUserRole(member.getUserId(), member.getProject().getId())
+                            );
+                            log.debug("Invalidated user-role caches for {} members with role {}",
+                                    members.size(), roleId);
+                        } catch (Exception e) {
+                            log.error("Failed to invalidate cache for role {}: {}",
+                                    roleId, e.getMessage());
+                        }
+
                     }
                 }
         );
