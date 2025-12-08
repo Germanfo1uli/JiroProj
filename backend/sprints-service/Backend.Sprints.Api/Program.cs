@@ -3,6 +3,10 @@ using Backend.Sprints.Api.Data.Repositories;
 using Backend.Sprints.Api.Services;
 using Microsoft.EntityFrameworkCore;
 using Steeltoe.Discovery.Eureka;
+using Backend.Sprints.Api.Clients; 
+using Backend.Sprints.Api.Configuration; 
+using Backend.Sprints.Api.Handlers; 
+using Refit;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,6 +22,17 @@ builder.Services.AddScoped<ISprintIssueService, SprintIssueService>();
 builder.Services.AddHealthChecks();
 builder.Services.AddEurekaDiscoveryClient();
 
+
+builder.Services.Configure<ServiceAuthSettings>(builder.Configuration.GetSection(ServiceAuthSettings.SectionName));
+
+builder.Services.AddTransient<InternalAuthHandler>();
+
+builder.Services.AddRefitClient<IUserClient>()
+    .ConfigureHttpClient(client =>
+    {
+        client.BaseAddress = new Uri("http://localhost:8081");
+    })
+    .AddHttpMessageHandler<InternalAuthHandler>();
 
 builder.Services.AddDbContext<SprintsDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default"),
