@@ -5,7 +5,9 @@ import com.example.boardservice.dto.models.ProjectRole;
 import com.example.boardservice.dto.models.enums.ActionType;
 import com.example.boardservice.dto.models.enums.EntityType;
 import com.example.boardservice.exception.AccessDeniedException;
+import com.example.boardservice.exception.ProjectDeletedException;
 import com.example.boardservice.repository.ProjectMemberRepository;
+import com.example.boardservice.repository.ProjectRepository;
 import com.example.boardservice.repository.ProjectRoleRepository;
 import com.example.boardservice.repository.RolePermissionRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,8 +27,12 @@ public class AuthService {
     private final RolePermissionRepository permissionRepository;
     private final ProjectMemberRepository memberRepository;
     private final ProjectRoleRepository roleRepository;
+    private final ProjectRepository projectRepository;
 
     public void checkPermission(Long userId, Long projectId, EntityType entity, ActionType action) {
+
+        checkProjectNotDeleted(projectId);
+
         Long roleId = redisCacheService.getUserRoleFromCache(userId, projectId);
 
         log.info("Loading role from Redis: {}", roleId);
@@ -64,20 +70,23 @@ public class AuthService {
     }
 
     public void checkOwnerOnly(Long userId, Long projectId) {
+
+        checkProjectNotDeleted(projectId);
+
         if (!isOwner(userId, projectId)) {
             throw new AccessDeniedException("Only project owner can perform this action. User: " + userId);
         }
     }
 
     private boolean isOwner(Long userId, Long projectId) {
-        log.info("=== DEBUG isOwner for userId: {}, projectId: {}", userId, projectId);
+        log.debug("isOwner for userId: {}, projectId: {}", userId, projectId);
 
         Long roleId = redisCacheService.getUserRoleFromCache(userId, projectId);
-        log.info("RoleId from cache: {}", roleId);
+        log.debug("RoleId from cache: {}", roleId);
 
         if (roleId == null) {
             roleId = memberRepository.findRoleIdByUserIdAndProjectId(userId, projectId).orElse(null);
-            log.info("RoleId from DB: {}", roleId);
+            log.debug("RoleId from DB: {}", roleId);
 
             if (roleId != null) {
                 redisCacheService.cacheUserRole(userId, projectId, roleId);
@@ -88,17 +97,24 @@ public class AuthService {
         }
 
         Boolean isOwner = redisCacheService.getRoleIsOwnerFromCache(roleId);
-        log.info("isOwner from cache for roleId {}: {}", roleId, isOwner);
+        log.debug("isOwner from cache for roleId {}: {}", roleId, isOwner);
 
         if (isOwner != null) {
             return isOwner;
         }
 
         isOwner = roleRepository.isOwnerRole(roleId);
-        log.info("isOwner from DB for roleId {}: {}", roleId, isOwner);
+        log.debug("isOwner from DB for roleId {}: {}", roleId, isOwner);
 
         redisCacheService.cacheRoleIsOwner(roleId, isOwner);
         return isOwner;
+    }
+
+    private void checkProjectNotDeleted(Long projectId) {
+        boolean isDeleted = projectRepository.isDeleted(projectId);
+        if (isDeleted) {
+            throw new ProjectDeletedException("Project with ID " + projectId + " has been deleted");
+        }
     }
 
     public boolean hasPermission(Long userId, Long projectId, EntityType entity, ActionType action) {

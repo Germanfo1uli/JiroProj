@@ -1,9 +1,11 @@
 package com.example.boardservice.controller;
 
 import com.example.boardservice.dto.request.CreateProjectRequest;
+import com.example.boardservice.dto.request.UpdateProjectRequest;
 import com.example.boardservice.dto.response.CreateProjectResponse;
 import com.example.boardservice.dto.response.GetProjectResponse;
 import com.example.boardservice.dto.response.ProjectListItem;
+import com.example.boardservice.dto.response.RoleResponse;
 import com.example.boardservice.security.JwtUser;
 import com.example.boardservice.service.ProjectService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -68,15 +70,30 @@ public class ProjectController {
     }
 
     @Operation(
-            summary = "Получение информации о проекте",
+            summary = "Обновление информации о проекте",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @PatchMapping("/{projectId}")
     public ResponseEntity<GetProjectResponse> updateProject(
             @PathVariable Long projectId,
+            @Valid @RequestBody UpdateProjectRequest request,
             @AuthenticationPrincipal JwtUser principal) {
 
-        GetProjectResponse response = projectService.getProjectDetail(principal.userId(), projectId);
+        GetProjectResponse response = projectService.updateProject(
+                principal.userId(), projectId, request.name(), request.description());
         return ResponseEntity.ok(response);
+    }
+
+    @Operation(
+            summary = "Удаление проекта (мягкое)",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @PatchMapping("/{projectId}/delete")
+    public ResponseEntity<?> deleteProject(
+            @PathVariable Long projectId,
+            @AuthenticationPrincipal JwtUser principal) {
+
+        projectService.deleteProject(principal.userId(), projectId);
+        return ResponseEntity.noContent().build();
     }
 }
