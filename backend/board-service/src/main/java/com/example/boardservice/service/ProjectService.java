@@ -8,6 +8,7 @@ import com.example.boardservice.dto.models.enums.ActionType;
 import com.example.boardservice.dto.models.enums.EntityType;
 import com.example.boardservice.dto.response.CreateProjectResponse;
 import com.example.boardservice.dto.response.GetProjectResponse;
+import com.example.boardservice.dto.response.InternalProjectResponse;
 import com.example.boardservice.dto.response.ProjectListItem;
 import com.example.boardservice.exception.AccessDeniedException;
 import com.example.boardservice.exception.ProjectNotFoundException;
@@ -92,6 +93,24 @@ public class ProjectService {
                 project.getDescription(),
                 project.getCreatedAt(),
                 user.getRole().getName()
+        );
+    }
+
+    public InternalProjectResponse getProjectInternal(Long projectId) {
+
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ProjectNotFoundException(projectId));
+
+        if (project.getDeletedAt() != null) {
+            throw new ProjectNotFoundException(projectId);
+        }
+
+        return new InternalProjectResponse(
+                projectId,
+                project.getOwnerId(),
+                project.getName(),
+                project.getDescription(),
+                project.getCreatedAt()
         );
     }
 

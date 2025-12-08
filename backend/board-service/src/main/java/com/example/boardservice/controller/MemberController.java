@@ -38,7 +38,7 @@ public class MemberController {
 
     @Operation(summary = "Кик участника из проекта")
     @DeleteMapping("/{projectId}/members/{userId}")
-    public ResponseEntity<List<ProjectMemberResponse>> kickProjectMember(
+    public ResponseEntity<?> kickProjectMember(
             @PathVariable Long projectId,
             @PathVariable Long userId,
             @AuthenticationPrincipal JwtUser principal) {
@@ -49,7 +49,7 @@ public class MemberController {
 
     @Operation(summary = "Выйти с проекта")
     @DeleteMapping("/{projectId}/members/me")
-    public ResponseEntity<List<ProjectMemberResponse>> kickMeFromProject(
+    public ResponseEntity<?> kickMeFromProject(
             @PathVariable Long projectId,
             @AuthenticationPrincipal JwtUser principal) {
 

@@ -10,5 +10,5 @@ import java.util.Optional;
 public interface ProjectRepository extends JpaRepository<Project, Long> {
     Optional<Project> findByInviteToken(String token);
     @Query("SELECT p.deletedAt IS NOT NULL FROM Project p WHERE p.id = :projectId")
-    boolean isDeleted(@Param("projectId") Long projectId);
+    Boolean isDeleted(@Param("projectId") Long projectId);
 }

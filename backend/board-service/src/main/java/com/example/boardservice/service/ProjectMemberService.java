@@ -126,17 +126,14 @@ public class ProjectMemberService {
                         return null;
                     }
 
-                    String roleName = Optional.ofNullable(member.getRole())
-                            .map(ProjectRole::getName)
-                            .orElse("USER");
-
                     return new ProjectMemberResponse(
                             member.getUserId(),
                             profile.username(),
                             profile.tag(),
                             profile.bio(),
                             profile.createdAt(),
-                            roleName
+                            member.getRole().getId(),
+                            member.getRole().getName()
                     );
                 })
                 .filter(Objects::nonNull)

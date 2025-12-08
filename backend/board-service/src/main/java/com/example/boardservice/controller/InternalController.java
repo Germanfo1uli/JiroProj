@@ -1,5 +1,8 @@
 package com.example.boardservice.controller;
 
+import com.example.boardservice.dto.response.InternalProjectResponse;
+import com.example.boardservice.security.SystemPrincipal;
+import com.example.boardservice.service.ProjectService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,18 +25,21 @@ import org.springframework.web.bind.annotation.RestController;
 @SecurityRequirements
 @Tag(name = "Internal Management", description = "Внутренние запросы для других микросервисов")
 public class InternalController {
-//    @Operation(summary = "Получение профиля пользователя по userId")
-//    @GetMapping("/users/{userId}")
-//    public ResponseEntity<PublicProfileResponse> getProfileById(
-//            @AuthenticationPrincipal SystemPrincipal principal,
-//            @PathVariable Long userId) {
-//
-//        if (principal == null) {
-//            throw new AccessDeniedException("Missing service authentication");
-//        }
-//
-//        log.info("Service {} requested profile for user {}", principal.getUsername(), userId);
-//        PublicProfileResponse response = userService.getProfileById(userId);
-//        return ResponseEntity.ok(response);
-//    }
+
+    private final ProjectService projectService;
+
+    @Operation(summary = "Получение информации о проекте по projectId")
+    @GetMapping("/projects/{projectId}")
+    public ResponseEntity<InternalProjectResponse> getProjectById(
+            @AuthenticationPrincipal SystemPrincipal principal,
+            @PathVariable Long projectId) {
+
+        if (principal == null) {
+            throw new AccessDeniedException("Missing service authentication");
+        }
+
+        log.info("Service {} requested info for project {}", principal.getUsername(), projectId);
+        InternalProjectResponse response = projectService.getProjectInternal(projectId);
+        return ResponseEntity.ok(response);
+    }
 }

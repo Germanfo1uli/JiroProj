@@ -21,6 +21,9 @@ public record ProjectMemberResponse(
         @Schema(description = "Дата создания аккаунта")
         LocalDateTime createdAt,
 
+        @Schema(description = "Айди роли в проекте")
+        Long roleId,
+
         @Schema(description = "Роль в проекте")
         String role
 ) {}

@@ -5,6 +5,7 @@ import com.example.boardservice.dto.models.enums.ActionType;
 import com.example.boardservice.dto.models.enums.EntityType;
 import com.example.boardservice.exception.AccessDeniedException;
 import com.example.boardservice.exception.ProjectDeletedException;
+import com.example.boardservice.exception.ProjectNotFoundException;
 import com.example.boardservice.repository.ProjectMemberRepository;
 import com.example.boardservice.repository.ProjectRepository;
 import com.example.boardservice.repository.ProjectRoleRepository;
@@ -110,8 +111,11 @@ public class AuthService {
     }
 
     private void checkProjectNotDeleted(Long projectId) {
-        boolean isDeleted = projectRepository.isDeleted(projectId);
-        if (isDeleted) {
+        Boolean isDeleted = projectRepository.isDeleted(projectId);
+        if (isDeleted == null || isDeleted) {
+            if (isDeleted == null) {
+                throw new ProjectNotFoundException(projectId);
+            }
             throw new ProjectDeletedException("Project with ID " + projectId + " has been deleted");
         }
     }
