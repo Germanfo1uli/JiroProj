@@ -26,11 +26,11 @@ public record PublicProfileResponse(
                         throw new IllegalArgumentException("User cannot be null");
                 }
                 return new PublicProfileResponse(
-                        user.getId(),      // Предполагаю, что в User есть getId()
-                        user.getUsername(), // getUsername()
-                        user.getTag(),     // getTag()
-                        user.getBio(),     // getBio()
-                        user.getCreatedAt() // getCreatedAt()
+                        user.getId(),
+                        user.getUsername(),
+                        user.getTag(),
+                        user.getBio(),
+                        user.getCreatedAt()
                 );
         }
 }
