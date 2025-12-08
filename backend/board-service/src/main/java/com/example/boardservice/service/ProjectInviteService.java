@@ -27,7 +27,7 @@ public class ProjectInviteService {
     private String frontendUrl;
 
     @Transactional
-    public String regenerateInvite(Long projectId, Long userId) {
+    public String regenerateInvite(Long userId, Long projectId) {
 
         authService.checkOwnerOnly(userId, projectId);
 
@@ -42,7 +42,7 @@ public class ProjectInviteService {
         return inviteLink;
     }
 
-    public String getInviteLink(Long projectId, Long userId) {
+    public String getInviteLink(Long userId, Long projectId) {
 
         authService.checkOwnerOnly(userId, projectId);
 
