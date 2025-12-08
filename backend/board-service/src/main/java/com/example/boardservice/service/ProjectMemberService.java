@@ -12,6 +12,7 @@ import com.example.boardservice.dto.response.ProjectMemberResponse;
 import com.example.boardservice.dto.response.PublicProfileResponse;
 import com.example.boardservice.exception.AlreadyMemberException;
 import com.example.boardservice.exception.RoleNotFoundException;
+import com.example.boardservice.exception.RoleNotInProjectException;
 import com.example.boardservice.repository.ProjectMemberRepository;
 import com.example.boardservice.repository.ProjectRoleRepository;
 import lombok.RequiredArgsConstructor;
@@ -49,7 +50,7 @@ public class ProjectMemberService {
                 .orElseThrow(() -> new RoleNotFoundException("Role with ID: " + roleId + "not found"));
 
         if(!Objects.equals(role.getProject().getId(), projectId)) {
-            throw new IllegalArgumentException("Role with ID: " + roleId + " not found in project ID: " + projectId);
+            throw new RoleNotInProjectException("Role with ID: " + roleId + " not found in project ID: " + projectId);
         }
 
         ProjectMember member = ProjectMember.builder()

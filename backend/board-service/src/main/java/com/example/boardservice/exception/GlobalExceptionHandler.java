@@ -57,6 +57,30 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
     }
 
+    // 400 Невалидная комбинация permission в матрице
+    @ExceptionHandler(InvalidPermissionException.class)
+    public ResponseEntity<Object> handleInvalidPermission(InvalidPermissionException ex,
+                                                          HttpServletRequest request) {
+        log.warn("Invalid permission for {} {}: {}", request.getMethod(), request.getRequestURI(), ex.getMessage());
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
+    }
+
+    // 400 Роль не принадлежит проекту
+    @ExceptionHandler(RoleNotInProjectException.class)
+    public ResponseEntity<Object> handleRoleNotInProject(RoleNotInProjectException ex,
+                                                         HttpServletRequest request) {
+        log.warn("Role mismatch for {} {}: {}", request.getMethod(), request.getRequestURI(), ex.getMessage());
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
+    }
+
+    // 400 Невалидное имя роли
+    @ExceptionHandler(InvalidRoleNameException.class)
+    public ResponseEntity<Object> handleInvalidRoleName(InvalidRoleNameException ex,
+                                                        HttpServletRequest request) {
+        log.warn("Invalid role name for {} {}: {}", request.getMethod(), request.getRequestURI(), ex.getMessage());
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
+    }
+
     // 401 Ошибка аутентификации между сервисами
     @ExceptionHandler(ServiceAuthException.class)
     public ResponseEntity<Object> handleServiceAuth(ServiceAuthException ex,
@@ -103,6 +127,15 @@ public class GlobalExceptionHandler {
                                                         HttpServletRequest request) {
         log.warn("Project not found for {} {}: {}", request.getMethod(), request.getRequestURI(), ex.getMessage());
         return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), request);
+    }
+
+    // 500 Отсутствует дефолтная роль
+    @ExceptionHandler(MissingDefaultRoleException.class)
+    public ResponseEntity<Object> handleMissingDefaultRole(MissingDefaultRoleException ex,
+                                                           HttpServletRequest request) {
+        log.error("Missing default role for {} {}: {}", request.getMethod(), request.getRequestURI(), ex.getMessage());
+        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR,
+                "System configuration error: " + ex.getMessage(), request);
     }
 
     // 500 Обработка всех остальных неожиданных исключений

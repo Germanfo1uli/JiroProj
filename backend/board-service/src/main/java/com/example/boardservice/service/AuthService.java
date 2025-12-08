@@ -1,7 +1,6 @@
 package com.example.boardservice.service;
 
 import com.example.boardservice.cache.RedisCacheService;
-import com.example.boardservice.dto.models.ProjectRole;
 import com.example.boardservice.dto.models.enums.ActionType;
 import com.example.boardservice.dto.models.enums.EntityType;
 import com.example.boardservice.exception.AccessDeniedException;

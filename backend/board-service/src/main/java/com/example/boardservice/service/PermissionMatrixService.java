@@ -5,6 +5,7 @@ import com.example.boardservice.dto.data.PermissionEntry;
 import com.example.boardservice.dto.models.RolePermission;
 import com.example.boardservice.dto.models.enums.ActionType;
 import com.example.boardservice.dto.models.enums.EntityType;
+import com.example.boardservice.exception.InvalidPermissionException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,7 +21,7 @@ public class PermissionMatrixService {
 
     public void validatePermission(EntityType entity, ActionType action) {
         if (!matrixProps.isAllowed(entity, action)) {
-            throw new IllegalArgumentException(
+            throw new InvalidPermissionException(
                     String.format("Permission %s:%s is not allowed by matrix", entity, action)
             );
         }

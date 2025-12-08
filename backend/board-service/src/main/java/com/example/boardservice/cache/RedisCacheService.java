@@ -50,10 +50,8 @@ public class RedisCacheService {
             keysToDelete.add(String.format(RedisConstants.ROLE_IS_OWNER_KEY, roleId));
         }
 
-        if (!keysToDelete.isEmpty()) {
-            redisTemplate.delete(keysToDelete);
-            log.info("Invalidated {} role caches for {} roles", keysToDelete.size(), roleIds.size());
-        }
+        redisTemplate.delete(keysToDelete);
+        log.info("Invalidated {} role caches for {} roles", keysToDelete.size(), roleIds.size());
     }
 
     public void invalidateAllUsersInProject(Long projectId) {

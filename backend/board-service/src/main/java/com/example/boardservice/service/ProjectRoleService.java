@@ -10,8 +10,7 @@ import com.example.boardservice.dto.models.enums.ActionType;
 import com.example.boardservice.dto.models.enums.EntityType;
 import com.example.boardservice.dto.response.GetRolesResponse;
 import com.example.boardservice.dto.response.RoleResponse;
-import com.example.boardservice.exception.RoleNotFoundException;
-import com.example.boardservice.exception.UserNotFoundException;
+import com.example.boardservice.exception.*;
 import com.example.boardservice.repository.ProjectMemberRepository;
 import com.example.boardservice.repository.ProjectRoleRepository;
 import com.example.boardservice.repository.RolePermissionRepository;
@@ -92,7 +91,7 @@ public class ProjectRoleService {
         authService.checkOwnerOnly(userId, projectId);
 
         if (roleName == null || roleName.isBlank()) {
-            throw new IllegalArgumentException("Role name is required");
+            throw new InvalidRoleNameException("Role name is required and cannot be blank");
         }
 
         permissionMatrixService.validatePermissions(request);
@@ -131,7 +130,7 @@ public class ProjectRoleService {
                 .orElseThrow(() -> new RoleNotFoundException("Role ID: " + roleId + " not found"));
 
         if (!Objects.equals(role.getProject().getId(), projectId)) {
-            throw new IllegalArgumentException("Role " + roleId + " does not belong to project " + projectId);
+            throw new RoleNotInProjectException("Role " + roleId + " does not belong to project " + projectId);
         }
 
         if (roleName != null && !roleName.isBlank()) {
@@ -172,12 +171,12 @@ public class ProjectRoleService {
                 .orElseThrow(() -> new RoleNotFoundException("Role ID: " + roleId + " not found"));
 
         if (!Objects.equals(role.getProject().getId(), projectId)) {
-            throw new IllegalArgumentException("Role " + roleId + " does not belong to project " + projectId);
+            throw new RoleNotInProjectException("Role " + roleId + " does not belong to project " + projectId);
         }
 
         List<ProjectMember> affectedMembers = memberRepository.findAllByRole_IdAndProject_Id(roleId, projectId);
         ProjectRole defaultRole = roleRepository.findByProject_IdAndIsDefaultTrue(projectId)
-                .orElseThrow(() -> new IllegalStateException("No default role in project " + projectId));
+                .orElseThrow(() -> new MissingDefaultRoleException("No default role in project " + projectId));
 
         log.info("User {} deleting role {} in project {}, reassigning {} members to default role {}",
                 userId, roleId, projectId, affectedMembers.size(), defaultRole.getId());
@@ -216,7 +215,7 @@ public class ProjectRoleService {
                 .orElseThrow(() -> new RoleNotFoundException("Role ID: " + roleId + " not found"));
 
         if (!Objects.equals(role.getProject().getId(), projectId)) {
-            throw new IllegalArgumentException("Role " + roleId + " does not belong to project " + projectId);
+            throw new RoleNotInProjectException("Role " + roleId + " does not belong to project " + projectId);
         }
 
         ProjectMember member = memberRepository.findByUserIdAndProject_Id(assignedId, projectId)
