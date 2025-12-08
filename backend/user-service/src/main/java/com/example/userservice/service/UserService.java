@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -71,6 +72,28 @@ public class UserService {
                 user.getBio(),
                 user.getCreatedAt()
         );
+    }
+
+    public List<PublicProfileResponse> getProfilesByIds(List<Long> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<User> users = userRepository.findAllById(userIds);
+
+        List<User> validUsers = users.stream()
+                .filter(user -> user.getDeletedAt() == null)
+                .filter(user -> user.getLockedAt() == null)
+                .toList();
+
+        int filteredOut = users.size() - validUsers.size();
+        if (filteredOut > 0) {
+            log.warn("Filtered out {} deleted/locked users from batch request", filteredOut);
+        }
+
+        return validUsers.stream()
+                .map(PublicProfileResponse::fromUser)
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true) // метод для генерации уникального username + tag (10 попыток)
