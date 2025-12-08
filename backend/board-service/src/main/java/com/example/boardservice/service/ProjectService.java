@@ -33,11 +33,11 @@ public class ProjectService {
     private final AuthService authService;
 
     @Transactional
-    public CreateProjectResponse createProject(Long ownerId, String name, String key) {
+    public CreateProjectResponse createProject(Long ownerId, String name, String description) {
         Project project = Project.builder()
                 .name(name)
-                .key(key)
                 .ownerId(ownerId)
+                .description(description)
                 .inviteToken(inviteService.generateSecureToken())
                 .build();
         project = projectRepository.save(project);
@@ -46,7 +46,7 @@ public class ProjectService {
 
         memberService.addOwner(ownerId, project, ownerRole);
 
-        return new CreateProjectResponse(project.getId(), project.getName(), project.getKey());
+        return new CreateProjectResponse(project.getId(), project.getName());
     }
 
     public List<ProjectListItem> getUserProjects(Long userId) {
@@ -56,7 +56,7 @@ public class ProjectService {
                 .map(m -> new ProjectListItem(
                         m.getProject().getId(),
                         m.getProject().getName(),
-                        m.getProject().getKey(),
+                        m.getProject().getDescription(),
                         m.getRole().getName(),
                         memberRepository.countByProjectId(m.getProject().getId())
                 ))
@@ -77,7 +77,7 @@ public class ProjectService {
                 projectId,
                 project.getOwnerId(),
                 project.getName(),
-                project.getKey(),
+                project.getDescription(),
                 project.getCreatedAt(),
                 user.getRole().getName()
         );

@@ -9,7 +9,7 @@ public record CreateProjectRequest(
         @NotBlank(message = "Name is required")
         String name,
 
-        @Schema(description = "Короткий тег проекта", example = "TF")
-        @NotBlank(message = "Key is required")
-        String key
+        @Schema(description = "Описание проекта", example = "TaskFlow - лучший проект в мире")
+        @NotBlank(message = "Description is required")
+        String description
 ) {}

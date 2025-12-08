@@ -37,7 +37,7 @@ public class ProjectController {
             @AuthenticationPrincipal JwtUser principal) {
 
         CreateProjectResponse response = projectService.createProject(
-                principal.userId(), request.name(), request.key());
+                principal.userId(), request.name(), request.description());
         return ResponseEntity.ok(response);
     }
 
@@ -60,6 +60,19 @@ public class ProjectController {
     )
     @GetMapping("/{projectId}")
     public ResponseEntity<GetProjectResponse> getProjectDetail(
+            @PathVariable Long projectId,
+            @AuthenticationPrincipal JwtUser principal) {
+
+        GetProjectResponse response = projectService.getProjectDetail(principal.userId(), projectId);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(
+            summary = "Получение информации о проекте",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @PatchMapping("/{projectId}")
+    public ResponseEntity<GetProjectResponse> updateProject(
             @PathVariable Long projectId,
             @AuthenticationPrincipal JwtUser principal) {
 

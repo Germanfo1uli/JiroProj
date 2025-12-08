@@ -9,8 +9,8 @@ public record ProjectListItem(
         @Schema(description = "Название проекта")
         String name,
 
-        @Schema(description = "Ключ для инвайтов")
-        String key,
+        @Schema(description = "Описание проекта")
+        String description,
 
         @Schema(description = "Ваша роль в проекте")
         String yourRole,
