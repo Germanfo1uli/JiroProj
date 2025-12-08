@@ -45,8 +45,10 @@ public class GatewayAuthFilter extends OncePerRequestFilter {
         String email = request.getHeader("X-User-Email");
         String sourceService = request.getHeader("X-Source-Service");
 
-        log.info("Incoming {} {} from IP: {}, Source: {}", method, path, clientIp,
-                sourceService != null ? sourceService : "gateway");
+        String requestSource = sourceService != null ? sourceService :
+                (gatewaySource != null ? "gateway" : "direct-call");
+
+        log.info("Incoming {} {} from IP: {}, Source: {}", method, path, clientIp, requestSource);
 
         // пропуск публичных эндпоинтов
         if (isPublicEndpoint(path)) {
