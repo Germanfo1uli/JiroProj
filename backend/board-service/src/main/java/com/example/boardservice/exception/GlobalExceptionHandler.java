@@ -41,6 +41,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(body);
     }
 
+    // 400 Кастом ошибка валидации (для файлов)
+    @ExceptionHandler(InvalidFileException.class)
+    public ResponseEntity<Object> handleInvalidCredentials(InvalidFileException ex,
+                                                           HttpServletRequest request) {
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
+    }
+
     // 400 Невалидное приглашение
     @ExceptionHandler(InvalidInviteException.class)
     public ResponseEntity<Object> handleInvalidInvite(InvalidInviteException ex,
