@@ -1,5 +1,6 @@
 package com.example.userservice.controller;
 
+import com.example.userservice.dto.data.IdListRequest;
 import com.example.userservice.dto.response.PublicProfileResponse;
 import com.example.userservice.security.SystemPrincipal;
 import com.example.userservice.service.UserService;
@@ -14,10 +15,9 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("api/internal")
@@ -43,5 +43,17 @@ public class InternalController {
         log.info("Service {} requested profile for user {}", principal.getUsername(), userId);
         PublicProfileResponse response = userService.getProfileById(userId);
         return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Получение профилей по списку userId")
+    @GetMapping("/users/batch")
+    public ResponseEntity<List<PublicProfileResponse>> getProfilesByIds(
+            @AuthenticationPrincipal SystemPrincipal principal,
+            @RequestBody @Validated IdListRequest request) {
+
+        log.info("Service {} requested {} profiles", principal.getUsername(), request.userIds().size());
+
+        List<PublicProfileResponse> responses = userService.getProfilesByIds(request.userIds());
+        return ResponseEntity.ok(responses);
     }
 }
