@@ -13,6 +13,11 @@ public interface ProjectMemberRepository extends JpaRepository<ProjectMember, Lo
     List<ProjectMember> findAllByRoleId(Long roleId);
     List<ProjectMember> findAllByRole_IdAndProject_Id(Long roleId, Long projectId);
     Optional<ProjectMember> findByUserIdAndProject_Id(Long userId, Long projectId);
+    List<ProjectMember> findAllByUserId(Long userId);
     @Query("SELECT pm.role.id FROM ProjectMember pm WHERE pm.userId = :userId AND pm.project.id = :projectId")
     Optional<Long> findRoleIdByUserIdAndProjectId(@Param("userId") Long userId, @Param("projectId") Long projectId);
+    List<ProjectMember> findByProjectId(Long projectId);
+    List<ProjectMember> findByUserId(Long userId);
+    Long countByProjectId(Long projectId);
+    void deleteByUserIdAndProject_Id(Long kickedId, Long projectId);
 }

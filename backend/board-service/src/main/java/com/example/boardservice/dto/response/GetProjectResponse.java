@@ -15,9 +15,12 @@ public record GetProjectResponse (
         @Schema(description = "Имя проекта", example = "TaskFlow")
         String name,
 
-        @Schema(description = "Краткий тег проекта", example = "TF")
-        String key,
+        @Schema(description = "Описание проекта", example = "TaskFlow - класс")
+        String description,
 
         @Schema(description = "Время создания проекта")
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+
+        @Schema(description = "Ваша роль в проекте")
+        String yourRole
 ) {}

@@ -1,8 +1,11 @@
 package com.example.boardservice.controller;
 
 import com.example.boardservice.dto.request.CreateProjectRequest;
+import com.example.boardservice.dto.request.UpdateProjectRequest;
 import com.example.boardservice.dto.response.CreateProjectResponse;
 import com.example.boardservice.dto.response.GetProjectResponse;
+import com.example.boardservice.dto.response.ProjectListItem;
+import com.example.boardservice.dto.response.RoleResponse;
 import com.example.boardservice.security.JwtUser;
 import com.example.boardservice.service.ProjectService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -15,12 +18,14 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
-@RequestMapping("api")
+@RequestMapping("api/projects")
 @RequiredArgsConstructor
 @Validated
 @SecurityRequirement(name = "bearerAuth")
-@Tag(name = "Projects Management", description = "Управление проектами")
+@Tag(name = "Project Management", description = "Управление проектами")
 public class ProjectController {
     private final ProjectService projectService;
 
@@ -28,13 +33,26 @@ public class ProjectController {
             summary = "Создание проекта",
             security = @SecurityRequirement(name = "bearerAuth")
     )
-    @PostMapping("/projects")
+    @PostMapping
     public ResponseEntity<CreateProjectResponse> createProject(
             @Valid @RequestBody CreateProjectRequest request,
             @AuthenticationPrincipal JwtUser principal) {
 
         CreateProjectResponse response = projectService.createProject(
-                principal.userId(), request.name(), request.key());
+                principal.userId(), request.name(), request.description());
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(
+            summary = "Получение информации о проектах пользователя",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @GetMapping("/me")
+    public ResponseEntity<List<ProjectListItem>> getProjectsByUser(
+            @AuthenticationPrincipal JwtUser principal) {
+
+        List<ProjectListItem> response = projectService.getUserProjects(
+                principal.userId());
         return ResponseEntity.ok(response);
     }
 
@@ -42,12 +60,40 @@ public class ProjectController {
             summary = "Получение информации о проекте",
             security = @SecurityRequirement(name = "bearerAuth")
     )
-    @GetMapping("/projects/{projectId}")
-    public ResponseEntity<GetProjectResponse> getProjectById(
+    @GetMapping("/{projectId}")
+    public ResponseEntity<GetProjectResponse> getProjectDetail(
             @PathVariable Long projectId,
             @AuthenticationPrincipal JwtUser principal) {
 
-        GetProjectResponse response = projectService.getProjectById(principal.userId(), projectId);
+        GetProjectResponse response = projectService.getProjectDetail(principal.userId(), projectId);
         return ResponseEntity.ok(response);
+    }
+
+    @Operation(
+            summary = "Обновление информации о проекте",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @PatchMapping("/{projectId}")
+    public ResponseEntity<GetProjectResponse> updateProject(
+            @PathVariable Long projectId,
+            @Valid @RequestBody UpdateProjectRequest request,
+            @AuthenticationPrincipal JwtUser principal) {
+
+        GetProjectResponse response = projectService.updateProject(
+                principal.userId(), projectId, request.name(), request.description());
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(
+            summary = "Удаление проекта (мягкое)",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @PatchMapping("/{projectId}/delete")
+    public ResponseEntity<?> deleteProject(
+            @PathVariable Long projectId,
+            @AuthenticationPrincipal JwtUser principal) {
+
+        projectService.deleteProject(principal.userId(), projectId);
+        return ResponseEntity.noContent().build();
     }
 }

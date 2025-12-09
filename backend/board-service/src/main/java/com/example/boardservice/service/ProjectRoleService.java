@@ -1,6 +1,7 @@
 package com.example.boardservice.service;
 
 import com.example.boardservice.cache.RedisCacheService;
+import com.example.boardservice.client.UserServiceClient;
 import com.example.boardservice.dto.data.PermissionEntry;
 import com.example.boardservice.dto.models.ProjectMember;
 import com.example.boardservice.dto.models.RolePermission;
@@ -10,8 +11,7 @@ import com.example.boardservice.dto.models.enums.ActionType;
 import com.example.boardservice.dto.models.enums.EntityType;
 import com.example.boardservice.dto.response.GetRolesResponse;
 import com.example.boardservice.dto.response.RoleResponse;
-import com.example.boardservice.exception.RoleNotFoundException;
-import com.example.boardservice.exception.UserNotFoundException;
+import com.example.boardservice.exception.*;
 import com.example.boardservice.repository.ProjectMemberRepository;
 import com.example.boardservice.repository.ProjectRoleRepository;
 import com.example.boardservice.repository.RolePermissionRepository;
@@ -38,6 +38,7 @@ public class ProjectRoleService {
     private final PermissionMatrixService permissionMatrixService;
     private final AuthService authService;
     private final RedisCacheService redisCacheService;
+    private final UserServiceClient userServiceClient;
 
     @Transactional
     public ProjectRole createDefaultRoles(Long projectId) {
@@ -92,7 +93,7 @@ public class ProjectRoleService {
         authService.checkOwnerOnly(userId, projectId);
 
         if (roleName == null || roleName.isBlank()) {
-            throw new IllegalArgumentException("Role name is required");
+            throw new InvalidRoleNameException("Role name is required and cannot be blank");
         }
 
         permissionMatrixService.validatePermissions(request);
@@ -131,7 +132,7 @@ public class ProjectRoleService {
                 .orElseThrow(() -> new RoleNotFoundException("Role ID: " + roleId + " not found"));
 
         if (!Objects.equals(role.getProject().getId(), projectId)) {
-            throw new IllegalArgumentException("Role " + roleId + " does not belong to project " + projectId);
+            throw new RoleNotInProjectException("Role " + roleId + " does not belong to project " + projectId);
         }
 
         if (roleName != null && !roleName.isBlank()) {
@@ -172,12 +173,12 @@ public class ProjectRoleService {
                 .orElseThrow(() -> new RoleNotFoundException("Role ID: " + roleId + " not found"));
 
         if (!Objects.equals(role.getProject().getId(), projectId)) {
-            throw new IllegalArgumentException("Role " + roleId + " does not belong to project " + projectId);
+            throw new RoleNotInProjectException("Role " + roleId + " does not belong to project " + projectId);
         }
 
         List<ProjectMember> affectedMembers = memberRepository.findAllByRole_IdAndProject_Id(roleId, projectId);
         ProjectRole defaultRole = roleRepository.findByProject_IdAndIsDefaultTrue(projectId)
-                .orElseThrow(() -> new IllegalStateException("No default role in project " + projectId));
+                .orElseThrow(() -> new MissingDefaultRoleException("No default role in project " + projectId));
 
         log.info("User {} deleting role {} in project {}, reassigning {} members to default role {}",
                 userId, roleId, projectId, affectedMembers.size(), defaultRole.getId());
@@ -194,13 +195,14 @@ public class ProjectRoleService {
                 new TransactionSynchronization() {
                     @Override
                     public void afterCommit() {
-                        redisCacheService.invalidateRolePermissions(roleId);
+                        try {
+                            redisCacheService.invalidateAllUsersInProject(projectId);
 
-                        affectedMembers.forEach(member ->
-                                redisCacheService.invalidateUserRole(member.getUserId(), projectId)
-                        );
-
-                        log.info("Role {} deleted, caches invalidated for {} members", roleId, affectedMembers.size());
+                            log.info("Role {} deleted, caches invalidated for {} members", roleId, affectedMembers.size());
+                        } catch (Exception e) {
+                            log.error("Failed to invalidate cache for role {} in project {}: {}",
+                                    roleId, projectId, e.getMessage());
+                        }
                     }
                 }
         );
@@ -211,11 +213,17 @@ public class ProjectRoleService {
 
         authService.checkOwnerOnly(userId, projectId);
 
+        try {
+            userServiceClient.getProfileById(assignedId);
+        } catch (Exception e) {
+            throw new UserNotFoundException("User with Id: " + assignedId + " does not exist");
+        }
+
         ProjectRole role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new RoleNotFoundException("Role ID: " + roleId + " not found"));
 
         if (!Objects.equals(role.getProject().getId(), projectId)) {
-            throw new IllegalArgumentException("Role " + roleId + " does not belong to project " + projectId);
+            throw new RoleNotInProjectException("Role " + roleId + " does not belong to project " + projectId);
         }
 
         ProjectMember member = memberRepository.findByUserIdAndProject_Id(assignedId, projectId)
@@ -224,17 +232,18 @@ public class ProjectRoleService {
         member.setRole(role);
         memberRepository.save(member);
 
-        redisCacheService.invalidateUserRole(userId, projectId);
-
         TransactionSynchronizationManager.registerSynchronization(
                 new TransactionSynchronization() {
                     @Override
                     public void afterCommit() {
-                        redisCacheService.invalidateRolePermissions(roleId);
+                        try {
+                            redisCacheService.invalidateUserRole(member.getUserId(), projectId);
 
-                        redisCacheService.invalidateUserRole(member.getUserId(), projectId);
-
-                        log.info("Role {} deleted, caches invalidated for 1 members", roleId);
+                            log.info("Role {} deleted, caches invalidated for 1 members", roleId);
+                        } catch (Exception e) {
+                            log.error("Failed to invalidate cache for user {} in project {}: {}",
+                                    member.getUserId(), projectId, e.getMessage());
+                        }
                     }
                 }
         );
@@ -274,11 +283,17 @@ public class ProjectRoleService {
                 new TransactionSynchronization() {
                     @Override
                     public void afterCommit() {
-                        members.forEach(member ->
-                                redisCacheService.invalidateUserRole(member.getUserId(), member.getProject().getId())
-                        );
-                        log.debug("Invalidated user-role caches for {} members with role {}",
-                                members.size(), roleId);
+                        try {
+                            members.forEach(member ->
+                                    redisCacheService.invalidateUserRole(member.getUserId(), member.getProject().getId())
+                            );
+                            log.debug("Invalidated user-role caches for {} members with role {}",
+                                    members.size(), roleId);
+                        } catch (Exception e) {
+                            log.error("Failed to invalidate cache for role {}: {}",
+                                    roleId, e.getMessage());
+                        }
+
                     }
                 }
         );

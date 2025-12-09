@@ -1,9 +1,9 @@
 package com.example.boardservice.controller;
 
-import com.example.boardservice.dto.request.CreateProjectRequest;
 import com.example.boardservice.dto.request.InviteUserRequest;
 import com.example.boardservice.security.JwtUser;
 import com.example.boardservice.service.ProjectInviteService;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -24,18 +24,26 @@ import java.util.Map;
 public class InviteController {
     public final ProjectInviteService inviteService;
 
+    @Operation(
+            summary = "Присоединиться к проекту по ссылке",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
     @PostMapping("/join/{token}")
     public ResponseEntity<Map<String, Object>> join(
             @PathVariable String token,
             @AuthenticationPrincipal JwtUser principal) {
 
-        Long projectId = inviteService.joinByInvite(token, principal.userId());
+        Long projectId = inviteService.joinByInvite(principal.userId(), token);
         return ResponseEntity.ok(Map.of(
                 "success", true,
                 "projectId", projectId
         ));
     }
 
+    @Operation(
+            summary = "Пригласить пользователя в проект",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
     @PostMapping("/{projectId}/invite")
     public ResponseEntity<String> invite(
             @PathVariable Long projectId,
@@ -44,5 +52,31 @@ public class InviteController {
 
         inviteService.inviteUser(principal.userId(), projectId, request.userId(), request.roleId());
         return ResponseEntity.ok("Success");
+    }
+
+    @Operation(
+            summary = "Пересоздать пригласительную ссылку",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @PostMapping("/{projectId}/invite/regenerate")
+    public ResponseEntity<String> regenerateInvite(
+            @PathVariable Long projectId,
+            @AuthenticationPrincipal JwtUser principal) {
+
+        String response = inviteService.regenerateInvite(principal.userId(), projectId);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(
+            summary = "Получить ссылку на приглашение",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @GetMapping("/{projectId}/invite")
+    public ResponseEntity<String> getInviteLink(
+            @PathVariable Long projectId,
+            @AuthenticationPrincipal JwtUser principal) {
+
+        String response = inviteService.getInviteLink(principal.userId(), projectId);
+        return ResponseEntity.ok(response);
     }
 }

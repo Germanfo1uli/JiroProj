@@ -8,8 +8,5 @@ public record CreateProjectResponse(
         Long id,
 
         @Schema(description = "Название проекта", example = "TaskFlow")
-        String name,
-
-        @Schema(description = "Короткий тег проекта", example = "TF")
-        String key
+        String name
 ) {}

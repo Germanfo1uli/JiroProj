@@ -25,8 +25,8 @@ public class Project {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "key", nullable = false)
-    private String key;
+    @Column(name = "description")
+    private String description;
 
     @Column(name = "created_at", updatable = false)
     @CreationTimestamp
@@ -40,4 +40,7 @@ public class Project {
 
     @Column(name = "invite_token", unique = true)
     private String inviteToken;
+
+    @OneToOne(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+    private ProjectAvatar avatar;
 }
