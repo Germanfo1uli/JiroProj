@@ -1,18 +1,31 @@
 import { useState, useEffect } from 'react';
 import { ProjectSettings } from '../types/settings';
 import { api } from '@/app/auth/hooks/useTokenRefresh';
+import { useInviteLink } from './useInviteLink';
 
 export const useSettingsForm = (projectId: string, handleProjectUpdated: () => void) => {
     const [settings, setSettings] = useState<ProjectSettings | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    const {
+        inviteLink,
+        loading: inviteLoading,
+        error: inviteError,
+        getInviteLink,
+        regenerateInviteLink
+    } = useInviteLink({ projectId });
+
     useEffect(() => {
         const fetchProject = async () => {
             try {
                 setLoading(true);
-                const response = await api.get(`/projects/${projectId}`);
-                const projectData = response.data;
+                const [projectResponse] = await Promise.all([
+                    api.get(`/projects/${projectId}`),
+                    getInviteLink()
+                ]);
+
+                const projectData = projectResponse.data;
                 setSettings({
                     projectName: projectData.name,
                     description: projectData.description
@@ -28,7 +41,7 @@ export const useSettingsForm = (projectId: string, handleProjectUpdated: () => v
         if (projectId) {
             fetchProject();
         }
-    }, [projectId]);
+    }, [projectId, getInviteLink]);
 
     const handleSubmit = async (values: ProjectSettings) => {
         try {
@@ -37,30 +50,33 @@ export const useSettingsForm = (projectId: string, handleProjectUpdated: () => v
                 description: values.description
             });
             setSettings(values);
-            console.log('Settings saved:', values);
+            handleProjectUpdated();
         } catch (err) {
-            console.error('Ошибка при сохранении настроек:', err);
             throw err;
         }
     };
 
-    const copyInviteLink = () => {
-        navigator.clipboard.writeText(`https://taskflow.ru/invite/${Math.random().toString(36).substr(2, 9)}-${Math.random().toString(36).substr(2, 9)}`);
-        alert('Ссылка скопирована в буфер обмена!');
+    const copyInviteLink = async () => {
+        if (!inviteLink) {
+            const link = await getInviteLink();
+            if (!link) throw new Error('Не удалось получить ссылку');
+            await navigator.clipboard.writeText(link);
+        } else {
+            await navigator.clipboard.writeText(inviteLink);
+        }
     };
 
-    const refreshInviteLink = () => {
-        if (confirm('Вы уверены, что хотите обновить пригласительную ссылку? Старая ссылка станет недействительной.')) {
-            const newLink = `https://taskflow.ru/invite/${Math.random().toString(36).substr(2, 9)}-${Math.random().toString(36).substr(2, 9)}`;
-            console.log('Invite link refreshed:', newLink);
-            alert('Пригласительная ссылка успешно обновлена!');
-        }
+    const refreshInviteLink = async () => {
+        await regenerateInviteLink();
     };
 
     return {
         settings,
         loading,
         error,
+        inviteLink,
+        inviteLoading,
+        inviteError,
         handleSubmit,
         copyInviteLink,
         refreshInviteLink

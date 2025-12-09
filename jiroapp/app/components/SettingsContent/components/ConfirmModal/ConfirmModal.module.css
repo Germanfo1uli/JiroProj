@@ -1,0 +1,119 @@
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1500;
+    backdrop-filter: blur(5px);
+}
+
+.modalContent {
+    background: white;
+    border-radius: 16px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.modalHeader {
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.modalTitle {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0;
+}
+
+.modalTitle h3 {
+    margin: 0;
+    color: #1e293b;
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.warningIcon {
+    color: #f59e0b;
+    font-size: 1.2rem;
+}
+
+.closeButton {
+    background: none;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.closeButton:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.modalBody {
+    padding: 1.5rem;
+}
+
+.modalBody p {
+    margin: 0;
+    color: #475569;
+    line-height: 1.6;
+    font-size: 0.95rem;
+}
+
+.modalFooter {
+    padding: 1.5rem;
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.cancelButton {
+    padding: 0.75rem 1.5rem;
+    background: rgba(255, 255, 255, 0.9);
+    color: #64748b;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.cancelButton:hover {
+    background: rgba(0, 0, 0, 0.05);
+    transform: translateY(-1px);
+}
+
+.confirmButton {
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #dc2626, #ef4444);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+.confirmButton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
+}
