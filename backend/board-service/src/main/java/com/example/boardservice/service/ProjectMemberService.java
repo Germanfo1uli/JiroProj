@@ -1,6 +1,7 @@
 package com.example.boardservice.service;
 
 import com.example.boardservice.cache.RedisCacheService;
+import com.example.boardservice.cache.UserCacheService;
 import com.example.boardservice.client.UserServiceClient;
 import com.example.boardservice.dto.data.UserBatchRequest;
 import com.example.boardservice.dto.models.Project;
@@ -26,7 +27,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -38,6 +39,7 @@ public class ProjectMemberService {
     private final UserServiceClient userServiceClient;
     private final AuthService authService;
     private final RedisCacheService redisCacheService;
+    private final UserCacheService userCacheService;
 
     @Transactional
     public ProjectMember addMember(Long userId, Long projectId, Long roleId) {
@@ -109,14 +111,11 @@ public class ProjectMemberService {
             return List.of();
         }
 
-        List<Long> userIds = members.stream().map(ProjectMember::getUserId).toList();
-        UserBatchRequest request = new UserBatchRequest(userIds);
+        Set<Long> userIds = members.stream()
+                .map(ProjectMember::getUserId)
+                .collect(Collectors.toSet());
 
-        log.info("Fetching {} user profiles from user-service for project {}", userIds.size(), projectId);
-        List<PublicProfileResponse> profiles = userServiceClient.getProfilesByIds(request);
-
-        Map<Long, PublicProfileResponse> profileMap = profiles.stream()
-                .collect(Collectors.toMap(PublicProfileResponse::id, p -> p));
+        Map<Long, PublicProfileResponse> profileMap = userCacheService.getUserProfilesBatch(userIds);
 
         return members.stream()
                 .map(member -> {
