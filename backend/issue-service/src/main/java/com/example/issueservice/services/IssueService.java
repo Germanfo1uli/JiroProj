@@ -1,17 +1,15 @@
 package com.example.issueservice.services;
 
-import com.example.issueservice.dto.request.CreateIssueDto;
-import com.example.issueservice.dto.response.IssueDetailsDto;
+import com.example.issueservice.dto.request.CreateIssueRequest;
 import com.example.issueservice.dto.response.IssueSummaryDto;
 import com.example.issueservice.exception.IssueNotFoundException;
 import com.example.issueservice.dto.models.Issue;
 import com.example.issueservice.repositories.IssueRepository;
-import com.example.issueservice.repositories.IssueAssigneeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,11 +20,9 @@ import java.util.stream.Collectors;
 public class IssueService {
 
     private final IssueRepository issueRepository;
-    private final IssueAssigneeRepository issueAssigneeRepository;
-    private final RestTemplate restTemplate;
 
     @Transactional
-    public IssueDetailsDto createIssue(CreateIssueDto dto) {
+    public com.example.issueservice.dto.response.CreateIssueResponse createIssue(CreateIssueRequest dto) {
         log.info("Creating new issue for project: {}", dto.getProjectId());
 
         Issue parentIssue = null;
@@ -54,7 +50,7 @@ public class IssueService {
         return convertToDto(savedIssue);
     }
 
-    public IssueDetailsDto getIssueById(Long id) {
+    public com.example.issueservice.dto.response.CreateIssueResponse getIssueById(Long id) {
         log.info("Fetching issue by id: {}", id);
 
         Issue issue = issueRepository.findById(id)
@@ -64,7 +60,7 @@ public class IssueService {
         return enrichIssueWithDetails(issue);
     }
 
-    public List<IssueDetailsDto> getIssuesByProject(Long projectId) {
+    public List<com.example.issueservice.dto.response.CreateIssueResponse> getIssuesByProject(Long projectId) {
         log.info("Fetching all issues for project: {}", projectId);
         List<Issue> issues = issueRepository.findByProjectId(projectId);
         return issues.stream()
@@ -102,7 +98,7 @@ public class IssueService {
         log.info("Successfully removed assignee.");
     }
     // нужно связать с существующими api
-    private IssueDetailsDto enrichIssueWithDetails(Issue issue) {
+    private com.example.issueservice.dto.response.CreateIssueResponse enrichIssueWithDetails(Issue issue) {
         // Вызовы к другим микросервисам
         String projectUrl = "http://project-service/api/projects/" + issue.getProjectId();
         String userUrl = "http://user-service/api/users/" + issue.getCreatorId();
@@ -120,7 +116,7 @@ public class IssueService {
             // TODO: Сделать один вызов в user-service с пачкой ID
             // List<String> assigneeNames = restTemplate.postForObject(userServiceUrl + "/batch", assigneeIds, ...);
 
-            return IssueDetailsDto.builder()
+            return com.example.issueservice.dto.response.CreateIssueResponse.builder()
                     .id(issue.getId())
                     .title(issue.getTitle())
                     .description(issue.getDescription())
@@ -154,9 +150,9 @@ public class IssueService {
                 .build();
     }
 
-    private IssueDetailsDto convertToDto(Issue issue) {
+    private com.example.issueservice.dto.response.CreateIssueResponse convertToDto(Issue issue) {
 
-        return IssueDetailsDto.builder()
+        return com.example.issueservice.dto.response.CreateIssueResponse.builder()
                 .id(issue.getId())
                 .title(issue.getTitle())
                 .description(issue.getDescription())

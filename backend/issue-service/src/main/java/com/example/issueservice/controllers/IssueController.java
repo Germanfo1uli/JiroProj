@@ -2,42 +2,57 @@ package com.example.issueservice.controllers;
 
 import com.example.issueservice.dto.request.AssignTagDto;
 import com.example.issueservice.dto.request.AssignUserDto;
-import com.example.issueservice.dto.request.CreateIssueDto;
+import com.example.issueservice.dto.request.CreateIssueRequest;
 import com.example.issueservice.dto.request.UpdateIssueDto;
-import com.example.issueservice.dto.response.IssueDetailsDto;
+import com.example.issueservice.dto.response.CreateIssueResponse;
 import com.example.issueservice.dto.response.IssueSummaryDto;
+import com.example.issueservice.security.JwtUser;
 import dto.request.*;
 import dto.response.*;
 import com.example.issueservice.services.IssueService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/issues")
+@RequestMapping("/api/projects")
 @RequiredArgsConstructor
+@Validated
+@SecurityRequirement(name = "bearerAuth")
+@Tag(name = "Issue Management", description = "Управление задачами в проекте")
 public class IssueController {
 
     private final IssueService issueService;
 
-    // --- Создание задачи ---
-    @PostMapping
-    public ResponseEntity<IssueDetailsDto> createIssue(@Valid @RequestBody CreateIssueDto dto) {
-        log.info("Request to create issue: {}", dto.getTitle());
-        IssueDetailsDto createdIssue = issueService.createIssue(dto);
-        return new ResponseEntity<>(createdIssue, HttpStatus.CREATED);
+    @Operation(
+            summary = "Создание задачи",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @PostMapping("/{projectId}")
+    public ResponseEntity<CreateIssueResponse> createIssue(
+            @Valid @RequestBody CreateIssueRequest request,
+            @AuthenticationPrincipal JwtUser principal) {
+
+        log.info("Request to create issue: {}", request.title());
+        CreateIssueResponse response = issueService.createIssue(request);
+        return ResponseEntity.ok(response);
     }
 
     // --- Получение задачи по ID ---
     @GetMapping("/{id}")
-    public ResponseEntity<IssueDetailsDto> getIssueById(@PathVariable Long id) {
+    public ResponseEntity<com.example.issueservice.dto.response.CreateIssueResponse> getIssueById(@PathVariable Long id) {
         log.info("Request to get issue by id: {}", id);
-        IssueDetailsDto issue = issueService.getIssueById(id);
+        CreateIssueResponse issue = issueService.getIssueById(id);
         return ResponseEntity.ok(issue);
     }
 
@@ -53,7 +68,7 @@ public class IssueController {
 
     // --- Обновление задачи ---
     @PutMapping("/{id}")
-    public ResponseEntity<IssueDetailsDto> updateIssue(@PathVariable Long id, @Valid @RequestBody UpdateIssueDto dto) {
+    public ResponseEntity<com.example.issueservice.dto.response.CreateIssueResponse> updateIssue(@PathVariable Long id, @Valid @RequestBody UpdateIssueDto dto) {
         log.info("Request to update issue with id: {}", id);
         // TODO: В сервисе нужно реализовать метод updateIssue(id, dto)
         // IssueDetailsDto updatedIssue = issueService.updateIssue(id, dto);

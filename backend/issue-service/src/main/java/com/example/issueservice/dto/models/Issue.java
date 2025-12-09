@@ -41,15 +41,14 @@ public class Issue {
     @OneToMany(mappedBy = "parentIssue", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Issue> childIssues = new ArrayList<>();
 
-    @Column(nullable = false)
+    @Column(name = "level", nullable = false)
     private Integer level;
 
     @OneToMany(mappedBy = "issue", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<IssueComment> comments = new ArrayList<>();
 
-    @OneToMany(mappedBy = "issue", cascade = CascadeType.ALL, orphanRemoval = true
-    )
-    private List<Attachment> attachments = new ArrayList<>();
+    @OneToMany(mappedBy = "issue", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Attachment> attachments = new ArrayList<>(); // Убрал лишний перенос строки
 
     @Column(name = "assignee_id")
     private Long assigneeId;
@@ -63,6 +62,7 @@ public class Issue {
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "issue_tags",
+            schema = "issue_service_schema",
             joinColumns = @JoinColumn(name = "issue_id"),
             inverseJoinColumns = @JoinColumn(name = "tag_id")
     )
@@ -75,14 +75,18 @@ public class Issue {
     private String description;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
     private IssueStatus status;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "type", nullable = false)
     private IssueType type;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "priority", nullable = false)
     private Priority priority;
 
+    @Column(name = "deadline")
     private LocalDateTime deadline;
 
     @CreationTimestamp
