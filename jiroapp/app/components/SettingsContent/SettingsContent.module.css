@@ -126,12 +126,12 @@
 
 .settingsTabs {
     border-bottom: 1px solid rgba(61, 107, 179, 0.1);
-    margin: 0 2.5rem;
 }
 
 .tabsContainer {
     display: flex;
     gap: 0.5rem;
+
     overflow-x: auto;
     padding-bottom: 1px;
     scrollbar-width: none;

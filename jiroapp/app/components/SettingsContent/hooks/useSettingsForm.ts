@@ -1,27 +1,57 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ProjectSettings } from '../types/settings';
+import { api } from '@/app/auth/hooks/useTokenRefresh';
 
-export const useSettingsForm = (initialData: ProjectSettings) => {
-    const [settings, setSettings] = useState<ProjectSettings>(initialData);
+export const useSettingsForm = (projectId: string, handleProjectUpdated: () => void) => {
+    const [settings, setSettings] = useState<ProjectSettings | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-    const handleSubmit = (values: ProjectSettings) => {
-        setSettings(values);
-        // Здесь будет API вызов для сохранения настроек
-        console.log('Settings saved:', values);
+    useEffect(() => {
+        const fetchProject = async () => {
+            try {
+                setLoading(true);
+                const response = await api.get(`/projects/${projectId}`);
+                const projectData = response.data;
+                setSettings({
+                    projectName: projectData.name,
+                    description: projectData.description
+                });
+            } catch (err) {
+                setError('Не удалось загрузить настройки проекта');
+                console.error(err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (projectId) {
+            fetchProject();
+        }
+    }, [projectId]);
+
+    const handleSubmit = async (values: ProjectSettings) => {
+        try {
+            await api.patch(`/projects/${projectId}`, {
+                name: values.projectName,
+                description: values.description
+            });
+            setSettings(values);
+            console.log('Settings saved:', values);
+        } catch (err) {
+            console.error('Ошибка при сохранении настроек:', err);
+            throw err;
+        }
     };
 
     const copyInviteLink = () => {
-        navigator.clipboard.writeText(settings.inviteLink);
+        navigator.clipboard.writeText(`https://taskflow.ru/invite/${Math.random().toString(36).substr(2, 9)}-${Math.random().toString(36).substr(2, 9)}`);
         alert('Ссылка скопирована в буфер обмена!');
     };
 
     const refreshInviteLink = () => {
         if (confirm('Вы уверены, что хотите обновить пригласительную ссылку? Старая ссылка станет недействительной.')) {
             const newLink = `https://taskflow.ru/invite/${Math.random().toString(36).substr(2, 9)}-${Math.random().toString(36).substr(2, 9)}`;
-            setSettings(prev => ({
-                ...prev,
-                inviteLink: newLink
-            }));
             console.log('Invite link refreshed:', newLink);
             alert('Пригласительная ссылка успешно обновлена!');
         }
@@ -29,6 +59,8 @@ export const useSettingsForm = (initialData: ProjectSettings) => {
 
     return {
         settings,
+        loading,
+        error,
         handleSubmit,
         copyInviteLink,
         refreshInviteLink

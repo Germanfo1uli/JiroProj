@@ -26,6 +26,7 @@ const ControlPanel = ({
 
     const handleHomeClick = () => {
         if (hasActiveProject) {
+
             onPageChange('project')
         } else {
             onPageChange('board')

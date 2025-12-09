@@ -4,7 +4,6 @@ import { Formik, Form } from 'formik';
 import { FaSave, FaCog, FaUsers, FaUserTag, FaTrash, FaExclamationTriangle } from 'react-icons/fa';
 import { settingsValidationSchema } from './utils/validationSchemas';
 import { useSettingsForm } from './hooks/useSettingsForm';
-import { ProjectSettings } from './types/settings';
 import AvatarSection from './components/AvatarSection/AvatarSection';
 import ProjectInfoSection from './components/ProjectInfoSection/ProjectInfoSection';
 import InviteSection from './components/InviteSection/InviteSection';
@@ -12,19 +11,92 @@ import RolesSection from './components/RolesSection/RolesSection';
 import DeleteProjectModal from './components/DeleteProjectModal/DeleteProjectModal';
 import styles from './SettingsContent.module.css';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { api } from '@/app/auth/hooks/useTokenRefresh';
+import { useProjectData } from '../VerticalNavbar/CreateProject/hooks/useProjectData';
 
-const SettingsContent = () => {
-    const initialSettings: ProjectSettings = {
-        avatar: '',
-        projectName: 'TASKFLOW PRO',
-        description: 'Система управления задачами нового поколения. Организуйте работу вашей команды эффективно и просто.',
-        inviteLink: 'https://taskflow.ru/invite/abc123-def456-ghi789'
+interface SettingsContentProps {
+    project: {
+        id: string;
+        name: string;
+        description: string;
     };
+    onBackClick: () => void;
+}
 
-    const { settings, handleSubmit, copyInviteLink, refreshInviteLink } = useSettingsForm(initialSettings);
+const SettingsContent = ({ project, onBackClick }: SettingsContentProps) => {
+    const { refreshProject } = useProjectData();
     const [activeTab, setActiveTab] = useState('general');
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [avatar, setAvatar] = useState<string | null>(null);
+
+    const handleProjectUpdated = () => {
+        refreshProject(project.id);
+    };
+
+    const { settings, loading, error, handleSubmit, copyInviteLink, refreshInviteLink } = useSettingsForm(
+        project.id,
+        handleProjectUpdated
+    );
+
+    useEffect(() => {
+        const fetchAvatar = async () => {
+            try {
+                const response = await api.get(`/projects/${project.id}/avatar`, {
+                    responseType: 'blob'
+                });
+                if (response.data && response.data.size > 0) {
+                    const imageUrl = URL.createObjectURL(response.data);
+                    setAvatar(imageUrl);
+                }
+            } catch (error) {
+                console.log('Аватар не найден');
+            }
+        };
+
+        fetchAvatar();
+    }, [project.id]);
+
+    const handleAvatarChange = async (file: File) => {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            await api.post(`/projects/${project.id}/avatar`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            const imageUrl = URL.createObjectURL(file);
+            setAvatar(imageUrl);
+            refreshProject(project.id);
+        } catch (error) {
+            console.error('Ошибка при загрузке аватара:', error);
+            throw error;
+        }
+    };
+
+    const handleAvatarRemove = async () => {
+        try {
+            await api.delete(`/projects/${project.id}/avatar`);
+            setAvatar(null);
+            refreshProject(project.id);
+        } catch (error) {
+            console.error('Ошибка при удалении аватара:', error);
+            throw error;
+        }
+    };
+
+    const handleDeleteProject = async () => {
+        try {
+            await api.patch(`/projects/${project.id}/delete`);
+            console.log('Проект удален');
+            onBackClick();
+        } catch (error) {
+            console.error('Ошибка при удалении проекта:', error);
+        }
+        setShowDeleteModal(false);
+    };
 
     const tabs = [
         { id: 'general', label: 'Основные', icon: <FaCog /> },
@@ -32,11 +104,13 @@ const SettingsContent = () => {
         { id: 'team', label: 'Команда', icon: <FaUsers /> }
     ];
 
-    const handleDeleteProject = () => {
-        console.log('Удаление проекта...');
-        setShowDeleteModal(false);
-        // Здесь будет логика удаления проекта
-    };
+    if (loading) {
+        return <div>Загрузка...</div>;
+    }
+
+    if (error) {
+        return <div>{error}</div>;
+    }
 
     return (
         <motion.div
@@ -60,21 +134,6 @@ const SettingsContent = () => {
                             <p className={styles.pageSubtitle}>
                                 Управление базовой информацией, ролями и доступом участников
                             </p>
-                        </div>
-
-                        <div className={styles.headerStats}>
-                            <div className={styles.statCard}>
-                                <span className={styles.statValue}>4</span>
-                                <span className={styles.statLabel}>активных участника</span>
-                            </div>
-                            <div className={styles.statCard}>
-                                <span className={styles.statValue}>3</span>
-                                <span className={styles.statLabel}>роли</span>
-                            </div>
-                            <div className={styles.statCard}>
-                                <span className={styles.statValue}>12</span>
-                                <span className={styles.statLabel}>выполненных задач</span>
-                            </div>
                         </div>
                     </motion.div>
 
@@ -108,7 +167,7 @@ const SettingsContent = () => {
 
                 <div className={styles.settingsMain}>
                     <AnimatePresence mode="wait">
-                        {activeTab === 'general' && (
+                        {activeTab === 'general' && settings && (
                             <motion.div
                                 key="general"
                                 initial={{ opacity: 0, x: 20 }}
@@ -133,12 +192,17 @@ const SettingsContent = () => {
                                                     className={styles.formColumn}
                                                 >
                                                     <div className={styles.formSection}>
-                                                        <AvatarSection currentAvatar={initialSettings.avatar} />
+                                                        <AvatarSection
+                                                            projectId={project.id}
+                                                            currentAvatar={avatar}
+                                                            onAvatarChange={handleAvatarChange}
+                                                            onAvatarRemove={handleAvatarRemove}
+                                                        />
                                                     </div>
 
                                                     <div className={styles.formSection}>
                                                         <InviteSection
-                                                            inviteLink={settings.inviteLink}
+                                                            inviteLink={`https://taskflow.ru/invite/${Math.random().toString(36).substr(2, 9)}-${Math.random().toString(36).substr(2, 9)}`}
                                                             onCopyLink={copyInviteLink}
                                                             onRefreshLink={refreshInviteLink}
                                                         />
@@ -155,7 +219,6 @@ const SettingsContent = () => {
                                                         <ProjectInfoSection />
                                                     </div>
 
-                                                    {/* Danger Zone теперь в колонке с основной информацией */}
                                                     <div className={styles.dangerZone}>
                                                         <div className={styles.dangerHeader}>
                                                             <FaExclamationTriangle className={styles.dangerIcon} />
@@ -274,7 +337,7 @@ const SettingsContent = () => {
                 isOpen={showDeleteModal}
                 onClose={() => setShowDeleteModal(false)}
                 onConfirm={handleDeleteProject}
-                projectName={settings.projectName}
+                projectName={settings?.projectName || project.name}
             />
         </motion.div>
     );

@@ -83,7 +83,7 @@ export const useProjectData = () => {
 
     useEffect(() => {
         fetchProjects();
-    }, [fetchProjects]);
+    }, []);
 
     const addProject = useCallback((project: Project) => {
         setProjects(prev => [project, ...prev]);
@@ -105,12 +105,49 @@ export const useProjectData = () => {
         }
     }, [fetchProjectAvatar]);
 
+    const updateProjectName = useCallback((projectId: string, newName: string) => {
+        setProjects(prev => prev.map(project =>
+            project.id === projectId
+                ? { ...project, name: newName }
+                : project
+        ));
+    }, []);
+
+    const removeProject = useCallback((projectId: string) => {
+        setProjects(prev => prev.filter(project => project.id !== projectId));
+    }, []);
+
+    const refreshProject = useCallback(async (projectId: string) => {
+        try {
+            const response = await api.get(`/projects/${projectId}`);
+            const projectData = response.data;
+
+            const avatarUrl = await fetchProjectAvatar(projectId);
+
+            setProjects(prev => prev.map(project =>
+                project.id === projectId.toString()
+                    ? {
+                        ...project,
+                        name: projectData.name,
+                        description: projectData.description,
+                        image: avatarUrl
+                    }
+                    : project
+            ));
+        } catch (error) {
+            console.error('Ошибка при обновлении проекта:', error);
+        }
+    }, [fetchProjectAvatar]);
+
     return {
         projects,
         loading,
         error,
         refetch: fetchProjects,
         addProject,
-        updateProjectAvatar
+        updateProjectAvatar,
+        updateProjectName,
+        removeProject,
+        refreshProject
     };
 };

@@ -81,7 +81,12 @@ const MainPage = () => {
                 {activePage === 'board' && <BoardsContent />}
                 {activePage === 'developers' && <DevelopersPage />}
                 {activePage === 'reports' && <ReportsPage />}
-                {activePage === 'settings' && <SettingsContent onBackClick={() => setActivePage('board')} />}
+                {activePage === 'settings' && activeProject && (
+                    <SettingsContent
+                        project={activeProject}
+                        onBackClick={() => setActivePage('board')}
+                    />
+                )}
                 {activePage === 'project' && activeProject && (
                     <ProjectContent
                         project={activeProject}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { FaTasks, FaSearch, FaPlus, FaQuestion, FaUserCircle, FaBell, FaBars, FaTimes } from 'react-icons/fa'
 import NotificationModal from './Notification/NotificationModal'
 import SearchPanel from './Search/SearchPanel'
@@ -30,7 +30,7 @@ const VerticalNavbar = ({
     const [isProfileOpen, setIsProfileOpen] = useState(false)
     const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false)
 
-    const { projects, loading, addProject, updateProjectAvatar } = useProjectData()
+    const { projects, loading, addProject, updateProjectAvatar, updateProjectName, removeProject } = useProjectData()
 
     const handleNotificationClick = () => {
         setIsNotificationOpen(!isNotificationOpen)

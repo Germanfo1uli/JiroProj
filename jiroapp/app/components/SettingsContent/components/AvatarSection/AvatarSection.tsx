@@ -1,15 +1,16 @@
-import { useField } from 'formik';
 import { FaCamera, FaTrash, FaUpload, FaImage, FaCheck } from 'react-icons/fa';
 import styles from './AvatarSection.module.css';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 
 interface AvatarSectionProps {
-    currentAvatar: string;
+    projectId: string;
+    currentAvatar: string | null;
+    onAvatarChange: (file: File) => Promise<void>;
+    onAvatarRemove: () => Promise<void>;
 }
 
-const AvatarSection = ({ currentAvatar }: AvatarSectionProps) => {
-    const [field, meta, helpers] = useField('avatar');
+const AvatarSection = ({ projectId, currentAvatar, onAvatarChange, onAvatarRemove }: AvatarSectionProps) => {
     const [isUploading, setIsUploading] = useState(false);
     const [preview, setPreview] = useState<string | null>(null);
 
@@ -22,19 +23,31 @@ const AvatarSection = ({ currentAvatar }: AvatarSectionProps) => {
             reader.onload = (e) => {
                 const result = e.target?.result as string;
                 setPreview(result);
-                helpers.setValue(result);
-                setIsUploading(false);
             };
+
             reader.onerror = () => {
                 setIsUploading(false);
             };
+
             reader.readAsDataURL(file);
+
+            try {
+                await onAvatarChange(file);
+            } catch (error) {
+                console.error('Ошибка при загрузке аватара:', error);
+            } finally {
+                setIsUploading(false);
+            }
         }
     };
 
-    const handleRemove = () => {
-        helpers.setValue('');
-        setPreview(null);
+    const handleRemove = async () => {
+        try {
+            await onAvatarRemove();
+            setPreview(null);
+        } catch (error) {
+            console.error('Ошибка при удалении аватара:', error);
+        }
     };
 
     return (
@@ -67,7 +80,7 @@ const AvatarSection = ({ currentAvatar }: AvatarSectionProps) => {
                 >
                     <div className={styles.avatarContainer}>
                         <img
-                            src={field.value || currentAvatar || '/default-avatar.png'}
+                            src={preview || currentAvatar || '/default-avatar.png'}
                             alt="Аватар проекта"
                             className={styles.avatarImage}
                             onError={(e) => {
@@ -79,7 +92,7 @@ const AvatarSection = ({ currentAvatar }: AvatarSectionProps) => {
                                 <div className={styles.loaderSpinner} />
                             </div>
                         )}
-                        {field.value && !isUploading && (
+                        {preview && !isUploading && (
                             <motion.div
                                 initial={{ scale: 0 }}
                                 animate={{ scale: 1 }}
@@ -135,7 +148,7 @@ const AvatarSection = ({ currentAvatar }: AvatarSectionProps) => {
                             )}
                         </motion.label>
 
-                        {field.value && (
+                        {currentAvatar && (
                             <motion.button
                                 type="button"
                                 className={styles.removeButton}
@@ -148,20 +161,8 @@ const AvatarSection = ({ currentAvatar }: AvatarSectionProps) => {
                             </motion.button>
                         )}
                     </div>
-
-
                 </div>
             </motion.div>
-
-            {meta.touched && meta.error && (
-                <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className={styles.error}
-                >
-                    {meta.error}
-                </motion.div>
-            )}
         </div>
     );
 };
