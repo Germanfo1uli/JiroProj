@@ -9,7 +9,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "project_tags", schema = "issues-service-schema")
+@Table(name = "project_tags", schema = "issue_service_schema")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

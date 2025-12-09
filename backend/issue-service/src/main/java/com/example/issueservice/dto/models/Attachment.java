@@ -9,7 +9,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "attachments", schema = "issues-service-schema")
+@Table(name = "attachments", schema = "issue_service_+schema")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

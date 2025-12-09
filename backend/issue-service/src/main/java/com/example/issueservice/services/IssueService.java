@@ -5,7 +5,6 @@ import com.example.issueservice.dto.response.IssueDetailsDto;
 import com.example.issueservice.dto.response.IssueSummaryDto;
 import com.example.issueservice.exception.IssueNotFoundException;
 import com.example.issueservice.dto.models.Issue;
-import com.example.issueservice.dto.models.IssueAssignee;
 import com.example.issueservice.repositories.IssueRepository;
 import com.example.issueservice.repositories.IssueAssigneeRepository;
 import lombok.RequiredArgsConstructor;
