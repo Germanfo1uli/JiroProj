@@ -80,13 +80,12 @@ public class UserService {
                 userId,
                 user.getUsername(),
                 user.getTag(),
-                user.getBio(),
-                user.getCreatedAt()
+                user.getBio()
         );
     }
 
     @Cacheable(value = CacheConstants.USER_PROFILE_BATCH,
-            key = "T(java.util.TreeSet).new(#userIds).toString()")
+            key = "new java.util.TreeSet(#userIds).toString()")
     public List<PublicProfileResponse> getProfilesByIds(List<Long> userIds) {
         if (userIds == null || userIds.isEmpty()) {
             return Collections.emptyList();
