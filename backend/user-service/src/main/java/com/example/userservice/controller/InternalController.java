@@ -46,7 +46,7 @@ public class InternalController {
     }
 
     @Operation(summary = "Получение профилей по списку userId")
-    @GetMapping("/users/batch")
+    @PostMapping("/users/batch")
     public ResponseEntity<List<PublicProfileResponse>> getProfilesByIds(
             @AuthenticationPrincipal SystemPrincipal principal,
             @RequestBody @Validated IdListRequest request) {

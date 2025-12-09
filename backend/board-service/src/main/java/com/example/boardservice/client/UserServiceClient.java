@@ -1,10 +1,12 @@
 package com.example.boardservice.client;
 
 import com.example.boardservice.config.UserServiceClientConfig;
+import com.example.boardservice.dto.data.UserBatchRequest;
 import com.example.boardservice.dto.response.PublicProfileResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
@@ -19,6 +21,6 @@ public interface UserServiceClient {
     @GetMapping("/users/{userId}")
     PublicProfileResponse getProfileById(@PathVariable Long userId);
 
-    @GetMapping("/users/batch")
-    List<PublicProfileResponse> getProfilesByIds(@RequestBody List<Long> userIds);
+    @PostMapping("/users/batch")
+    List<PublicProfileResponse> getProfilesByIds(@RequestBody UserBatchRequest request);
 }

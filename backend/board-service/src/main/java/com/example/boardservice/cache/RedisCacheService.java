@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -34,6 +35,23 @@ public class RedisCacheService {
         String key = String.format(RedisConstants.USER_ROLE_KEY, userId, projectId);
         redisTemplate.delete(key);
         log.info("Invalidated role cache for user {} in project {}", userId, projectId);
+    }
+
+    public void invalidateAllRolesInProject(List<Long> roleIds) {
+        if (roleIds == null || roleIds.isEmpty()) {
+            log.debug("No role IDs provided for invalidation");
+            return;
+        }
+
+        Set<String> keysToDelete = new HashSet<>();
+
+        for (Long roleId : roleIds) {
+            keysToDelete.add(String.format(RedisConstants.ROLE_PERMS_KEY, roleId));
+            keysToDelete.add(String.format(RedisConstants.ROLE_IS_OWNER_KEY, roleId));
+        }
+
+        redisTemplate.delete(keysToDelete);
+        log.info("Invalidated {} role caches for {} roles", keysToDelete.size(), roleIds.size());
     }
 
     public void invalidateAllUsersInProject(Long projectId) {
