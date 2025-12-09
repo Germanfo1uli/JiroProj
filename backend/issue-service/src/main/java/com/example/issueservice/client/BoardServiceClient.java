@@ -1,6 +1,7 @@
 package com.example.issueservice.client;
 
-import com.example.issueservice.config.BoardServiceClientConfig;
+import com.example.issueservice.config.ClientConfig;
+import com.example.issueservice.dto.response.InternalProjectResponse;
 import com.example.issueservice.dto.response.UserPermissionsResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,9 +10,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 @FeignClient(
         name = "board-service",
         path = "api/internal",
-        configuration = BoardServiceClientConfig.class
+        configuration = ClientConfig.class
 )
 public interface BoardServiceClient {
+
+    @GetMapping("/projects/{projectId")
+    InternalProjectResponse getProjectById(
+            @RequestParam Long projectId
+    );
 
     @GetMapping("/permissions")
     UserPermissionsResponse getUserPermissions(

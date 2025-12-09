@@ -2,20 +2,17 @@ package com.example.issueservice.config;
 
 import feign.Request;
 import feign.Retryer;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class BoardServiceClientConfig {
-
-    @Value("${board.service.token}")
-    private String boardServiceToken;
+public class ClientConfig {
 
     @Bean
     public InternalAuthInterceptor interServiceAuthInterceptor() {
-        return new InternalAuthInterceptor(boardServiceToken);
+        return new InternalAuthInterceptor();
     }
+
 
     @Bean
     public Request.Options feignOptions() {

@@ -48,7 +48,7 @@ public class Issue {
     private List<IssueComment> comments = new ArrayList<>();
 
     @OneToMany(mappedBy = "issue", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Attachment> attachments = new ArrayList<>(); // Убрал лишний перенос строки
+    private List<Attachment> attachments = new ArrayList<>();
 
     @Column(name = "assignee_id")
     private Long assigneeId;

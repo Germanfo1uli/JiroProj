@@ -18,7 +18,8 @@ public class IssueHierarchyValidator {
             }
             case STORY, TASK, BUG -> {
                 if (parent != null && parent.getType() != IssueType.EPIC) {
-                    throw new IllegalArgumentException("Story/Task/Bug can only be child of Epic");
+                    throw new IllegalArgumentException(
+                            "Story/Task/Bug can only be child of Epic");
                 }
                 issue.setLevel(2);
                 if (parent != null) {
@@ -29,8 +30,10 @@ public class IssueHierarchyValidator {
                 if (parent == null) {
                     throw new IllegalArgumentException("Sub-task must have a parent");
                 }
-                if (!Set.of(IssueType.STORY, IssueType.TASK, IssueType.BUG).contains(parent.getType())) {
-                    throw new IllegalArgumentException("Sub-task can only be child of Story/Task/Bug");
+                if (!Set.of(IssueType.STORY, IssueType.TASK, IssueType.BUG)
+                        .contains(parent.getType())) {
+                    throw new IllegalArgumentException(
+                            "Sub-task can only be child of Story/Task/Bug");
                 }
                 issue.setLevel(3);
                 issue.setProjectId(parent.getProjectId());

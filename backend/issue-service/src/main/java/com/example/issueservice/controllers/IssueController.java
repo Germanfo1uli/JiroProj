@@ -5,7 +5,7 @@ import com.example.issueservice.dto.request.AssignUserDto;
 import com.example.issueservice.dto.request.CreateIssueRequest;
 import com.example.issueservice.dto.request.UpdateIssueDto;
 import com.example.issueservice.dto.response.CreateIssueResponse;
-import com.example.issueservice.dto.response.IssueSummaryDto;
+import com.example.issueservice.dto.response.IssueSummaryResponse;
 import com.example.issueservice.security.JwtUser;
 import dto.request.*;
 import dto.response.*;
@@ -38,7 +38,7 @@ public class IssueController {
             summary = "Создание задачи",
             security = @SecurityRequirement(name = "bearerAuth")
     )
-    @PostMapping("/{projectId}")
+    @PostMapping("/{projectId}/issues")
     public ResponseEntity<CreateIssueResponse> createIssue(
             @Valid @RequestBody CreateIssueRequest request,
             @AuthenticationPrincipal JwtUser principal,
@@ -47,25 +47,33 @@ public class IssueController {
         log.info("Request to create issue: {}", request.title());
         CreateIssueResponse response = issueService.createIssue(
                 principal.userId(), projectId, request.parentId(),
-                request.level(), request.title(), request.description(),
+                request.title(), request.description(),
                 request.type(), request.priority(), request.deadline());
         return ResponseEntity.ok(response);
     }
 
-    // --- Получение задачи по ID ---
-    @GetMapping("/{id}")
-    public ResponseEntity<com.example.issueservice.dto.response.CreateIssueResponse> getIssueById(@PathVariable Long id) {
-        log.info("Request to get issue by id: {}", id);
-        CreateIssueResponse issue = issueService.getIssueById(id);
-        return ResponseEntity.ok(issue);
+    @Operation(
+            summary = "Получение одной задачи",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @GetMapping("/{projectId}/issues/{issueId}")
+    public ResponseEntity<CreateIssueResponse> getIssueById(
+            @AuthenticationPrincipal JwtUser principal,
+            @PathVariable Long projectId,
+            @PathVariable Long issueId) {
+
+        log.info("Request to get issue by id: {}", issueId);
+        CreateIssueResponse response = issueService.getIssueById(
+                principal.userId(), projectId, issueId);
+        return ResponseEntity.ok(response);
     }
 
     // --- Получение всех задач проекта ---
     @GetMapping
-    public ResponseEntity<List<IssueSummaryDto>> getIssuesByProject(@RequestParam Long projectId) {
+    public ResponseEntity<List<IssueSummaryResponse>> getIssuesByProject(@RequestParam Long projectId) {
         log.info("Request to get all issues for project: {}", projectId);
 
-        List<IssueSummaryDto> issueSummaries = issueService.getIssueSummariesByProject(projectId);
+        List<IssueSummaryResponse> issueSummaries = issueService.getIssueSummariesByProject(projectId);
 
         return ResponseEntity.ok(issueSummaries);
     }

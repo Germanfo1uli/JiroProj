@@ -1,11 +1,10 @@
 package com.example.issueservice.services;
 
-import com.example.issueservice.dto.models.enums.IssueStatus;
-import com.example.issueservice.dto.models.enums.IssueType;
-import com.example.issueservice.dto.models.enums.Priority;
-import com.example.issueservice.dto.request.CreateIssueRequest;
+import com.example.issueservice.client.BoardServiceClient;
+import com.example.issueservice.client.UserServiceClient;
+import com.example.issueservice.dto.models.enums.*;
 import com.example.issueservice.dto.response.CreateIssueResponse;
-import com.example.issueservice.dto.response.IssueSummaryDto;
+import com.example.issueservice.dto.response.IssueSummaryResponse;
 import com.example.issueservice.exception.IssueNotFoundException;
 import com.example.issueservice.dto.models.Issue;
 import com.example.issueservice.repositories.IssueRepository;
@@ -25,26 +24,30 @@ import java.util.stream.Collectors;
 public class IssueService {
 
     private final IssueRepository issueRepository;
+    private final IssueHierarchyValidator hierarchyValidator;
+    private final AuthService authService;
+    private final BoardServiceClient boardClient;
+    private final UserServiceClient userClient;
 
     @Transactional
-    public com.example.issueservice.dto.response.CreateIssueResponse createIssue(
-            Long userId, Long projectId, Long parentId, Integer level, String title,
-            String description, IssueType type, Priority priority, LocalDateTime deadline) {
+    public CreateIssueResponse createIssue(
+            Long userId, Long projectId, Long parentId, String title, String description,
+            IssueType type, Priority priority, LocalDateTime deadline) {
+
+        authService.hasPermission(userId, projectId, EntityType.ISSUE, ActionType.CREATE);
 
         log.info("Creating new issue for project: {}", projectId);
 
         Issue parentIssue = null;
         if (parentId != null) {
             parentIssue = issueRepository.findById(parentId)
-                    .orElseThrow(() -> new IllegalArgumentException("Parent issue with id " + parentId + " not found"));
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Parent issue with id " + parentId + " not found"));
             log.info("Found parent issue: {}", parentIssue.getTitle());
         }
 
         Issue newIssue = Issue.builder()
-                .projectId(projectId)
-                .parentIssue(parentIssue)
                 .creatorId(userId)
-                .level(level)
                 .title(title)
                 .description(description)
                 .type(type)
@@ -53,13 +56,22 @@ public class IssueService {
                 .status(IssueStatus.TO_DO)
                 .build();
 
+        newIssue.setParentIssue(parentIssue);
+
+        hierarchyValidator.validateHierarchy(newIssue, parentIssue);
+
         Issue savedIssue = issueRepository.save(newIssue);
-        log.info("Successfully created issue with id: {}", savedIssue.getId());
+        log.info("Successfully created issue with id: {}, level: {}",
+                savedIssue.getId(), savedIssue.getLevel());
 
         return CreateIssueResponse.from(savedIssue);
     }
 
-    public com.example.issueservice.dto.response.CreateIssueResponse getIssueById(Long id) {
+    public CreateIssueResponse getIssueById(
+            Long userId, Long projectId, Long id) {
+
+        authService.hasPermission(userId, projectId, EntityType.ISSUE, ActionType.CREATE);
+
         log.info("Fetching issue by id: {}", id);
 
         Issue issue = issueRepository.findById(id)
@@ -69,7 +81,7 @@ public class IssueService {
         return enrichIssueWithDetails(issue);
     }
 
-    public List<com.example.issueservice.dto.response.CreateIssueResponse> getIssuesByProject(Long projectId) {
+    public List<CreateIssueResponse> getIssuesByProject(Long projectId) {
         log.info("Fetching all issues for project: {}", projectId);
         List<Issue> issues = issueRepository.findByProjectId(projectId);
         return issues.stream()
@@ -77,7 +89,7 @@ public class IssueService {
                 .collect(Collectors.toList());
     }
 
-    public List<IssueSummaryDto> getIssueSummariesByProject(Long projectId) {
+    public List<IssueSummaryResponse> getIssueSummariesByProject(Long projectId) {
         log.info("Fetching all issue SUMMARIES for project: {}", projectId);
         List<Issue> issues = issueRepository.findByProjectId(projectId);
 
@@ -106,26 +118,17 @@ public class IssueService {
         issueAssigneeRepository.deleteByIssueIdAndUserId(issueId, userId);
         log.info("Successfully removed assignee.");
     }
-    // нужно связать с существующими api
-    private com.example.issueservice.dto.response.CreateIssueResponse enrichIssueWithDetails(Issue issue) {
-        // Вызовы к другим микросервисам
-        String projectUrl = "http://project-service/api/projects/" + issue.getProjectId();
-        String userUrl = "http://user-service/api/users/" + issue.getCreatorId();
+
+    private CreateIssueResponse enrichIssueWithDetails(Issue issue) {
 
         try {
             // TODO: здесь будут полноценные DTO, а не строки
             String projectName = restTemplate.getForObject(projectUrl, String.class);
             String creatorName = restTemplate.getForObject(userUrl, String.class);
 
-            // Получаем ID исполнителей и запрашиваем их имена
-            List<Long> assigneeIds = issueAssigneeRepository.findByIssueId(issue.getId())
-                    .stream()
-                    .map(IssueAssignee::getUserId)
-                    .collect(Collectors.toList());
             // TODO: Сделать один вызов в user-service с пачкой ID
-            // List<String> assigneeNames = restTemplate.postForObject(userServiceUrl + "/batch", assigneeIds, ...);
 
-            return com.example.issueservice.dto.response.CreateIssueResponse.builder()
+            return CreateIssueResponse.builder()
                     .id(issue.getId())
                     .title(issue.getTitle())
                     .description(issue.getDescription())
@@ -135,19 +138,18 @@ public class IssueService {
                     .deadline(issue.getDeadline())
                     .createdAt(issue.getCreatedAt())
                     .updatedAt(issue.getUpdatedAt())
-                    .projectName(projectName)
                     .creatorName(creatorName)
-                    .assigneeNames(List.of("User1", "User2")) // Заглушка
+                    .assigneeNames(List.of("User1", "User2"))
                     .build();
 
         } catch (Exception e) {
             log.error("Error while enriching issue {}. Returning partial data.", issue.getId(), e);
-            return convertToDto(issue);
+            return CreateIssueResponse.from(issue);
         }
     }
 
-    private IssueSummaryDto convertToSummaryDto(Issue issue) {
-        return IssueSummaryDto.builder()
+    private IssueSummaryResponse convertToSummaryDto(Issue issue) {
+        return IssueSummaryResponse.builder()
                 .id(issue.getId())
                 .title(issue.getTitle())
                 .status(issue.getStatus())
@@ -158,22 +160,6 @@ public class IssueService {
                 // TODO: Когда будет RabbitMQ, здесь можно будет добавлять projectName, creatorName и т.д.
                 .build();
     }
-
-    private com.example.issueservice.dto.response.CreateIssueResponse convertToDto(Issue issue) {
-
-        return com.example.issueservice.dto.response.CreateIssueResponse.builder()
-                .id(issue.getId())
-                .title(issue.getTitle())
-                .description(issue.getDescription())
-                .status(issue.getStatus())
-                .type(issue.getType())
-                .priority(issue.getPriority())
-                .deadline(issue.getDeadline())
-                .createdAt(issue.getCreatedAt())
-                .updatedAt(issue.getUpdatedAt())
-                .build();
-    }
-
 }
 
 
