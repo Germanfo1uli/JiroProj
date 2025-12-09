@@ -141,31 +141,6 @@ public class IssueService {
         log.info("Successfully removed assignee.");
     }
 
-    @Cacheable(value = "user-profiles-batch", key = "#userIds.toString()")
-    public Map<Long, PublicProfileResponse> getUserProfilesBatch(Set<Long> userIds) {
-        if (userIds == null || userIds.isEmpty()) {
-            return Collections.emptyMap();
-        }
-
-        Set<Long> validUserIds = userIds.stream()
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
-
-        if (validUserIds.isEmpty()) {
-            return Collections.emptyMap();
-        }
-
-        try {
-            UserBatchRequest request = new UserBatchRequest(new ArrayList<>(validUserIds));
-            List<PublicProfileResponse> profiles = userClient.getProfilesByIds(request);
-
-            return profiles.stream()
-                    .collect(Collectors.toMap(PublicProfileResponse::id, p -> p));
-        } catch (Exception e) {
-            log.error("Failed to fetch profiles for users: {}", validUserIds, e);
-            return Collections.emptyMap();
-        }
-    }
 
     private IssueDetailResponse convertToSummaryDto(Issue issue) {
         return IssueDetailResponse.builder()

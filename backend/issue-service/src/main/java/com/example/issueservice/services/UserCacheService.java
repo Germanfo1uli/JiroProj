@@ -5,6 +5,7 @@ import com.example.issueservice.dto.data.UserBatchRequest;
 import com.example.issueservice.dto.response.PublicProfileResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
@@ -17,14 +18,17 @@ import java.util.stream.Collectors;
 public class UserCacheService {
 
     private final UserServiceClient userClient;
-
-    @Cacheable(value = "user-profiles-batch",
+    @Cacheable(
+            value = "userProfilesBatch",
             key = "T(java.util.TreeSet).new(#userIds).toString()",
-            unless = "#result.isEmpty()")
+            unless = "#result == null"
+    )
     public Map<Long, PublicProfileResponse> getUserProfilesBatch(Set<Long> userIds) {
         if (userIds == null || userIds.isEmpty()) {
             return Collections.emptyMap();
         }
+
+        log.info("Cache miss for user profiles: {}. Fetching from UserService...", userIds);
 
         try {
             UserBatchRequest request = new UserBatchRequest(new ArrayList<>(userIds));
@@ -36,5 +40,10 @@ public class UserCacheService {
             log.error("Failed to fetch profiles for users: {}", userIds, e);
             return null;
         }
+    }
+
+    @CacheEvict(value = "userProfilesBatch", allEntries = true)
+    public void invalidateAllUserProfiles() {
+        log.info("Invalidated all user profile caches");
     }
 }
