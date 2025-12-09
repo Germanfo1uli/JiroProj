@@ -1,19 +1,15 @@
 package com.example.issueservice.services;
 
-import com.example.issueservice.client.BoardServiceClient;
+import com.example.issueservice.cache.UserCacheService;
 import com.example.issueservice.client.UserServiceClient;
-import com.example.issueservice.dto.data.UserBatchRequest;
 import com.example.issueservice.dto.models.enums.*;
 import com.example.issueservice.dto.response.CreateIssueResponse;
 import com.example.issueservice.dto.response.IssueDetailResponse;
-import com.example.issueservice.dto.response.PublicProfileResponse;
 import com.example.issueservice.exception.IssueNotFoundException;
 import com.example.issueservice.dto.models.Issue;
 import com.example.issueservice.repositories.IssueRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

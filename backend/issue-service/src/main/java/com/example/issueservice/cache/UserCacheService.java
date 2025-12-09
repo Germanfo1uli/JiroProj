@@ -1,8 +1,9 @@
-package com.example.issueservice.services;
+package com.example.issueservice.cache;
 
 import com.example.issueservice.client.UserServiceClient;
 import com.example.issueservice.dto.data.UserBatchRequest;
 import com.example.issueservice.dto.response.PublicProfileResponse;
+import com.example.issueservice.exception.ServiceUnavailableException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -38,7 +39,7 @@ public class UserCacheService {
                     .collect(Collectors.toMap(PublicProfileResponse::id, p -> p));
         } catch (Exception e) {
             log.error("Failed to fetch profiles for users: {}", userIds, e);
-            return null;
+            throw new ServiceUnavailableException("Failed to fetch user profiles: " + e.getMessage());
         }
     }
 
