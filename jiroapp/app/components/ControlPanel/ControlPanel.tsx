@@ -1,6 +1,6 @@
 'use client'
 
-import { FaThLarge, FaChartBar, FaCog, FaUsers, FaProjectDiagram, FaHome } from 'react-icons/fa'
+import { FaThLarge, FaChartBar, FaCog, FaUsers, FaProjectDiagram, FaHome, FaLightbulb } from 'react-icons/fa'
 import styles from './ControlPanel.module.css'
 
 interface ControlPanelProps {
@@ -9,6 +9,7 @@ interface ControlPanelProps {
     isOpen?: boolean
     hasActiveProject?: boolean
     onBackToProjects?: () => void
+    showFullMenu?: boolean
 }
 
 const ControlPanel = ({
@@ -16,15 +17,16 @@ const ControlPanel = ({
                           onPageChange,
                           isOpen = true,
                           hasActiveProject = false,
-                          onBackToProjects
+                          onBackToProjects,
+                          showFullMenu = false
                       }: ControlPanelProps) => {
     const handleNavClick = (page: string) => {
         onPageChange(page)
     }
 
     const handleHomeClick = () => {
-        if (hasActiveProject && onBackToProjects) {
-            onBackToProjects()
+        if (hasActiveProject) {
+            onPageChange('project')
         } else {
             onPageChange('board')
         }
@@ -44,7 +46,7 @@ const ControlPanel = ({
 
             <nav className={styles.panelNav}>
                 <button
-                    className={`${styles.panelNavButton} ${activePage === 'board' || activePage === 'project' ? styles.active : ''}`}
+                    className={`${styles.panelNavButton} ${(activePage === 'project' && hasActiveProject) || (activePage === 'board' && !hasActiveProject) ? styles.active : ''}`}
                     onClick={handleHomeClick}
                 >
                     <FaHome className={styles.panelNavIcon} />
@@ -53,37 +55,52 @@ const ControlPanel = ({
                     </span>
                 </button>
 
-                <button
-                    className={`${styles.panelNavButton} ${activePage === 'dashboard' ? styles.active : ''}`}
-                    onClick={() => handleNavClick('dashboard')}
-                >
-                    <FaThLarge className={styles.panelNavIcon} />
-                    <span className={styles.panelNavText}>Доска</span>
-                </button>
+                {!hasActiveProject && (
+                    <div className={styles.projectPrompt}>
+                        <div className={styles.promptIcon}>
+                            <FaLightbulb />
+                        </div>
+                        <div className={styles.promptText}>
+                            <p>Выберите или создайте проект, чтобы раскрыть весь потенциал TaskFlow!</p>
+                        </div>
+                    </div>
+                )}
 
-                <button
-                    className={`${styles.panelNavButton} ${activePage === 'reports' ? styles.active : ''}`}
-                    onClick={() => handleNavClick('reports')}
-                >
-                    <FaChartBar className={styles.panelNavIcon} />
-                    <span className={styles.panelNavText}>Отчёты</span>
-                </button>
+                {showFullMenu && (
+                    <>
+                        <button
+                            className={`${styles.panelNavButton} ${activePage === 'dashboard' ? styles.active : ''}`}
+                            onClick={() => handleNavClick('dashboard')}
+                        >
+                            <FaThLarge className={styles.panelNavIcon} />
+                            <span className={styles.panelNavText}>Доска</span>
+                        </button>
 
-                <button
-                    className={`${styles.panelNavButton} ${activePage === 'settings' ? styles.active : ''}`}
-                    onClick={() => handleNavClick('settings')}
-                >
-                    <FaCog className={styles.panelNavIcon} />
-                    <span className={styles.panelNavText}>Настройки</span>
-                </button>
+                        <button
+                            className={`${styles.panelNavButton} ${activePage === 'reports' ? styles.active : ''}`}
+                            onClick={() => handleNavClick('reports')}
+                        >
+                            <FaChartBar className={styles.panelNavIcon} />
+                            <span className={styles.panelNavText}>Отчёты</span>
+                        </button>
 
-                <button
-                    className={`${styles.panelNavButton} ${activePage === 'developers' ? styles.active : ''}`}
-                    onClick={() => handleNavClick('developers')}
-                >
-                    <FaUsers className={styles.panelNavIcon} />
-                    <span className={styles.panelNavText}>Разработчики</span>
-                </button>
+                        <button
+                            className={`${styles.panelNavButton} ${activePage === 'settings' ? styles.active : ''}`}
+                            onClick={() => handleNavClick('settings')}
+                        >
+                            <FaCog className={styles.panelNavIcon} />
+                            <span className={styles.panelNavText}>Настройки</span>
+                        </button>
+
+                        <button
+                            className={`${styles.panelNavButton} ${activePage === 'developers' ? styles.active : ''}`}
+                            onClick={() => handleNavClick('developers')}
+                        >
+                            <FaUsers className={styles.panelNavIcon} />
+                            <span className={styles.panelNavText}>Разработчики</span>
+                        </button>
+                    </>
+                )}
             </nav>
         </div>
     )

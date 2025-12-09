@@ -32,7 +32,7 @@ const LoadingFallback = () => (
 
 const MainPage = () => {
     const [activePage, setActivePage] = useState<ActivePage>('board')
-    const [isControlPanelOpen, setIsControlPanelOpen] = useState(true)
+    const [isControlPanelOpen, setIsControlPanelOpen] = useState(false)
     const [loadedComponents, setLoadedComponents] = useState<Set<ActivePage>>(new Set(['board']))
     const [activeProject, setActiveProject] = useState<Project | null>(null)
     const router = useRouter()
@@ -45,23 +45,29 @@ const MainPage = () => {
     }, [router])
 
     const handlePageChange = (page: ActivePage) => {
-        if (page === 'board' && activeProject) {
-            // Если есть активный проект и нажали "Главная", показываем проект
-            setActivePage('project')
-        } else {
-            setLoadedComponents(prev => new Set([...prev, page]))
-            setActivePage(page)
+        setLoadedComponents(prev => new Set([...prev, page]))
+        setActivePage(page)
+
+        if (page !== 'board' && page !== 'project') {
+            setIsControlPanelOpen(true)
         }
     }
 
     const handleProjectSelect = (project: Project) => {
-        setActiveProject(project)
-        setActivePage('project')
+        if (activeProject?.id !== project.id) {
+            setActiveProject(project)
+            setActivePage('project')
+            setIsControlPanelOpen(true)
+        } else {
+            setActivePage('project')
+            setIsControlPanelOpen(true)
+        }
     }
 
     const handleBackToDashboard = () => {
         setActiveProject(null)
         setActivePage('board')
+        setIsControlPanelOpen(false)
     }
 
     const handleToggleControlPanel = () => {
@@ -80,6 +86,7 @@ const MainPage = () => {
                     <ProjectContent
                         project={activeProject}
                         onBackToDashboard={handleBackToDashboard}
+                        key={activeProject.id}
                     />
                 )}
             </Suspense>
@@ -92,6 +99,7 @@ const MainPage = () => {
                 onToggleControlPanel={handleToggleControlPanel}
                 isControlPanelOpen={isControlPanelOpen}
                 onProjectSelect={handleProjectSelect}
+                activeProjectId={activeProject?.id || null}
             />
             <ControlPanel
                 activePage={activePage}
@@ -99,6 +107,7 @@ const MainPage = () => {
                 isOpen={isControlPanelOpen}
                 hasActiveProject={!!activeProject}
                 onBackToProjects={handleBackToDashboard}
+                showFullMenu={!!activeProject}
             />
 
             <div className={`${styles.mainContentWrapper} ${!isControlPanelOpen ? styles.panelCollapsed : ''}`}>

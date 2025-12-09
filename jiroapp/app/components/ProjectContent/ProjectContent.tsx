@@ -27,21 +27,20 @@ import {
     FaShare
 } from 'react-icons/fa'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useProjectData } from './hooks/useProjectData'
 import { ProjectContentProps } from './types/types'
 import styles from './ProjectContent.module.css'
 import confetti from 'canvas-confetti'
 
 const ProjectContent = ({ project: initialProject, onBackToDashboard }: ProjectContentProps) => {
-    const { project, stats, activities, isLoading, setProject, refreshProject } = useProjectData()
+    const [project, setProject] = useState(initialProject)
+    const [isLoading, setIsLoading] = useState(false)
     const [hoveredCard, setHoveredCard] = useState<number | null>(null)
     const [showConfetti, setShowConfetti] = useState(false)
 
     useEffect(() => {
-        if (initialProject) {
-            setProject(initialProject)
-        }
-    }, [initialProject, setProject])
+        setProject(initialProject)
+        setIsLoading(false)
+    }, [initialProject])
 
     useEffect(() => {
         if (project && project.progress === 100 && !showConfetti) {
@@ -122,6 +121,7 @@ const ProjectContent = ({ project: initialProject, onBackToDashboard }: ProjectC
 
     return (
         <motion.div
+            key={project.id}
             className={styles.projectContent}
             initial="hidden"
             animate="visible"
@@ -416,36 +416,6 @@ const ProjectContent = ({ project: initialProject, onBackToDashboard }: ProjectC
                         </div>
                     </motion.div>
                 </motion.div>
-
-                {activities.length > 0 && (
-                    <motion.div
-                        className={styles.achievementsSection}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.8 }}
-                    >
-                        <h3 className={styles.achievementsTitle}>
-                            <FaComments className={styles.achievementsIcon} />
-                            Последняя активность
-                        </h3>
-                        <div className={styles.achievementsGrid}>
-                            {activities.slice(0, 3).map((activity) => (
-                                <div key={activity.id} className={styles.achievement}>
-                                    <div className={styles.achievementIcon}>
-                                        {activity.type === 'task_created' && <FaPlus />}
-                                        {activity.type === 'task_completed' && <FaCheckCircle />}
-                                        {activity.type === 'member_added' && <FaUsers />}
-                                        {activity.type === 'comment_added' && <FaComments />}
-                                    </div>
-                                    <div className={styles.achievementContent}>
-                                        <h4>{activity.description}</h4>
-                                        <p>{activity.user.name} • {activity.timestamp}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </motion.div>
-                )}
             </div>
         </motion.div>
     )

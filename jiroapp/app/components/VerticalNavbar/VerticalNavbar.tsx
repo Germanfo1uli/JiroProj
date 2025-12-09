@@ -15,12 +15,14 @@ interface VerticalNavbarProps {
     onToggleControlPanel?: () => void;
     isControlPanelOpen?: boolean;
     onProjectSelect?: (project: Project) => void;
+    activeProjectId?: string | null;
 }
 
 const VerticalNavbar = ({
                             onToggleControlPanel,
                             isControlPanelOpen = true,
-                            onProjectSelect
+                            onProjectSelect,
+                            activeProjectId
                         }: VerticalNavbarProps) => {
     const [isNotificationOpen, setIsNotificationOpen] = useState(false)
     const [isSearchOpen, setIsSearchOpen] = useState(false)
@@ -87,6 +89,9 @@ const VerticalNavbar = ({
         setTimeout(() => {
             updateProjectAvatar(project.id)
         }, 1000)
+        if (onProjectSelect) {
+            onProjectSelect(project)
+        }
     }
 
     const closeNotification = () => setIsNotificationOpen(false)
@@ -149,7 +154,7 @@ const VerticalNavbar = ({
                             projects.map(project => (
                                 <button
                                     key={project.id}
-                                    className={styles.projectButton}
+                                    className={`${styles.projectButton} ${activeProjectId === project.id ? styles.activeProject : ''}`}
                                     aria-label={`Проект: ${project.name}`}
                                     onClick={() => handleProjectClick(project)}
                                 >

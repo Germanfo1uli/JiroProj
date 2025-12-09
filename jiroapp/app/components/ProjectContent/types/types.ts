@@ -47,3 +47,8 @@ export interface ProjectContextType {
     setProject: (project: ProjectData) => void;
     refreshProject: () => Promise<void>;
 }
+
+export interface ProjectContentProps {
+    project: Project;
+    onBackToDashboard: () => void;
+}
