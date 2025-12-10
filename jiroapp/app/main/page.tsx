@@ -79,7 +79,11 @@ const MainPage = () => {
             <Suspense fallback={<LoadingFallback />}>
                 {activePage === 'dashboard' && <DashboardContent />}
                 {activePage === 'board' && <BoardsContent />}
-                {activePage === 'developers' && <DevelopersPage />}
+                {activePage === 'developers' && (
+                    <DevelopersPage
+                        projectId={activeProject?.id || null}
+                    />
+                )}
                 {activePage === 'reports' && <ReportsPage />}
                 {activePage === 'settings' && activeProject && (
                     <SettingsContent

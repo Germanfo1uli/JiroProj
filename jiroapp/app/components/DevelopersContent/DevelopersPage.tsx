@@ -1,10 +1,9 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react';
-import { Button, Snackbar, Alert, Box, CircularProgress, Typography, IconButton } from '@mui/material';
-import { FaUserPlus, FaSync, FaEdit, FaFilter, FaPlus, FaChartLine } from 'react-icons/fa';
-import { Developer, NewDeveloper } from './types/developer.types';
-import { mockDevelopers } from './data/mockDevelopers';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { Button, Snackbar, Alert, Box, CircularProgress, Typography } from '@mui/material';
+import { FaUserPlus, FaSync, FaPlus, FaChartLine, FaExclamationTriangle } from 'react-icons/fa';
+import { Developer, ProjectMember } from './types/developer.types';
 import { DevelopersTable } from './components/DevelopersTable';
 import { AddDeveloperDialog } from './components/AddDeveloperDialog';
 import { DeleteConfirmationDialog } from './components/DeleteConfirmationDialog';
@@ -12,15 +11,19 @@ import { EditDeveloperDialog } from './components/EditDeveloperDialog';
 import { useDeveloperProjects } from './hooks/useDeveloperProjects';
 import { useDashboard } from '../DashboardContent/hooks/useDashboard';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useProjectMembers } from './hooks/useProjectMembers';
 import styles from './DevelopersPage.module.css';
 
-const DevelopersPage = () => {
-    const [developers, setDevelopers] = useState<Developer[]>(mockDevelopers);
+interface DevelopersPageProps {
+    projectId: string | null;
+}
+
+const DevelopersPage = ({ projectId }: DevelopersPageProps) => {
+    const [developers, setDevelopers] = useState<Developer[]>([]);
     const [isAddDeveloperOpen, setIsAddDeveloperOpen] = useState(false);
     const [isEditDeveloperOpen, setIsEditDeveloperOpen] = useState(false);
     const [editingDeveloper, setEditingDeveloper] = useState<Developer | null>(null);
     const [isRefreshing, setIsRefreshing] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
     const [filterRole, setFilterRole] = useState<string>('all');
     const [sortBy, setSortBy] = useState<'name' | 'tasks' | 'role'>('name');
 
@@ -44,18 +47,44 @@ const DevelopersPage = () => {
         severity: 'success'
     });
 
-    const [newDeveloper, setNewDeveloper] = useState<NewDeveloper>({
+    const [newDeveloper, setNewDeveloper] = useState({
         name: '',
-        role: 'executor'
+        role: 'executor' as Developer['role']
     });
 
+    const { members, loading, error, refetch } = useProjectMembers(projectId);
     const { getDeveloperProjects } = useDeveloperProjects();
     const { boards } = useDashboard();
-    const isLeader = developers.some(dev => dev.isCurrentUser && dev.role === 'leader');
+
+    const roleMapping = useCallback((role: string): Developer['role'] => {
+        const mapping: Record<string, Developer['role']> = {
+            'LEADER': 'leader',
+            'EXECUTOR': 'executor',
+            'ASSISTANT': 'assistant',
+            'OWNER': 'leader'
+        };
+        return mapping[role] || 'executor';
+    }, []);
+
+    const mapMemberToDeveloper = useCallback((member: ProjectMember): Developer => {
+        return {
+            id: member.userId,
+            name: member.username,
+            avatar: null,
+            role: roleMapping(member.role),
+            completedTasks: 0,
+            overdueTasks: 0,
+            projects: [],
+            isCurrentUser: false,
+            tag: member.tag,
+            bio: member.bio,
+            createdAt: member.createdAt,
+            roleId: member.roleId
+        };
+    }, [roleMapping]);
 
     const calculateCompletedTasks = useCallback((developerName: string): number => {
         let completedTasks = 0;
-
         boards.forEach(board => {
             if (board.title === 'Done') {
                 board.cards?.forEach(card => {
@@ -65,14 +94,12 @@ const DevelopersPage = () => {
                 });
             }
         });
-
         return completedTasks;
     }, [boards]);
 
     const calculateOverdueTasks = useCallback((developerName: string): number => {
         let overdueTasks = 0;
         const today = new Date();
-
         boards.forEach(board => {
             if (board.title !== 'Done') {
                 board.cards?.forEach(card => {
@@ -85,64 +112,75 @@ const DevelopersPage = () => {
                 });
             }
         });
-
         return overdueTasks;
     }, [boards]);
 
-    const updateAllDeveloperProjects = useCallback(() => {
-        setIsRefreshing(true);
+    useEffect(() => {
+        if (!projectId) {
+            setDevelopers([]);
+            return;
+        }
 
-        const updatedDevelopers = developers.map(developer => ({
-            ...developer,
-            projects: getDeveloperProjects(developer),
-            completedTasks: calculateCompletedTasks(developer.name),
-            overdueTasks: calculateOverdueTasks(developer.name)
-        }));
+        if (!loading && members.length > 0) {
+            const initialDevelopers = members.map(mapMemberToDeveloper);
 
-        setDevelopers(updatedDevelopers);
+            const developersWithStats = initialDevelopers.map(developer => ({
+                ...developer,
+                projects: getDeveloperProjects(developer),
+                completedTasks: calculateCompletedTasks(developer.name),
+                overdueTasks: calculateOverdueTasks(developer.name)
+            }));
 
-        setTimeout(() => {
-            setIsRefreshing(false);
-            showSnackbar('Данные разработчиков обновлены', 'success');
-        }, 500);
-    }, [developers, getDeveloperProjects, calculateCompletedTasks, calculateOverdueTasks]);
+            setDevelopers(developersWithStats);
+        } else if (!loading) {
+            setDevelopers([]);
+        }
+    }, [loading, members, projectId]);
 
     useEffect(() => {
-        const timer = setTimeout(() => {
-            setIsLoading(false);
-            updateAllDeveloperProjects();
-        }, 1000);
-
-        return () => clearTimeout(timer);
-    }, []);
-
-    useEffect(() => {
-        updateAllDeveloperProjects();
+        if (developers.length > 0) {
+            const updatedDevelopers = developers.map(developer => ({
+                ...developer,
+                projects: getDeveloperProjects(developer),
+                completedTasks: calculateCompletedTasks(developer.name),
+                overdueTasks: calculateOverdueTasks(developer.name)
+            }));
+            setDevelopers(updatedDevelopers);
+        }
     }, [boards]);
 
-    const handleAddDeveloper = (developerData: NewDeveloper) => {
-        const newDev: Developer = {
-            id: Math.max(0, ...developers.map(d => d.id)) + 1,
-            name: developerData.name,
-            avatar: null,
-            role: developerData.role,
-            completedTasks: calculateCompletedTasks(developerData.name),
-            overdueTasks: calculateOverdueTasks(developerData.name),
-            projects: getDeveloperProjects({
-                name: developerData.name,
-                role: developerData.role,
-                completedTasks: 0,
-                overdueTasks: 0,
-                projects: [],
-                avatar: null,
-                id: 0
-            })
-        };
 
-        setDevelopers(prev => [...prev, newDev]);
-        setNewDeveloper({ name: '', role: 'executor' });
-        setIsAddDeveloperOpen(false);
-        showSnackbar(`Участник ${developerData.name} добавлен в проект`, 'success');
+    if (!projectId) {
+        return (
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className={styles.developersSection}
+            >
+                <Box sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: '400px',
+                    textAlign: 'center',
+                    padding: 4
+                }}>
+                    <FaExclamationTriangle style={{ fontSize: '64px', color: '#f59e0b', marginBottom: '20px' }} />
+                    <Typography variant="h5" sx={{ fontWeight: 700, mb: 2, color: '#1e293b' }}>
+                        Проект не выбран
+                    </Typography>
+                    <Typography variant="body1" sx={{ color: '#64748b', maxWidth: '500px', mb: 3 }}>
+                        Для просмотра участников команды сначала выберите проект в левой панели навигации или создайте новый проект.
+                    </Typography>
+                </Box>
+            </motion.div>
+        );
+    }
+
+    const handleAddDeveloper = (developerData: { name: string; role: Developer['role'] }) => {
+        showSnackbar('Добавление участников через API пока не поддерживается', 'info');
     };
 
     const handleEditDeveloper = (developer: Developer) => {
@@ -151,14 +189,9 @@ const DevelopersPage = () => {
     };
 
     const handleUpdateDeveloper = (updatedDeveloper: Developer) => {
-        setDevelopers(prev =>
-            prev.map(dev =>
-                dev.id === updatedDeveloper.id ? updatedDeveloper : dev
-            )
-        );
+        showSnackbar('Редактирование участников через API пока не поддерживается', 'info');
         setIsEditDeveloperOpen(false);
         setEditingDeveloper(null);
-        showSnackbar(`Данные участника ${updatedDeveloper.name} обновлены`, 'success');
     };
 
     const handleRemoveDeveloper = (developerId: number) => {
@@ -174,10 +207,8 @@ const DevelopersPage = () => {
 
     const confirmDelete = () => {
         if (deleteConfirmation.developerId) {
-            const developerName = developers.find(dev => dev.id === deleteConfirmation.developerId)?.name;
-            setDevelopers(prev => prev.filter(dev => dev.id !== deleteConfirmation.developerId));
+            showSnackbar('Удаление участников через API пока не поддерживается', 'info');
             setDeleteConfirmation({ isOpen: false, developerId: null, developerName: '' });
-            showSnackbar(`Участник ${developerName} удален из проекта`, 'success');
         }
     };
 
@@ -194,35 +225,39 @@ const DevelopersPage = () => {
     };
 
     const handleManualRefresh = () => {
-        updateAllDeveloperProjects();
+        refetch();
     };
 
-    const filteredDevelopers = developers.filter(dev => {
-        if (filterRole === 'all') return true;
-        return dev.role === filterRole;
-    });
+    const filteredDevelopers = useMemo(() => {
+        return developers.filter(dev => {
+            if (filterRole === 'all') return true;
+            return dev.role === filterRole;
+        });
+    }, [developers, filterRole]);
 
-    const sortedDevelopers = [...filteredDevelopers].sort((a, b) => {
-        switch (sortBy) {
-            case 'name':
-                return a.name.localeCompare(b.name);
-            case 'tasks':
-                return b.completedTasks - a.completedTasks;
-            case 'role':
-                return a.role.localeCompare(b.role);
-            default:
-                return 0;
-        }
-    });
+    const sortedDevelopers = useMemo(() => {
+        return [...filteredDevelopers].sort((a, b) => {
+            switch (sortBy) {
+                case 'name':
+                    return a.name.localeCompare(b.name);
+                case 'tasks':
+                    return b.completedTasks - a.completedTasks;
+                case 'role':
+                    return a.role.localeCompare(b.role);
+                default:
+                    return 0;
+            }
+        });
+    }, [filteredDevelopers, sortBy]);
 
-    const stats = {
+    const stats = useMemo(() => ({
         total: developers.length,
         leaders: developers.filter(d => d.role === 'leader').length,
         executors: developers.filter(d => d.role === 'executor').length,
         assistants: developers.filter(d => d.role === 'assistant').length,
         totalCompleted: developers.reduce((sum, dev) => sum + dev.completedTasks, 0),
         totalOverdue: developers.reduce((sum, dev) => sum + (dev.overdueTasks || 0), 0)
-    };
+    }), [developers]);
 
     return (
         <motion.div
@@ -263,8 +298,21 @@ const DevelopersPage = () => {
                                     }}
                                 >
                                     <FaChartLine />
-                                    {stats.total} участников • {stats.totalCompleted} выполненных задач
+                                    {error ? 'Ошибка загрузки' : `${stats.total} участников • ${stats.totalCompleted} выполненных задач`}
                                 </Typography>
+                                {projectId && (
+                                    <Typography
+                                        variant="caption"
+                                        sx={{
+                                            color: '#8b5cf6',
+                                            fontWeight: 600,
+                                            display: 'block',
+                                            mt: 0.5
+                                        }}
+                                    >
+                                        Проект ID: {projectId}
+                                    </Typography>
+                                )}
                             </Box>
                         </Box>
                     </div>
@@ -329,8 +377,8 @@ const DevelopersPage = () => {
 
                         <Button
                             onClick={handleManualRefresh}
-                            disabled={isRefreshing}
-                            startIcon={isRefreshing ? <CircularProgress size={16} /> : <FaSync />}
+                            disabled={loading}
+                            startIcon={loading ? <CircularProgress size={16} /> : <FaSync />}
                             sx={{
                                 padding: '10px 20px',
                                 borderRadius: '12px',
@@ -354,7 +402,7 @@ const DevelopersPage = () => {
                                 transition: 'all 0.3s ease'
                             }}
                         >
-                            {isRefreshing ? 'Обновление...' : 'Обновить'}
+                            {loading ? 'Обновление...' : 'Обновить'}
                         </Button>
 
                         <Button
@@ -385,7 +433,7 @@ const DevelopersPage = () => {
             </div>
 
             <AnimatePresence mode="wait">
-                {isLoading ? (
+                {loading ? (
                     <motion.div
                         key="loading"
                         initial={{ opacity: 0 }}
@@ -415,6 +463,37 @@ const DevelopersPage = () => {
                             ))}
                         </Box>
                     </motion.div>
+                ) : error ? (
+                    <motion.div
+                        key="error"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className={styles.developersContent}
+                    >
+                        <Box sx={{
+                            padding: 4,
+                            textAlign: 'center',
+                            background: 'rgba(239, 68, 68, 0.05)',
+                            borderRadius: '16px',
+                            border: '1px solid rgba(239, 68, 68, 0.2)'
+                        }}>
+                            <FaExclamationTriangle style={{ fontSize: '48px', color: '#ef4444', marginBottom: '16px' }} />
+                            <Typography variant="h6" sx={{ color: '#ef4444', mb: 1 }}>
+                                Ошибка загрузки
+                            </Typography>
+                            <Typography variant="body1" sx={{ color: '#64748b' }}>
+                                {error}
+                            </Typography>
+                            <Button
+                                onClick={handleManualRefresh}
+                                variant="outlined"
+                                sx={{ mt: 2 }}
+                            >
+                                Попробовать снова
+                            </Button>
+                        </Box>
+                    </motion.div>
                 ) : (
                     <motion.div
                         key="content"
@@ -425,7 +504,7 @@ const DevelopersPage = () => {
                     >
                         <DevelopersTable
                             developers={sortedDevelopers}
-                            isLeader={isLeader}
+                            isLeader={developers.some(dev => dev.isCurrentUser && dev.role === 'leader')}
                             onRemoveDeveloper={handleRemoveDeveloper}
                             onEditDeveloper={handleEditDeveloper}
                         />

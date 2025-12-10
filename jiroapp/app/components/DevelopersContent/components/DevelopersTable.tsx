@@ -168,6 +168,19 @@ export const DevelopersTable = ({
                                                 >
                                                     {developer.name}
                                                 </Typography>
+                                                {developer.tag && (
+                                                    <Chip
+                                                        label={developer.tag}
+                                                        size="small"
+                                                        sx={{
+                                                            background: 'rgba(139, 92, 246, 0.1)',
+                                                            color: '#8b5cf6',
+                                                            fontWeight: 600,
+                                                            fontSize: '0.7rem',
+                                                            height: '20px'
+                                                        }}
+                                                    />
+                                                )}
                                                 {developer.isCurrentUser && (
                                                     <Chip
                                                         label="Вы"
@@ -183,6 +196,18 @@ export const DevelopersTable = ({
                                                     />
                                                 )}
                                             </Box>
+                                            {developer.bio && (
+                                                <Typography
+                                                    variant="body2"
+                                                    sx={{
+                                                        color: '#64748b',
+                                                        fontSize: '0.85rem',
+                                                        mt: 0.5
+                                                    }}
+                                                >
+                                                    {developer.bio}
+                                                </Typography>
+                                            )}
                                         </Box>
                                     </Box>
                                 </TableCell>

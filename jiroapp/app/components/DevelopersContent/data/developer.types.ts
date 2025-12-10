@@ -1,31 +1,24 @@
-export type DeveloperRole = 'leader' | 'executor' | 'assistant';
-
 export interface ProjectMember {
     userId: number;
     username: string;
-    tag: string;
-    bio: string;
-    createdAt: string;
-    roleId: number;
     role: string;
+    roleId: number;
+    tag?: string;
+    bio?: string;
+    createdAt?: string;
 }
 
 export interface Developer {
     id: number;
     name: string;
     avatar: string | null;
-    role: DeveloperRole;
+    role: 'leader' | 'executor' | 'assistant';
     completedTasks: number;
     overdueTasks: number;
     projects: string[];
-    isCurrentUser?: boolean;
+    isCurrentUser: boolean;
     tag?: string;
     bio?: string;
     createdAt?: string;
     roleId?: number;
-}
-
-export interface NewDeveloper {
-    name: string;
-    role: DeveloperRole;
 }

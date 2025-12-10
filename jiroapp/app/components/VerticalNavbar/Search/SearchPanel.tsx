@@ -9,11 +9,11 @@ import { z } from 'zod'
 import { FaSearch, FaTimes, FaLink, FaCopy, FaCheck } from 'react-icons/fa'
 import styles from './SearchPanel.module.css'
 
-// Схема валидации
+
 const schema = z.object({
     inviteLink: z.string().min(1, 'Вставьте ссылку').regex(
         /^https:\/\/taskflow\.ru\/invite\/[a-zA-Z0-9-]+$/,
-        'Неверный формат ссылки. Пример: https://taskflow.ru/invite/abc123-def456'
+        'Неверный формат ссылки. Пример: http://localhost:3000/join/75_4N5auuD_yjxE1jILb-A'
     ),
 })
 
@@ -61,7 +61,7 @@ export default function SearchPanel({ onClose, onJoinProject }: SearchPanelProps
         }
     }, [setValue])
 
-    // Обработка поиска
+
     const onSubmit = useCallback(async (data: FormData) => {
         const inviteCode = data.inviteLink.split('/').pop() || ''
         try {
