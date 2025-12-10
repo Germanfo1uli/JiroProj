@@ -22,10 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,52 +36,37 @@ public class ProjectRoleService {
     private final AuthService authService;
     private final RedisCacheService redisCacheService;
     private final UserServiceClient userServiceClient;
+    private final RolePermissionFactory permissionFactory;
 
-    @Transactional
+    @Transactional // при создании проекта генерируются 5 базовых ролей
     public ProjectRole createDefaultRoles(Long projectId) {
-        ProjectRole owner = ProjectRole.builder()
+        List<ProjectRole> roles = List.of(
+                roleBuilder(projectId, "Owner", false, true),
+                roleBuilder(projectId, "User", true, false),
+                roleBuilder(projectId, "Developer", false, false),
+                roleBuilder(projectId, "Code Reviewer", false, false),
+                roleBuilder(projectId, "QA Engineer", false, false)
+        );
+        roleRepository.saveAll(roles);
+
+        Set<RolePermission> allPermissions = new HashSet<>();
+        roles.forEach(role -> {
+            Set<RolePermission> rolePermissions = permissionFactory.createPermissions(role);
+            allPermissions.addAll(rolePermissions);
+        });
+        permissionRepository.saveAll(allPermissions);
+
+        log.info("Created {} default roles for project {}", roles.size(), projectId);
+        return roles.getFirst();
+    }
+
+    private ProjectRole roleBuilder(Long projectId, String name, boolean isDefault, boolean isOwner) {
+        return ProjectRole.builder()
                 .project(Project.builder().id(projectId).build())
-                .name("Owner")
-                .isOwner(true)
-                .isDefault(false)
+                .name(name)
+                .isDefault(isDefault)
+                .isOwner(isOwner)
                 .build();
-
-        ProjectRole user = ProjectRole.builder()
-                .project(Project.builder().id(projectId).build())
-                .name("User")
-                .isOwner(false)
-                .isDefault(true)
-                .build();
-
-        roleRepository.saveAll(List.of(owner, user));
-
-        Set<RolePermission> ownerPerms = Arrays.stream(EntityType.values())
-                .flatMap(entity -> permissionMatrixService.getAllowedActions(entity).stream()
-                        .map(action -> RolePermission.builder()
-                                .role(owner)
-                                .entity(entity)
-                                .action(action)
-                                .build()))
-                .collect(Collectors.toSet());
-
-        Set<RolePermission> userPerms = Arrays.stream(EntityType.values())
-                .map(entity -> RolePermission.builder()
-                        .role(user)
-                        .entity(entity)
-                        .action(ActionType.VIEW)
-                        .build())
-                .collect(Collectors.toSet());
-
-        permissionRepository.saveAll(ownerPerms);
-        permissionRepository.saveAll(userPerms);
-
-        cachePermissions(owner.getId(), ownerPerms, owner.getIsOwner());
-        cachePermissions(user.getId(), userPerms, user.getIsOwner());
-
-        log.info("Created default roles for project {}: Owner(ID:{}) and User(ID:{})",
-                projectId, owner.getId(), user.getId());
-
-        return owner;
     }
 
     @Transactional
