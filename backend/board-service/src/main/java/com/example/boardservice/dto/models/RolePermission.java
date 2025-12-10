@@ -11,7 +11,7 @@ import lombok.*;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(exclude = "role")
+@EqualsAndHashCode(of = {"role", "entity", "action"})
 @ToString(exclude = "role")
 public class RolePermission {
     @Id

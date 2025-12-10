@@ -49,12 +49,11 @@ public class ProjectRoleService {
         );
         roleRepository.saveAll(roles);
 
-        Set<RolePermission> allPermissions = new HashSet<>();
-        roles.forEach(role -> {
+        for (ProjectRole role : roles) {
             Set<RolePermission> rolePermissions = permissionFactory.createPermissions(role);
-            allPermissions.addAll(rolePermissions);
-        });
-        permissionRepository.saveAll(allPermissions);
+            permissionRepository.saveAll(rolePermissions);
+            log.debug("Saved {} permissions for role '{}'", rolePermissions.size(), role.getName());
+        }
 
         log.info("Created {} default roles for project {}", roles.size(), projectId);
         return roles.getFirst();
