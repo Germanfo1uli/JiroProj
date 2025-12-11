@@ -8,6 +8,7 @@ import com.example.boardservice.dto.models.ProjectMember;
 import com.example.boardservice.dto.models.ProjectRole;
 import com.example.boardservice.dto.models.enums.ActionType;
 import com.example.boardservice.dto.models.enums.EntityType;
+import com.example.boardservice.dto.response.MemberExistResponse;
 import com.example.boardservice.dto.response.ProjectMemberResponse;
 import com.example.boardservice.dto.response.PublicProfileResponse;
 import com.example.boardservice.exception.*;
@@ -149,9 +150,14 @@ public class ProjectMemberService {
         }
     }
 
-    public ProjectMember getMemberInProject(Long userId, Long projectId) {
-        return memberRepository.findByUserIdAndProject_Id(userId, projectId)
+    public MemberExistResponse getMemberInProject(Long userId, Long projectId) {
+        ProjectMember member = memberRepository.findByUserIdAndProject_Id(userId, projectId)
                 .orElseThrow(() -> new UserNotFoundException("User with ID: " + userId + " not found in project " + projectId));
+
+        return new MemberExistResponse(
+                member.getUserId(),
+                member.getProject().getId()
+        );
     }
 
     @Transactional

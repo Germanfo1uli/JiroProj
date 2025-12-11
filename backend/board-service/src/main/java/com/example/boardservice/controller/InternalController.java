@@ -2,6 +2,7 @@ package com.example.boardservice.controller;
 
 import com.example.boardservice.dto.models.ProjectMember;
 import com.example.boardservice.dto.response.InternalProjectResponse;
+import com.example.boardservice.dto.response.MemberExistResponse;
 import com.example.boardservice.dto.response.UserPermissionsResponse;
 import com.example.boardservice.security.SystemPrincipal;
 import com.example.boardservice.service.AuthService;
@@ -66,10 +67,10 @@ public class InternalController {
 
     @Operation(summary = "Запрос на пользователя в проекте")
     @GetMapping("/projects/{projectId}/members/{userId}")
-    public ResponseEntity<ProjectMember> getMember(
+    public ResponseEntity<MemberExistResponse> getMember(
             @AuthenticationPrincipal SystemPrincipal principal,
-            @PathVariable Long userId,
-            @PathVariable Long projectId) {
+            @PathVariable Long projectId,
+            @PathVariable Long userId) {
 
         if (principal == null) {
             throw new AccessDeniedException("Missing service authentication");
@@ -78,7 +79,7 @@ public class InternalController {
         log.info("Service {} requested for user {} in project {}",
                 principal.getUsername(), userId, projectId);
 
-        ProjectMember response = memberService.getMemberInProject(userId, projectId);
+        MemberExistResponse response = memberService.getMemberInProject(userId, projectId);
         return ResponseEntity.ok(response);
     }
 }
