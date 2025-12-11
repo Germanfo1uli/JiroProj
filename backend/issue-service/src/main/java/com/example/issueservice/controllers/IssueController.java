@@ -86,35 +86,6 @@ public class IssueController {
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 
-    @Operation(
-            summary = "Назначение исполнителя на задачу",
-            security = @SecurityRequirement(name = "bearerAuth")
-    )
-    @PostMapping("/{issueId}/assignees")
-    public ResponseEntity<Void> addAssignee(
-            @AuthenticationPrincipal JwtUser principal,
-            @PathVariable Long issueId,
-            @Valid @RequestBody Long assigneeId) {
-
-        log.info("Request to assign user {} to issue {}", assigneeId, issueId);
-        issueService.addAssignee(principal.userId(), issueId, assigneeId);
-        return ResponseEntity.ok().build();
-    }
-
-    @Operation(
-            summary = "Удаление исполнителя с задачи",
-            security = @SecurityRequirement(name = "bearerAuth")
-    )
-    @DeleteMapping("/{issueId}/assignees")
-    public ResponseEntity<Void> removeAssignee(
-            @AuthenticationPrincipal JwtUser principal,
-            @PathVariable Long issueId) {
-
-        log.info("Request to remove assignee from issue {}", issueId);
-        issueService.removeAssignee(principal.userId(), issueId);
-        return ResponseEntity.noContent().build();
-    }
-
     // --- Управление тегами (будет использовать TagService) ---
     @PostMapping("/{issueId}/tags")
     public ResponseEntity<Void> assignTagToIssue(@PathVariable Long issueId, @Valid @RequestBody AssignTagDto dto) {

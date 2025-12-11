@@ -1,0 +1,15 @@
+package com.example.issueservice.dto.request;
+
+import com.example.issueservice.dto.models.enums.AssignmentType;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
+
+public record AddAssigneeRequest(
+        @Schema(name = "ID участника проекта", example = "123")
+        @NotNull
+        Long userId,
+
+        @Schema(name = "Тип назначаемого ", example = "ASSIGNEE")
+        @NotNull
+        AssignmentType type
+) {}
