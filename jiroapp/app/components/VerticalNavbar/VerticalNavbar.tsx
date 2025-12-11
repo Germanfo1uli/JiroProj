@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { FaTasks, FaSearch, FaPlus, FaQuestion, FaUserCircle, FaBell, FaBars, FaTimes } from 'react-icons/fa'
 import NotificationModal from './Notification/NotificationModal'
 import SearchPanel from './Search/SearchPanel'
@@ -31,6 +31,18 @@ const VerticalNavbar = ({
     const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false)
 
     const { projects, loading, addProject, updateProjectAvatar, updateProjectName, removeProject } = useProjectData()
+
+    // Убираем дубликаты проектов
+    const uniqueProjects = useMemo(() => {
+        const seen = new Set<string>()
+        return projects.filter(project => {
+            if (seen.has(project.id)) {
+                return false
+            }
+            seen.add(project.id)
+            return true
+        })
+    }, [projects])
 
     const handleNotificationClick = () => {
         setIsNotificationOpen(!isNotificationOpen)
@@ -85,10 +97,13 @@ const VerticalNavbar = ({
     }
 
     const handleProjectCreated = async (project: Project) => {
-        addProject(project)
-        setTimeout(() => {
-            updateProjectAvatar(project.id)
-        }, 1000)
+        const existingProject = projects.find(p => p.id === project.id)
+        if (!existingProject) {
+            addProject(project)
+            setTimeout(() => {
+                updateProjectAvatar(project.id)
+            }, 1000)
+        }
         if (onProjectSelect) {
             onProjectSelect(project)
         }
@@ -151,7 +166,7 @@ const VerticalNavbar = ({
                                 </div>
                             ))
                         ) : (
-                            projects.map(project => (
+                            uniqueProjects.map(project => (
                                 <button
                                     key={project.id}
                                     className={`${styles.projectButton} ${activeProjectId === project.id ? styles.activeProject : ''}`}

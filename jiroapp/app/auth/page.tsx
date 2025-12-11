@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, Suspense, memo } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Head from 'next/head'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaArrowRight, FaTasks } from 'react-icons/fa'
@@ -44,10 +44,11 @@ class ErrorBoundary extends React.Component<
     }
 }
 
-const AuthPage = memo(() => {
+const AuthPageContent = () => {
     const [isLogin, setIsLogin] = useState(true)
     const [isVisible, setIsVisible] = useState(false)
     const router = useRouter()
+    const searchParams = useSearchParams()
     const { loginUser, registerUser } = useAuth()
 
     useEffect(() => {
@@ -56,7 +57,12 @@ const AuthPage = memo(() => {
         try {
             const token = localStorage.getItem('token')
             if (token && !controller.signal.aborted) {
-                router.push('/main')
+                const redirect = searchParams.get('redirect')
+                if (redirect) {
+                    router.push(redirect)
+                } else {
+                    router.push('/main')
+                }
             }
         } catch (error) {
             console.error('Token check failed:', error)
@@ -68,7 +74,7 @@ const AuthPage = memo(() => {
             controller.abort()
             clearTimeout(timer)
         }
-    }, [router])
+    }, [router, searchParams])
 
     const handleBack = () => {
         setIsVisible(false)
@@ -80,13 +86,19 @@ const AuthPage = memo(() => {
         { setSubmitting, setErrors }: FormikHelpers<FormValues>
     ) => {
         try {
+            const redirect = searchParams.get('redirect') || '/main'
+
             if (isLogin) {
-                const result = await loginUser(values.email, values.password, router.push)
+                const result = await loginUser(values.email, values.password, (path) => {
+                    router.push(redirect)
+                })
                 if (!result.success) {
                     setErrors({ email: result.message })
                 }
             } else {
-                const result = await registerUser(values.name, values.email, values.password, router.push)
+                const result = await registerUser(values.name, values.email, values.password, (path) => {
+                    router.push(redirect)
+                })
                 if (!result.success) {
                     setErrors({ email: result.message })
                 }
@@ -222,6 +234,23 @@ const AuthPage = memo(() => {
                 </motion.div>
             </main>
         </>
+    )
+}
+
+const AuthPage = memo(() => {
+    return (
+        <Suspense fallback={
+            <div className={styles.authContainer}>
+                <div className={styles.logoWrapper}>
+                    <div className={styles.logo}>
+                        <FaTasks className={styles.logoIcon} />
+                        <span>TASKFLOW</span>
+                    </div>
+                </div>
+            </div>
+        }>
+            <AuthPageContent />
+        </Suspense>
     )
 })
 
