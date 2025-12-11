@@ -1,17 +1,15 @@
 package com.example.issueservice.services;
 
-import com.example.issueservice.dto.models.enums.ActionType;
-import com.example.issueservice.dto.models.enums.EntityType;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import com.example.issueservice.client.BoardServiceClient;
 import com.example.issueservice.dto.models.Issue;
-import com.example.issueservice.dto.models.enums.AssignmentType;
-import com.example.issueservice.dto.models.enums.IssueStatus;
+import com.example.issueservice.dto.models.enums.*;
 import com.example.issueservice.exception.*;
 import com.example.issueservice.repositories.IssueRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -23,11 +21,9 @@ public class TransitionService {
 
     @Transactional
     public void transitionStatus(Long userId, Long issueId, AssignmentType type, IssueStatus targetStatus) {
-
         Issue issue = issueRepository.findById(issueId)
                 .orElseThrow(() -> new IssueNotFoundException("Issue with ID: " + issueId + " not found"));
 
-        // проверка прав: для reviewer/qa - специфичное право, для developer - базовый доступ
         ActionType requiredAction = (type == AssignmentType.ASSIGNEE)
                 ? ActionType.VIEW
                 : type.getActionType();
@@ -48,9 +44,7 @@ public class TransitionService {
 
     private void validateTransition(IssueStatus currentStatus, IssueStatus targetStatus, AssignmentType type) {
         if (currentStatus == targetStatus) {
-            throw new IllegalArgumentException(
-                    String.format("Cannot transition to the same status: %s", currentStatus.name())
-            );
+            throw new InvalidStatusTransitionException("Cannot transition to the same status: " + currentStatus.name());
         }
 
         boolean isValid = switch (type) {
@@ -61,9 +55,7 @@ public class TransitionService {
 
         if (!isValid) {
             throw new InvalidStatusTransitionException(
-                    String.format("Invalid transition from %s to %s for role %s",
-                            currentStatus.name(), targetStatus.name(), type.name())
-            );
+                    "Invalid transition from " + currentStatus.name() + " to " + targetStatus.name() + " for role " + type.name());
         }
     }
 

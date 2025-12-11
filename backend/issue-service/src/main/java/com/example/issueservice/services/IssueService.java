@@ -7,6 +7,7 @@ import com.example.issueservice.dto.response.IssueDetailResponse;
 import com.example.issueservice.dto.response.PublicProfileResponse;
 import com.example.issueservice.exception.IssueNotFoundException;
 import com.example.issueservice.dto.models.Issue;
+import com.example.issueservice.exception.IssueNotInProjectException;
 import com.example.issueservice.exception.ServiceUnavailableException;
 import com.example.issueservice.repositories.IssueRepository;
 import lombok.RequiredArgsConstructor;
@@ -42,12 +43,13 @@ public class IssueService {
         Issue parentIssue = null;
         if (parentId != null) {
             parentIssue = issueRepository.findById(parentId)
-                    .orElseThrow(() -> new IllegalArgumentException(
+                    .orElseThrow(() -> new IssueNotFoundException(
                             "Parent issue with id " + parentId + " not found"));
             log.info("Found parent issue: {}", parentIssue.getTitle());
 
             if (!projectId.equals(parentIssue.getProjectId())) {
-                throw new IllegalArgumentException("Parent issue does not belong to project " + projectId);
+                throw new IssueNotInProjectException(
+                        "Parent issue with id " + parentId + " belongs to project " + parentIssue.getProjectId() + ", not to project " + projectId);
             }
         }
 
@@ -63,7 +65,6 @@ public class IssueService {
                 .build();
 
         newIssue.setParentIssue(parentIssue);
-
         hierarchyValidator.validateHierarchy(newIssue, parentIssue);
 
         Issue savedIssue = issueRepository.save(newIssue);
