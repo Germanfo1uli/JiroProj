@@ -20,15 +20,16 @@ builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IActivityLogService, ActivityLogService>();
 
 builder.Services.AddHealthChecks();
-
 builder.Services.AddEurekaDiscoveryClient();
 
 builder.Services.Configure<ServiceAuthSettings>(builder.Configuration.GetSection(ServiceAuthSettings.SectionName));
+
 builder.Services.AddTransient<InternalAuthHandler>();
+
 builder.Services.AddRefitClient<IProjectClient>()
     .ConfigureHttpClient(client =>
     {
-        client.BaseAddress = new Uri("http://localhost:8082");
+        client.BaseAddress = new Uri("http://gateway-service");
     })
     .AddHttpMessageHandler<InternalAuthHandler>();
 
@@ -38,6 +39,7 @@ builder.Services.AddDbContext<DashboardDbContext>(options =>
 
 var app = builder.Build();
 
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -45,6 +47,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapHealthChecks("/healthz");
+
+app.UseGatewayAuthentication();
 
 app.UseAuthorization();
 app.MapControllers();
