@@ -168,7 +168,7 @@ const RolesSection = ({ projectId }: RolesSectionProps) => {
     };
 
     const handlePermissionToggle = (permissionItem: PermissionItem) => {
-        if (!editingRole || editingRole.isOwner) return;
+        if (!editingRole || editingRole.isOwner || editingRole.isDefault) return;
 
         const permission = getPermissionFromItem(permissionItem);
         const hasPerm = hasPermission(editingRole, permissionItem);
@@ -189,7 +189,7 @@ const RolesSection = ({ projectId }: RolesSectionProps) => {
     };
 
     const toggleAllPermissions = (category: string, value: boolean) => {
-        if (!editingRole || editingRole.isOwner) return;
+        if (!editingRole || editingRole.isOwner || editingRole.isDefault) return;
 
         const categoryPermissions = permissionsList
             .filter(p => p.category === category)
@@ -228,7 +228,6 @@ const RolesSection = ({ projectId }: RolesSectionProps) => {
         return groups;
     };
 
-    // Сортируем роли: сначала Owner, затем остальные
     const sortedRoles = [...roles].sort((a, b) => {
         if (a.isOwner && !b.isOwner) return -1;
         if (!a.isOwner && b.isOwner) return 1;
@@ -324,7 +323,7 @@ const RolesSection = ({ projectId }: RolesSectionProps) => {
                                     </div>
                                 </div>
                                 <div className={styles.roleActions}>
-                                    {!role.isOwner && (
+                                    {!role.isOwner && !role.isDefault && (
                                         <motion.button
                                             className={styles.editButton}
                                             onClick={() => handleEditRole(role)}
@@ -346,7 +345,7 @@ const RolesSection = ({ projectId }: RolesSectionProps) => {
                                             <FaTrash />
                                         </motion.button>
                                     )}
-                                    {role.isOwner && (
+                                    {(role.isOwner || role.isDefault) && (
                                         <motion.button
                                             className={styles.viewButton}
                                             onClick={() => handleEditRole(role)}
@@ -410,9 +409,9 @@ const RolesSection = ({ projectId }: RolesSectionProps) => {
                             </p>
                             <ul className={styles.infoTips}>
                                 <li>Владелец имеет полный доступ ко всем функциям</li>
-                                <li>Роль владельца нельзя редактировать или удалять</li>
+                                <li>Роль владельца и роль по умолчанию нельзя редактировать или удалять</li>
                                 <li>Изменения ролей применяются ко всем участникам с этой ролью</li>
-                                <li>Роль по умолчанию нельзя удалить</li>
+                                <li>Роль по умолчанию назначается новым участникам</li>
                             </ul>
                         </div>
                     </div>
@@ -440,7 +439,7 @@ const RolesSection = ({ projectId }: RolesSectionProps) => {
                                     ) : (
                                         <FaUserTag className={styles.modalIcon} />
                                     )}
-                                    {isCreating ? 'Создание новой роли' : 'Редактирование роли'}
+                                    {isCreating ? 'Создание новой роли' : (editingRole.isOwner || editingRole.isDefault ? 'Просмотр роли' : 'Редактирование роли')}
                                 </h3>
                                 <button
                                     className={styles.modalClose}
@@ -465,11 +464,16 @@ const RolesSection = ({ projectId }: RolesSectionProps) => {
                                                 name: e.target.value
                                             })}
                                             placeholder="Введите название роли"
-                                            disabled={editingRole.isOwner && !isCreating}
+                                            disabled={editingRole.isOwner || editingRole.isDefault}
                                         />
-                                        {editingRole.isOwner && !isCreating && (
+                                        {editingRole.isOwner && (
                                             <p className={styles.formHint}>
                                                 Название роли владельца нельзя изменить
+                                            </p>
+                                        )}
+                                        {editingRole.isDefault && !editingRole.isOwner && (
+                                            <p className={styles.formHint}>
+                                                Название роли по умолчанию нельзя изменить
                                             </p>
                                         )}
                                     </div>
@@ -487,10 +491,16 @@ const RolesSection = ({ projectId }: RolesSectionProps) => {
                                             })}
                                             placeholder="Опишите назначение роли"
                                             rows={3}
+                                            disabled={editingRole.isOwner || editingRole.isDefault}
                                         />
+                                        {(editingRole.isOwner || editingRole.isDefault) && !isCreating && (
+                                            <p className={styles.formHint}>
+                                                Описание роли {editingRole.isOwner ? 'владельца' : 'по умолчанию'} нельзя изменить
+                                            </p>
+                                        )}
                                     </div>
 
-                                    {!editingRole.isOwner && (
+                                    {!editingRole.isOwner && !editingRole.isDefault && (
                                         <div className={styles.permissionsSection}>
                                             <h4 className={styles.permissionsTitle}>
                                                 <FaLock className={styles.permissionsTitleIcon} />
@@ -594,25 +604,52 @@ const RolesSection = ({ projectId }: RolesSectionProps) => {
                                             </div>
                                         </div>
                                     )}
+
+                                    {editingRole.isDefault && !editingRole.isOwner && (
+                                        <div className={styles.ownerPermissionsInfo}>
+                                            <div className={styles.ownerInfoCard}>
+                                                <FaUserTag className={styles.ownerInfoIcon} />
+                                                <div className={styles.ownerInfoContent}>
+                                                    <h4 className={styles.ownerInfoTitle}>Роль по умолчанию</h4>
+                                                    <p className={styles.ownerInfoText}>
+                                                        Эта роль назначается новым участникам проекта по умолчанию.
+                                                        Права доступа для этой роли нельзя изменять.
+                                                    </p>
+                                                    <div className={styles.ownerPermissions}>
+                                                        <span className={styles.ownerPermission}>
+                                                            <FaCheck /> Базовый доступ к задачам
+                                                        </span>
+                                                        <span className={styles.ownerPermission}>
+                                                            <FaCheck /> Просмотр проекта
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
                             <div className={styles.modalFooter}>
-                                <button
-                                    className={styles.modalCancel}
-                                    onClick={() => setEditingRole(null)}
-                                >
-                                    Отмена
-                                </button>
-                                <motion.button
-                                    className={styles.modalSave}
-                                    onClick={handleSaveRole}
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                >
-                                    <FaSave className={styles.saveIcon} />
-                                    {isCreating ? 'Создать роль' : 'Сохранить изменения'}
-                                </motion.button>
+                                {(editingRole.isOwner || editingRole.isDefault) ? null : (
+                                    <>
+                                        <button
+                                            className={styles.modalCancel}
+                                            onClick={() => setEditingRole(null)}
+                                        >
+                                            Отмена
+                                        </button>
+                                        <motion.button
+                                            className={styles.modalSave}
+                                            onClick={handleSaveRole}
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
+                                        >
+                                            <FaSave className={styles.saveIcon} />
+                                            {isCreating ? 'Создать роль' : 'Сохранить изменения'}
+                                        </motion.button>
+                                    </>
+                                )}
                             </div>
                         </motion.div>
                     </motion.div>
