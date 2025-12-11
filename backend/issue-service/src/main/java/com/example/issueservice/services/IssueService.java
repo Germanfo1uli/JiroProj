@@ -45,6 +45,10 @@ public class IssueService {
                     .orElseThrow(() -> new IllegalArgumentException(
                             "Parent issue with id " + parentId + " not found"));
             log.info("Found parent issue: {}", parentIssue.getTitle());
+
+            if (!projectId.equals(parentIssue.getProjectId())) {
+                throw new IllegalArgumentException("Parent issue does not belong to project " + projectId);
+            }
         }
 
         Issue newIssue = Issue.builder()
