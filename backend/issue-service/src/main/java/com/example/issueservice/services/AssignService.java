@@ -1,5 +1,6 @@
 package com.example.issueservice.services;
 
+import com.example.issueservice.client.BoardServiceClient;
 import com.example.issueservice.client.UserServiceClient;
 import com.example.issueservice.dto.models.Issue;
 import com.example.issueservice.dto.models.enums.ActionType;
@@ -21,7 +22,7 @@ public class AssignService {
 
     private final IssueRepository issueRepository;
     private final AuthService authService;
-    private final UserServiceClient userClient;
+    private final BoardServiceClient boardClient;
 
     @Transactional
     public void assignUserTo(Long userId, Long issueId, Long assigneeId, AssignmentType type) {
@@ -34,9 +35,9 @@ public class AssignService {
         log.info("Adding user {} to assignee of issue {}", assigneeId, issueId);
 
         try {
-            userClient.getProfileById(assigneeId);
+            boardClient.getMember(assigneeId, issue.getProjectId());
         } catch (Exception e) {
-            throw new UserNotFoundException("User with ID: " + assigneeId + " does not exist");
+            throw new UserNotFoundException("User with ID: " + assigneeId + " does not exist in project " + issue.getProjectId());
         }
 
         switch (type) {
@@ -106,5 +107,26 @@ public class AssignService {
 
         issueRepository.save(issue);
         log.info("Successfully removed assignee.");
+    }
+
+    @Transactional
+    public void removeSelfAssign(Long userId, Long issueId, AssignmentType type) {
+
+        Issue issue = issueRepository.findById(issueId)
+                .orElseThrow(() -> new IssueNotFoundException("Issue with ID: " + issueId + " not found"));
+
+        authService.hasPermission(userId, issue.getProjectId(), EntityType.ISSUE, type.getActionType());
+
+        log.info("Removing self from issue {}", issueId);
+
+        switch (type) {
+            case ASSIGNEE -> issue.setAssigneeId(null);
+            case CODE_REVIEWER -> issue.setCodeReviewerId(null);
+            case QA_ENGINEER -> issue.setQaEngineerId(null);
+            default -> throw new IllegalArgumentException("Invalid assignment type");
+        }
+
+        issueRepository.save(issue);
+        log.info("Successfully removed self assignee.");
     }
 }
