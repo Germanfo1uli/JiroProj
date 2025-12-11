@@ -29,7 +29,7 @@ builder.Services.AddTransient<InternalAuthHandler>();
 builder.Services.AddRefitClient<IUserClient>()
     .ConfigureHttpClient(client =>
     {
-        client.BaseAddress = new Uri("http://gateway-service");
+        client.BaseAddress = new Uri("http://user-service:8081");
     })
     .AddHttpMessageHandler<InternalAuthHandler>();
 
