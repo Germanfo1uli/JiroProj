@@ -45,7 +45,7 @@ public class AssigneeController {
             summary = "Стать исполнителем задачи (для Developer) (type регулирует нужное назначение)",
             security = @SecurityRequirement(name = "bearerAuth")
     )
-    @PostMapping("/{issueId}/assignees/self")
+    @PostMapping("/{issueId}/assignees/own")
     public ResponseEntity<Void> assignSelf(
             @AuthenticationPrincipal JwtUser principal,
             @PathVariable Long issueId,

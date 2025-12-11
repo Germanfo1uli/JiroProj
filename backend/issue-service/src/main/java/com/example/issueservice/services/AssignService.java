@@ -5,17 +5,13 @@ import com.example.issueservice.dto.models.Issue;
 import com.example.issueservice.dto.models.enums.ActionType;
 import com.example.issueservice.dto.models.enums.AssignmentType;
 import com.example.issueservice.dto.models.enums.EntityType;
-import com.example.issueservice.exception.AccessDeniedException;
 import com.example.issueservice.exception.IssueNotFoundException;
-import com.example.issueservice.exception.RoleAlreadyAssignedException;
 import com.example.issueservice.exception.UserNotFoundException;
 import com.example.issueservice.repositories.IssueRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
