@@ -3,7 +3,6 @@ package com.example.issueservice.services;
 import com.example.issueservice.dto.models.enums.ActionType;
 import com.example.issueservice.dto.models.enums.EntityType;
 import com.example.issueservice.dto.request.AssignTagDto;
-import com.example.issueservice.dto.request.CreateProjectTagResponse;
 import com.example.issueservice.dto.response.TagResponse;
 import com.example.issueservice.exception.ProjectTagNotFoundException;
 import com.example.issueservice.dto.models.Issue;
@@ -40,31 +39,61 @@ public class TagService {
         }
 
         ProjectTag newTag = ProjectTag.builder()
-                .projectId(dto.getProjectId())
-                .name(dto.getName())
+                .projectId(projectId)
+                .name(name)
                 .build();
+
         ProjectTag savedTag = projectTagRepository.save(newTag);
+
         log.info("Successfully created project tag with id: {}", savedTag.getId());
-        return convertToDto(savedTag);
+
+        return TagResponse.from(savedTag);
     }
 
-    public List<TagResponse> getTagsByProject(Long projectId) {
+    @Transactional(readOnly = true)
+    public List<TagResponse> getTagsByProject(Long userId, Long projectId) {
+
+        authService.hasPermission(userId, projectId, EntityType.TAG, ActionType.VIEW);
+
         log.info("Fetching all tags for project: {}", projectId);
         List<ProjectTag> tags = projectTagRepository.findByProjectId(projectId);
-        return tags.stream().map(this::convertToDto).collect(Collectors.toList());
+
+        return tags.stream()
+                .map(TagResponse::from)
+                .collect(Collectors.toList());
     }
 
     @Transactional
-    public void deleteProjectTag(Long tagId) {
+    public TagResponse updateProjectTag(Long userId, Long projectId, Long tagId) {
+
+        ProjectTag tag = projectTagRepository.findById(tagId)
+                .orElseThrow(() -> new ProjectTagNotFoundException("Tag with ID " + tagId + " not found"));
+
+        authService.hasPermission(userId, tag.getProjectId(), EntityType.TAG, ActionType.EDIT);
+
+        log.info("Updating project tag with id: {}", tagId);
+
+
+
+        projectTagRepository.save(tag);
+        log.info("Successfully updated project tag {}", tagId);
+
+        return TagResponse.from(tag);
+    }
+
+    @Transactional
+    public void deleteProjectTag(Long userId, Long tagId) {
+
+        ProjectTag tag = projectTagRepository.findById(tagId)
+                .orElseThrow(() -> new ProjectTagNotFoundException("Tag with ID " + tagId + " not found"));
+
+        authService.hasPermission(userId, tag.getProjectId(), EntityType.TAG, ActionType.DELETE);
+
         log.info("Deleting project tag with id: {}", tagId);
-        if (!projectTagRepository.existsById(tagId)) {
-            throw new ProjectTagNotFoundException("Project tag with id " + tagId + " not found");
-        }
+
         projectTagRepository.deleteById(tagId);
         log.info("Successfully deleted project tag {}", tagId);
     }
-
-    // --- Управление привязкой тегов к задачам ---
 
     @Transactional
     public void assignTagToIssue(Long issueId, AssignTagDto dto) {
@@ -94,19 +123,13 @@ public class TagService {
     }
 
     public List<TagResponse> getTagsByIssue(Long issueId) {
+
         log.info("Fetching tags for issue: {}", issueId);
         Issue issue = issueRepository.findById(issueId)
                 .orElseThrow(() -> new IllegalArgumentException("Issue not found"));
 
         return issue.getTags().stream()
-                .map(this::convertToDto)
+                .map(TagResponse::from)
                 .collect(Collectors.toList());
-    }
-
-    private TagResponse convertToDto(ProjectTag tag) {
-        return TagResponse.builder()
-                .id(tag.getId())
-                .name(tag.getName())
-                .build();
     }
 }

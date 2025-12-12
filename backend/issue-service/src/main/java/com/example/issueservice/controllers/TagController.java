@@ -1,7 +1,7 @@
 package com.example.issueservice.controllers;
 
 import com.example.issueservice.dto.request.AssignTagDto;
-import com.example.issueservice.dto.request.CreateProjectTagResponse;
+import com.example.issueservice.dto.request.CreateUpdateTagResponse;
 import com.example.issueservice.dto.response.TagResponse;
 import com.example.issueservice.security.JwtUser;
 import com.example.issueservice.services.TagService;
@@ -9,7 +9,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -30,7 +29,7 @@ public class TagController {
     )
     @PostMapping("/tags")
     public ResponseEntity<TagResponse> createProjectTag(
-            @Valid @RequestBody CreateProjectTagResponse request,
+            @Valid @RequestBody CreateUpdateTagResponse request,
             @AuthenticationPrincipal JwtUser principal) {
 
         log.info("Request to create tag '{}' for project {}", request.name(), request.projectId());
@@ -40,17 +39,46 @@ public class TagController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/projects/{projectId}")
-    public ResponseEntity<List<TagResponse>> getTagsByProject(@PathVariable Long projectId) {
+    @Operation(
+            summary = "Получение всех тегов проекта",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @GetMapping("/tags")
+    public ResponseEntity<List<TagResponse>> getTagsByProject(
+            @RequestParam Long projectId,
+            @AuthenticationPrincipal JwtUser principal) {
+
         log.info("Request to get all tags for project: {}", projectId);
-        List<TagResponse> tags = tagService.getTagsByProject(projectId);
+        List<TagResponse> tags = tagService.getTagsByProject(principal.userId(), projectId);
+
         return ResponseEntity.ok(tags);
     }
 
+    @Operation(
+            summary = "Обновление тега",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @PatchMapping("/{tagId}")
+    public ResponseEntity<TagResponse> updateProjectTag(
+            @PathVariable Long tagId,
+            CreateUpdateTagResponse request,
+            @AuthenticationPrincipal JwtUser principal) {
+
+        log.info("Request to update project tag with id: {}", tagId);
+        TagResponse tag = tagService.updateProjectTag(principal.userId(), request.projectId(), tagId);
+
+        log.info("Successfully update project tag {}", tagId);
+        return ResponseEntity.ok(tag);
+    }
+
     @DeleteMapping("/{tagId}")
-    public ResponseEntity<Void> deleteProjectTag(@PathVariable Long tagId) {
+    public ResponseEntity<?> deleteProjectTag(
+            @PathVariable Long tagId,
+            @AuthenticationPrincipal JwtUser principal) {
+
         log.info("Request to delete project tag with id: {}", tagId);
-        tagService.deleteProjectTag(tagId);
+        tagService.deleteProjectTag(principal.userId(), tagId);
+
         log.info("Successfully deleted project tag {}", tagId);
         return ResponseEntity.noContent().build();
     }
