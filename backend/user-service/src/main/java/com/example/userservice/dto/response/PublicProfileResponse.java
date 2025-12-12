@@ -16,21 +16,17 @@ public record PublicProfileResponse(
         String tag,
 
         @Schema(description = "О себе", example = "Я лучший программист...")
-        String bio,
-
-        @Schema(description = "Дата создания аккаунта", example = "2025-01-01T10:30:00")
-        LocalDateTime createdAt
+        String bio
 ) {
         public static PublicProfileResponse fromUser(User user) {
                 if (user == null) {
                         throw new IllegalArgumentException("User cannot be null");
                 }
                 return new PublicProfileResponse(
-                        user.getId(),      // Предполагаю, что в User есть getId()
-                        user.getUsername(), // getUsername()
-                        user.getTag(),     // getTag()
-                        user.getBio(),     // getBio()
-                        user.getCreatedAt() // getCreatedAt()
+                        user.getId(),
+                        user.getUsername(),
+                        user.getTag(),
+                        user.getBio()
                 );
         }
 }

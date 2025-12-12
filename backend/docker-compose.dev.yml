@@ -182,11 +182,7 @@ services:
       RABBITMQ__PASSWORD: ${RABBITMQ_PASS:-secret}
 
       DOTNET_URLS: http://localhost:8084
-
-    volumes:
-      - ./sprints-service:/src/sprints-service
-      - ./shared-libs:/src/shared-libs
-
+    
   dashboard-service:
     build:
       context: .

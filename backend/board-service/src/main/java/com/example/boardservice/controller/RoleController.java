@@ -1,6 +1,8 @@
 package com.example.boardservice.controller;
 
 import com.example.boardservice.dto.request.CreateUpdateRoleRequest;
+import com.example.boardservice.dto.request.RoleAssignRequest;
+import com.example.boardservice.dto.response.GetRolesResponse;
 import com.example.boardservice.dto.response.RoleResponse;
 import com.example.boardservice.security.JwtUser;
 import com.example.boardservice.service.ProjectRoleService;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 @SecurityRequirement(name = "bearerAuth")
 @Tag(name = "Roles Management", description = "Управление ролями в проекте")
 public class RoleController {
+
     private final ProjectRoleService roleService;
 
     @Operation(
@@ -34,7 +37,7 @@ public class RoleController {
             @AuthenticationPrincipal JwtUser principal) {
 
         RoleResponse response = roleService.createRole(
-                principal.userId(), projectId, request.isDefault(),
+                principal.userId(), projectId,
                 request.name(), request.permissions());
         return ResponseEntity.ok(response);
     }
@@ -52,7 +55,61 @@ public class RoleController {
 
         RoleResponse response = roleService.updateRole(
                 principal.userId(), roleId, projectId,
-                request.isDefault(), request.name(), request.permissions());
+                request.name(), request.permissions());
         return ResponseEntity.ok(response);
+    }
+
+    @Operation(
+            summary = "Удаление роли",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @DeleteMapping("/{projectId}/roles/{roleId}")
+    public ResponseEntity<RoleResponse> deleteRole(
+            @PathVariable Long projectId,
+            @PathVariable Long roleId,
+            @AuthenticationPrincipal JwtUser principal) {
+
+        roleService.deleteRole(principal.userId(), roleId, projectId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(
+            summary = "Получение ролей проекта",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @GetMapping("/{projectId}/roles")
+    public ResponseEntity<GetRolesResponse> getRoles(
+            @PathVariable Long projectId,
+            @AuthenticationPrincipal JwtUser principal) {
+
+        GetRolesResponse response = roleService.getRolesByProjectId(principal.userId(), projectId);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(
+            summary = "Получение персональной роли в проекте",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @GetMapping("/{projectId}/roles/me")
+    public ResponseEntity<RoleResponse> getOwnRole(
+            @PathVariable Long projectId,
+            @AuthenticationPrincipal JwtUser principal) {
+
+        RoleResponse response = roleService.getOwnRoleByProjectId(principal.userId(), projectId);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(
+            summary = "Назначение роли",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @PatchMapping("/{projectId}/users/{userId}")
+    public ResponseEntity<?> assignRole(
+            @PathVariable Long projectId,
+            @Valid @RequestBody RoleAssignRequest request,
+            @AuthenticationPrincipal JwtUser principal) {
+
+        roleService.assignRole(principal.userId(), projectId, request.userId(), request.roleId());
+        return ResponseEntity.ok().build();
     }
 }

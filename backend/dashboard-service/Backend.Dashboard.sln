@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Backend.Dashboard.Api", "Backend.Dashboards.Api\Backend.Dashboard.Api.csproj", "{B4247C5C-857D-400E-BF4F-9D50D66CECC4}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Backend.Shared", "..\shared-libs\Backend.Shared\Backend.Shared.csproj", "{72117419-4E1B-4D00-930B-8D6C0195C942}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B4247C5C-857D-400E-BF4F-9D50D66CECC4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B4247C5C-857D-400E-BF4F-9D50D66CECC4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B4247C5C-857D-400E-BF4F-9D50D66CECC4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B4247C5C-857D-400E-BF4F-9D50D66CECC4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{72117419-4E1B-4D00-930B-8D6C0195C942}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72117419-4E1B-4D00-930B-8D6C0195C942}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72117419-4E1B-4D00-930B-8D6C0195C942}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{72117419-4E1B-4D00-930B-8D6C0195C942}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1E50F970-6CF6-47C5-8B14-07A35BD745C7}
+	EndGlobalSection
+EndGlobal

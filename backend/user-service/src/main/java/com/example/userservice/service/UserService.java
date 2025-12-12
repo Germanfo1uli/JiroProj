@@ -1,5 +1,6 @@
 package com.example.userservice.service;
 
+import com.example.userservice.cache.CacheConstants;
 import com.example.userservice.exception.*;
 import com.example.userservice.dto.data.UserFlags;
 import com.example.userservice.dto.response.ChangeProfileResponse;
@@ -8,11 +9,15 @@ import com.example.userservice.dto.response.PublicProfileResponse;
 import com.example.userservice.dto.models.User;
 import com.example.userservice.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,6 +28,10 @@ public class UserService {
     private final UserRepository userRepository;
     private final SecureRandom random = new SecureRandom();
 
+    @Caching(evict = {
+            @CacheEvict(value = CacheConstants.USER_PROFILE, key = "#userId"),
+            @CacheEvict(value = CacheConstants.USER_PROFILE_BATCH, allEntries = true)
+    })
     @Transactional
     public ChangeProfileResponse updateProfileById(Long userId, String username, String bio) {
         User user = userRepository.findById(userId)
@@ -35,6 +44,8 @@ public class UserService {
 
         user.setBio(bio);
         user.setUsername(username);
+
+        userRepository.save(user);
         return new ChangeProfileResponse(user.getUsername(), user.getTag(), user.getBio());
     }
 
@@ -52,6 +63,7 @@ public class UserService {
             );
     }
 
+    @Cacheable(value = CacheConstants.USER_PROFILE, key = "#userId")
     public PublicProfileResponse getProfileById(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
@@ -68,9 +80,32 @@ public class UserService {
                 userId,
                 user.getUsername(),
                 user.getTag(),
-                user.getBio(),
-                user.getCreatedAt()
+                user.getBio()
         );
+    }
+
+    @Cacheable(value = CacheConstants.USER_PROFILE_BATCH,
+            key = "new java.util.TreeSet(#userIds).toString()")
+    public List<PublicProfileResponse> getProfilesByIds(List<Long> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<User> users = userRepository.findAllById(userIds);
+
+        List<User> validUsers = users.stream()
+                .filter(user -> user.getDeletedAt() == null)
+                .filter(user -> user.getLockedAt() == null)
+                .toList();
+
+        int filteredOut = users.size() - validUsers.size();
+        if (filteredOut > 0) {
+            log.warn("Filtered out {} deleted/locked users from batch request", filteredOut);
+        }
+
+        return validUsers.stream()
+                .map(PublicProfileResponse::fromUser)
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true) // метод для генерации уникального username + tag (10 попыток)
@@ -87,18 +122,6 @@ public class UserService {
         throw new UsernameTagExhaustedException(
                 "No available tags for username " + username + ". Please choose another username."
         );
-    }
-
-    public boolean isLocked(Long userId) {
-        return userRepository.findFlagsById(userId)
-                .map(UserFlags::isLocked)
-                .orElse(false);
-    }
-
-    public boolean isDeleted(Long userId) {
-        return userRepository.findFlagsById(userId)
-                .map(UserFlags::isDeleted)
-                .orElse(true);
     }
 
     @Transactional(readOnly = true)
