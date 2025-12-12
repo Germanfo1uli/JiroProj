@@ -2,13 +2,10 @@ package com.example.issueservice.services;
 
 import com.example.issueservice.dto.models.enums.ActionType;
 import com.example.issueservice.dto.models.enums.EntityType;
-import com.example.issueservice.dto.request.AssignTagDto;
 import com.example.issueservice.dto.response.TagResponse;
 import com.example.issueservice.exception.ProjectTagNotFoundException;
-import com.example.issueservice.dto.models.Issue;
 import com.example.issueservice.dto.models.ProjectTag;
 import com.example.issueservice.exception.TagAlreadyExistsException;
-import com.example.issueservice.repositories.IssueRepository;
 import com.example.issueservice.repositories.ProjectTagRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,6 +1,5 @@
 package com.example.issueservice.controllers;
 
-import com.example.issueservice.dto.request.AssignTagDto;
 import com.example.issueservice.dto.request.CreateUpdateTagResponse;
 import com.example.issueservice.dto.response.TagResponse;
 import com.example.issueservice.security.JwtUser;
