@@ -76,14 +76,18 @@ public class IssueController {
         return ResponseEntity.ok(response);
     }
 
-    // --- Удаление задачи ---
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteIssue(@PathVariable Long id) {
-        log.info("Request to delete issue with id: {}", id);
-        // TODO: В сервисе нужно реализовать метод deleteIssue(id)
-        // issueService.deleteIssue(id);
-        // return ResponseEntity.noContent().build();
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+    @Operation(
+            summary = "Удаление задачи (каскадно - ОСТОРОЖНОЕ ИСПОЛЬЗОВАНИЕ, удалит все подзадачи, комменты и файлы)",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @DeleteMapping("/{issueId}")
+    public ResponseEntity<?> deleteIssue(
+            @AuthenticationPrincipal JwtUser principal,
+            @PathVariable Long issueId) {
+
+        log.info("Request to delete issue by id: {}", issueId);
+        issueService.deleteIssue(principal.userId(), issueId);
+        return ResponseEntity.noContent().build();
     }
 
     // --- Управление тегами (будет использовать TagService) ---

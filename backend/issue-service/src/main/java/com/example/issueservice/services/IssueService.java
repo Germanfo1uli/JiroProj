@@ -142,6 +142,17 @@ public class IssueService {
             throw new ServiceUnavailableException("Failed to fetch user profiles: " + e.getMessage());
         }
     }
+
+    @Transactional
+    public void deleteIssue(Long userId, Long issueId) {
+
+        Issue issue = issueRepository.findById(issueId)
+                .orElseThrow(() -> new IssueNotFoundException("Issue with id " + issueId + " not found"));
+
+        authService.hasPermission(userId, issue.getProjectId(), EntityType.ISSUE, ActionType.DELETE);
+
+        issueRepository.deleteById(issueId);
+    }
 }
 
 
