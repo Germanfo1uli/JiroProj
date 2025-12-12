@@ -7,18 +7,23 @@ import com.example.issueservice.security.JwtUser;
 import com.example.issueservice.services.TagService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/issues")
+@RequestMapping("/api/tags")
 @RequiredArgsConstructor
+@Validated
+@SecurityRequirement(name = "bearerAuth")
+@Tag(name = "Tag Management", description = "Управление тегами в проекте")
 public class TagController {
 
     private final TagService tagService;
@@ -27,7 +32,7 @@ public class TagController {
             summary = "Создание тега",
             security = @SecurityRequirement(name = "bearerAuth")
     )
-    @PostMapping("/tags")
+    @PostMapping
     public ResponseEntity<TagResponse> createProjectTag(
             @Valid @RequestBody CreateUpdateTagResponse request,
             @AuthenticationPrincipal JwtUser principal) {
@@ -43,7 +48,7 @@ public class TagController {
             summary = "Получение всех тегов проекта",
             security = @SecurityRequirement(name = "bearerAuth")
     )
-    @GetMapping("/tags")
+    @GetMapping
     public ResponseEntity<List<TagResponse>> getTagsByProject(
             @RequestParam Long projectId,
             @AuthenticationPrincipal JwtUser principal) {
@@ -73,6 +78,10 @@ public class TagController {
         return ResponseEntity.ok(tag);
     }
 
+    @Operation(
+            summary = "Удаление тега",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
     @DeleteMapping("/{tagId}")
     public ResponseEntity<?> deleteProjectTag(
             @PathVariable Long tagId,
@@ -83,32 +92,5 @@ public class TagController {
 
         log.info("Successfully deleted project tag {}", tagId);
         return ResponseEntity.noContent().build();
-    }
-
-    @PostMapping("/issues/{issueId}")
-    public ResponseEntity<Void> assignTagToIssue(
-            @PathVariable Long issueId,
-            @Valid @RequestBody AssignTagDto dto) {
-        log.info("Request to assign tag {} to issue {}", dto.getTagId(), issueId);
-        tagService.assignTagToIssue(issueId, dto);
-        log.info("Successfully assigned tag to issue.");
-        return ResponseEntity.ok().build();
-    }
-
-    @DeleteMapping("/issues/{issueId}/tags/{tagId}")
-    public ResponseEntity<Void> removeTagFromIssue(
-            @PathVariable Long issueId,
-            @PathVariable Long tagId) {
-        log.info("Request to remove tag {} from issue {}", tagId, issueId);
-        tagService.removeTagFromIssue(issueId, tagId);
-        log.info("Successfully removed tag from issue.");
-        return ResponseEntity.noContent().build();
-    }
-
-    @GetMapping("/issues/{issueId}")
-    public ResponseEntity<List<TagResponse>> getTagsByIssue(@PathVariable Long issueId) {
-        log.info("Request to get all tags for issue: {}", issueId);
-        List<TagResponse> tags = tagService.getTagsByIssue(issueId);
-        return ResponseEntity.ok(tags);
     }
 }

@@ -66,12 +66,8 @@ public class TagService {
     @Transactional
     public TagResponse updateProjectTag(Long userId, Long projectId, Long tagId, String name) {
 
-        ProjectTag tag = projectTagRepository.findById(tagId)
+        ProjectTag tag = projectTagRepository.findByIdAndProjectId(tagId, projectId)
                 .orElseThrow(() -> new ProjectTagNotFoundException("Tag with ID " + tagId + " not found"));
-
-        if(!projectId.equals(tag.getProjectId())) {
-            throw new ProjectTagNotFoundException("Tag with ID " + tagId + " not found");
-        }
 
         authService.hasPermission(userId, projectId, EntityType.TAG, ActionType.EDIT);
 

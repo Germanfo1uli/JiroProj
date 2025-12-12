@@ -12,5 +12,5 @@ public interface ProjectTagRepository extends JpaRepository<ProjectTag, Long> {
 
     boolean existsByProjectIdAndName(Long projectId, String name);
 
-    Optional<ProjectTag> findByProjectIdAndName(Long projectId, String name);
+    Optional<ProjectTag> findByIdAndProjectId(Long id, Long projectId);
 }
