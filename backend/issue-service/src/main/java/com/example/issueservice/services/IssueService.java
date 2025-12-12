@@ -44,13 +44,13 @@ public class IssueService {
         log.info("Creating new issue for project: {}", projectId);
 
         Issue parentIssue = findAndValidateParentIssue(parentId, projectId);
-
         Issue newIssue = buildAndSaveBaseIssue(userId, projectId, parentIssue, title, description, type, priority);
 
-        List<TagResponse> tags = processTags(newIssue, tagIds, projectId);
+        List<TagResponse> tags = (tagIds != null && !tagIds.isEmpty())
+                ? assignTagsToIssue(newIssue, tagIds, projectId, true)
+                : List.of();
 
         log.info("Successfully created issue with id: {}, level: {}", newIssue.getId(), newIssue.getLevel());
-
         return IssueDetailResponse.fromIssue(
                 newIssue,
                 tags
@@ -68,7 +68,6 @@ public class IssueService {
         authService.hasPermission(userId, issue.getProjectId(), EntityType.ISSUE, ActionType.EDIT);
         log.info("Updating issue with id: {}", issueId);
 
-        // Обновляем поля, если они переданы
         if (title != null) {
             issue.setTitle(title);
         }
@@ -80,32 +79,40 @@ public class IssueService {
         }
 
         if (tagIds != null) {
-            updateIssueTags(issue, tagIds);
+            assignTagsToIssue(issue, tagIds, issue.getProjectId(), false);
         }
 
-        Issue updatedIssue = issueRepository.save(issue);
-        log.info("Successfully updated issue with id: {}", updatedIssue.getId());
+        issueRepository.save(issue);
+        log.info("Successfully updated issue with id: {}", issue.getId());
 
         return getIssueById(userId, issueId);
     }
 
-    private void updateIssueTags(Issue issue, List<Long> tagIds) {
+    private List<TagResponse> assignTagsToIssue(Issue issue, List<Long> tagIds, Long projectId, boolean saveAfter) {
         if (tagIds.isEmpty()) {
             issue.setTags(new HashSet<>());
-            return;
+            if (saveAfter) issueRepository.save(issue);
+            return List.of();
         }
 
         Set<ProjectTag> foundTags = new HashSet<>(tagRepository.findAllById(tagIds));
+        validateTagsForProject(foundTags, tagIds, projectId);
 
-        if (foundTags.size() != tagIds.size()) {
+        issue.setTags(foundTags);
+        if (saveAfter) issueRepository.save(issue);
+
+        return foundTags.stream().map(TagResponse::from).toList();
+    }
+
+    private void validateTagsForProject(Set<ProjectTag> foundTags, List<Long> requestedTagIds, Long projectId) {
+
+        if (foundTags.size() != requestedTagIds.size()) {
             throw new ProjectTagNotFoundException("One or more tags not found");
         }
 
-        if (!foundTags.stream().allMatch(tag -> tag.getProjectId().equals(issue.getProjectId()))) {
-            throw new ProjectTagNotFoundException("All tags must belong to project " + issue.getProjectId());
+        if (!foundTags.stream().allMatch(tag -> tag.getProjectId().equals(projectId))) {
+            throw new ProjectTagNotFoundException("All tags must belong to project " + projectId);
         }
-
-        issue.setTags(foundTags);
     }
 
     private Issue findAndValidateParentIssue(Long parentId, Long projectId) {
@@ -122,7 +129,6 @@ public class IssueService {
             throw new IssueNotInProjectException(
                     "Parent issue belongs to project " + parentIssue.getProjectId() + ", not to project " + projectId);
         }
-
         return parentIssue;
     }
 
@@ -144,32 +150,6 @@ public class IssueService {
         hierarchyValidator.validateHierarchy(newIssue, parentIssue);
 
         return issueRepository.save(newIssue);
-    }
-
-    private List<TagResponse> processTags(Issue issue, List<Long> tagIds, Long projectId) {
-        if (tagIds == null || tagIds.isEmpty()) {
-            return List.of();
-        }
-
-        Set<ProjectTag> foundTags = new HashSet<>(tagRepository.findAllById(tagIds));
-        validateTags(foundTags, tagIds, projectId);
-
-        issue.setTags(foundTags);
-        issueRepository.save(issue);
-
-        return foundTags.stream()
-                .map(TagResponse::from)
-                .toList();
-    }
-
-    private void validateTags(Set<ProjectTag> foundTags, List<Long> requestedTagIds, Long projectId) {
-        if (foundTags.size() != requestedTagIds.size()) {
-            throw new ProjectTagNotFoundException("One or more tags not found");
-        }
-
-        if (!foundTags.stream().allMatch(tag -> tag.getProjectId().equals(projectId))) {
-            throw new ProjectTagNotFoundException("All tags must belong to project " + projectId);
-        }
     }
 
     @Transactional(readOnly = true)
@@ -278,5 +258,3 @@ public class IssueService {
         issueRepository.deleteById(issueId);
     }
 }
-
-

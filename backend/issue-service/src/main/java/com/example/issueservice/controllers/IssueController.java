@@ -78,7 +78,7 @@ public class IssueController {
     }
 
     @Operation(
-            summary = "Обновление задачи",
+            summary = "Обновление задачи (в том числе вместе с тегами)",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @PutMapping("/{issueId}")
