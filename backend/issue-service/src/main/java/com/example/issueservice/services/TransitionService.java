@@ -18,28 +18,38 @@ public class TransitionService {
     private final AssignHelper assignHelper;
 
     @Transactional
-    public void transitionStatus(Long userId, Long issueId, AssignmentType type, IssueStatus targetStatus) {
+    public void transitionAsOwner(Long userId, Long issueId, IssueStatus targetStatus) {
         Issue issue = issueRepository.findById(issueId)
                 .orElseThrow(() -> new IssueNotFoundException("Issue with ID: " + issueId + " not found"));
 
-        boolean hasFinalizePermission = false;
-        try {
-            authService.hasPermission(userId, issue.getProjectId(), EntityType.ISSUE, ActionType.FULL_TRANSITION);
-            hasFinalizePermission = true;
-        } catch (AccessDeniedException _) {}
+        authService.hasPermission(userId, issue.getProjectId(), EntityType.ISSUE, ActionType.FULL_TRANSITION);
 
-        if (!hasFinalizePermission) {
-            ActionType requiredAction = (type == AssignmentType.ASSIGNEE)
-                    ? ActionType.VIEW
-                    : type.getActionType();
+        log.info("Owner transitioning issue {} from {} to {} by user {}",
+                issueId, issue.getStatus().name(), targetStatus.name(), userId);
 
-            authService.hasPermission(userId, issue.getProjectId(), EntityType.ISSUE, requiredAction);
-            validateTransition(issue.getStatus(), targetStatus, type);
-            assignHelper.validateUserAssignedToRole(issue, userId, type);
-        }
+        issue.setStatus(targetStatus);
+        issueRepository.save(issue);
 
-        log.info("Transitioning issue {} from {} to {} by user {} as {} (finalize: {})",
-                issueId, issue.getStatus().name(), targetStatus.name(), userId, type.name(), hasFinalizePermission);
+        log.info("Successfully transitioned issue {} to status {} by owner", issueId, targetStatus.name());
+    }
+
+    @Transactional
+    public void transitionAsRole(Long userId, Long issueId, AssignmentType assignmentType, IssueStatus targetStatus) {
+        Issue issue = issueRepository.findById(issueId)
+                .orElseThrow(() -> new IssueNotFoundException("Issue with ID: " + issueId + " not found"));
+
+        ActionType requiredAction = (assignmentType == AssignmentType.ASSIGNEE)
+                ? ActionType.VIEW
+                : assignmentType.getActionType();
+
+        authService.hasPermission(userId, issue.getProjectId(), EntityType.ISSUE, requiredAction);
+
+        validateTransition(issue.getStatus(), targetStatus, assignmentType);
+
+        assignHelper.validateUserAssignedToRole(issue, userId, assignmentType);
+
+        log.info("Role transitioning issue {} from {} to {} by user {} as {}",
+                issueId, issue.getStatus().name(), targetStatus.name(), userId, assignmentType.name());
 
         issue.setStatus(targetStatus);
         issueRepository.save(issue);
