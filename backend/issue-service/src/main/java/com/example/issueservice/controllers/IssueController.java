@@ -1,5 +1,6 @@
 package com.example.issueservice.controllers;
 
+import com.example.issueservice.dto.request.AssignTagsRequest;
 import com.example.issueservice.dto.request.CreateIssueRequest;
 import com.example.issueservice.dto.request.UpdateIssueRequest;
 import com.example.issueservice.dto.response.IssueDetailResponse;
@@ -105,5 +106,21 @@ public class IssueController {
         log.info("Request to delete issue by id: {}", issueId);
         issueService.deleteIssue(principal.userId(), issueId);
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(
+            summary = "Назначение тегов задаче (только assignee)",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @PatchMapping("/{issueId}/tags")
+    public ResponseEntity<IssueDetailResponse> assignTagsBatch(
+            @AuthenticationPrincipal JwtUser principal,
+            @PathVariable Long issueId,
+            @Valid @RequestBody AssignTagsRequest request) {
+
+        log.info("Batch tag assignment request for issue {} by user {}", issueId, principal.userId());
+        IssueDetailResponse response = issueService.assignTagsToIssue(
+                principal.userId(), issueId, request.tagIds());
+        return ResponseEntity.ok(response);
     }
 }

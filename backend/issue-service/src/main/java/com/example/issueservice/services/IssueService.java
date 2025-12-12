@@ -7,11 +7,8 @@ import com.example.issueservice.dto.models.enums.*;
 import com.example.issueservice.dto.response.IssueDetailResponse;
 import com.example.issueservice.dto.response.PublicProfileResponse;
 import com.example.issueservice.dto.response.TagResponse;
-import com.example.issueservice.exception.IssueNotFoundException;
+import com.example.issueservice.exception.*;
 import com.example.issueservice.dto.models.Issue;
-import com.example.issueservice.exception.IssueNotInProjectException;
-import com.example.issueservice.exception.ProjectTagNotFoundException;
-import com.example.issueservice.exception.ServiceUnavailableException;
 import com.example.issueservice.repositories.IssueRepository;
 import com.example.issueservice.repositories.ProjectTagRepository;
 import lombok.RequiredArgsConstructor;
@@ -84,6 +81,30 @@ public class IssueService {
 
         issueRepository.save(issue);
         log.info("Successfully updated issue with id: {}", issue.getId());
+
+        return getIssueById(userId, issueId);
+    }
+
+    @Transactional
+    public IssueDetailResponse assignTagsToIssue(Long userId, Long issueId, List<Long> tagIds) {
+
+        Issue issue = issueRepository.findWithTagsById(issueId)
+                .orElseThrow(() -> new IssueNotFoundException("Issue with id " + issueId + " not found"));
+
+        authService.hasPermission(userId, issue.getProjectId(), EntityType.ISSUE, ActionType.APPLY);
+
+        if (issue.getAssigneeId() == null) {
+            throw new AccessDeniedException("Issue has no assignee. Cannot modify tags.");
+        }
+        if (!issue.getAssigneeId().equals(userId)) {
+            throw new AccessDeniedException("Only the assignee can modify issue tags");
+        }
+
+        log.info("Assigning tags {} to issue {} by user {}", tagIds, issueId, userId);
+
+        assignTagsToIssue(issue, tagIds, issue.getProjectId(), false);
+
+        issueRepository.save(issue);
 
         return getIssueById(userId, issueId);
     }
