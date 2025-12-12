@@ -45,11 +45,10 @@ public class TransitionController {
         return ResponseEntity.ok().build();
     }
 
-    // Эндпоинт для ролевых переходов (с указанием роли)
     @Operation(
             summary = "Перевести задачу в статус как назначенный исполнитель",
             description = """
-            Доступные переходы:
+            Доступные переходы (в скобках название строка для targetStatus):
             - Developer (ASSIGNEE): IN_PROGRESS → CODE_REVIEW
             - Reviewer (CODE_REVIEWER): CODE_REVIEW → QA или IN_PROGRESS
             - QA (QA_ENGINEER): QA → STAGING или IN_PROGRESS
