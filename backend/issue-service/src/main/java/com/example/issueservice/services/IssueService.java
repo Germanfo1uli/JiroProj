@@ -7,8 +7,8 @@ import com.example.issueservice.dto.response.IssueDetailResponse;
 import com.example.issueservice.dto.response.PublicProfileResponse;
 import com.example.issueservice.exception.IssueNotFoundException;
 import com.example.issueservice.dto.models.Issue;
+import com.example.issueservice.exception.IssueNotInProjectException;
 import com.example.issueservice.exception.ServiceUnavailableException;
-import com.example.issueservice.exception.UserNotFoundException;
 import com.example.issueservice.repositories.IssueRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,8 +33,8 @@ public class IssueService {
 
     @Transactional
     public IssueDetailResponse createIssue(
-            Long userId, Long projectId, Long parentId, String title, String description,
-            IssueType type, Priority priority, LocalDateTime deadline) {
+            Long userId, Long projectId, Long parentId, String title,
+            String description, IssueType type, Priority priority) {
 
         authService.hasPermission(userId, projectId, EntityType.ISSUE, ActionType.CREATE);
 
@@ -43,23 +43,27 @@ public class IssueService {
         Issue parentIssue = null;
         if (parentId != null) {
             parentIssue = issueRepository.findById(parentId)
-                    .orElseThrow(() -> new IllegalArgumentException(
+                    .orElseThrow(() -> new IssueNotFoundException(
                             "Parent issue with id " + parentId + " not found"));
             log.info("Found parent issue: {}", parentIssue.getTitle());
+
+            if (!projectId.equals(parentIssue.getProjectId())) {
+                throw new IssueNotInProjectException(
+                        "Parent issue with id " + parentId + " belongs to project " + parentIssue.getProjectId() + ", not to project " + projectId);
+            }
         }
 
         Issue newIssue = Issue.builder()
+                .projectId(projectId)
                 .creatorId(userId)
                 .title(title)
                 .description(description)
                 .type(type)
                 .priority(priority)
-                .deadline(deadline)
                 .status(IssueStatus.TO_DO)
                 .build();
 
         newIssue.setParentIssue(parentIssue);
-
         hierarchyValidator.validateHierarchy(newIssue, parentIssue);
 
         Issue savedIssue = issueRepository.save(newIssue);
@@ -137,43 +141,6 @@ public class IssueService {
             log.error("Failed to fetch profiles for users: {}", userIds, e);
             throw new ServiceUnavailableException("Failed to fetch user profiles: " + e.getMessage());
         }
-    }
-
-    @Transactional
-    public void addAssignee(Long userId, Long issueId, Long assigneeId) {
-
-        Issue issue = issueRepository.findById(issueId)
-                .orElseThrow(() -> new IssueNotFoundException("Issue with ID: " + issueId + " not found"));
-
-        authService.hasPermission(userId, issue.getProjectId(), EntityType.ISSUE, ActionType.ASSIGN);
-
-        log.info("Adding user {} to assignee of issue {}", assigneeId, issueId);
-
-        try {
-            userClient.getProfileById(assigneeId);
-        } catch (Exception e) {
-            throw new UserNotFoundException("User with ID " + assigneeId + " does not exist");
-        }
-
-        issue.setAssigneeId(assigneeId);
-
-        issueRepository.save(issue);
-        log.info("Successfully added assignee.");
-    }
-
-    @Transactional
-    public void removeAssignee(Long userId, Long issueId) {
-
-        Issue issue = issueRepository.findById(issueId)
-                .orElseThrow(() -> new IssueNotFoundException("Issue with ID: " + issueId + " not found"));
-
-        authService.hasPermission(userId, issue.getProjectId(), EntityType.ISSUE, ActionType.ASSIGN);
-
-        log.info("Removing from assignees of issue {}", issueId);
-
-        issue.setAssigneeId(null);
-
-        log.info("Successfully removed assignee.");
     }
 }
 
