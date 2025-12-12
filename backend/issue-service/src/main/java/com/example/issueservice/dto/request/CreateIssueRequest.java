@@ -5,6 +5,8 @@ import com.example.issueservice.dto.models.enums.Priority;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 
+import java.util.List;
+
 public record CreateIssueRequest(
         @Schema(description = "ID проекта", example = "123")
         @NotNull(message = "ProjectID is required")
@@ -27,5 +29,8 @@ public record CreateIssueRequest(
 
         @Schema(description = "Приоритет задачи", example = "MEDIUM")
         @NotNull(message = "Priority is required")
-        Priority priority
+        Priority priority,
+
+        @Schema(description = "ID тегов для назначения задаче", example = "[1, 2, 3]")
+        List<Long> tagIds
 ) {}

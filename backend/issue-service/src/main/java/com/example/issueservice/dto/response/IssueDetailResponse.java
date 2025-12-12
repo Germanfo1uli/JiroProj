@@ -60,7 +60,7 @@ public record IssueDetailResponse(
         @Schema(description = "Список тегов задачи")
         List<TagResponse> tags
 ) {
-        public static IssueDetailResponse fromIssue(Issue issue) {
+        public static IssueDetailResponse fromIssue(Issue issue, List<TagResponse> tags) {
                 return new IssueDetailResponse(
                         issue.getId(),
                         issue.getProjectId(),
@@ -77,7 +77,7 @@ public record IssueDetailResponse(
                         null,
                         null,
                         null,
-                        Collections.emptyList()
+                        tags
                 );
         }
 

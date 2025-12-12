@@ -2,6 +2,7 @@ package com.example.issueservice.controllers;
 
 import com.example.issueservice.dto.request.AssignTagDto;
 import com.example.issueservice.dto.request.CreateIssueRequest;
+import com.example.issueservice.dto.request.UpdateIssueRequest;
 import com.example.issueservice.dto.response.IssueDetailResponse;
 import com.example.issueservice.security.JwtUser;
 import com.example.issueservice.services.IssueService;
@@ -42,7 +43,7 @@ public class IssueController {
         IssueDetailResponse response = issueService.createIssue(
                 principal.userId(), request.projectId(), request.parentId(),
                 request.title(), request.description(),
-                request.type(), request.priority());
+                request.type(), request.priority(), request.tagIds());
         return ResponseEntity.ok(response);
     }
 
@@ -73,6 +74,24 @@ public class IssueController {
         log.info("Request to get all issues for project: {}", projectId);
         List<IssueDetailResponse> response = issueService.getIssuesByProject(
                 principal.userId(), projectId);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(
+            summary = "Обновление задачи",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @PutMapping("/{issueId}")
+    public ResponseEntity<IssueDetailResponse> updateIssue(
+            @AuthenticationPrincipal JwtUser principal,
+            @PathVariable Long issueId,
+            @Valid @RequestBody UpdateIssueRequest request) {
+
+        log.info("Request to update issue {}: {}", issueId, request);
+        IssueDetailResponse response = issueService.updateIssue(
+                principal.userId(), issueId,
+                request.title(), request.description(),
+                request.priority(), request.tagIds());
         return ResponseEntity.ok(response);
     }
 

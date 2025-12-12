@@ -2,6 +2,7 @@ package com.example.issueservice.services;
 
 import com.example.issueservice.client.UserServiceClient;
 import com.example.issueservice.dto.data.UserBatchRequest;
+import com.example.issueservice.dto.models.ProjectTag;
 import com.example.issueservice.dto.models.enums.*;
 import com.example.issueservice.dto.response.IssueDetailResponse;
 import com.example.issueservice.dto.response.PublicProfileResponse;
@@ -9,14 +10,15 @@ import com.example.issueservice.dto.response.TagResponse;
 import com.example.issueservice.exception.IssueNotFoundException;
 import com.example.issueservice.dto.models.Issue;
 import com.example.issueservice.exception.IssueNotInProjectException;
+import com.example.issueservice.exception.ProjectTagNotFoundException;
 import com.example.issueservice.exception.ServiceUnavailableException;
 import com.example.issueservice.repositories.IssueRepository;
+import com.example.issueservice.repositories.ProjectTagRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -28,6 +30,7 @@ import java.util.stream.Stream;
 public class IssueService {
 
     private final IssueRepository issueRepository;
+    private final ProjectTagRepository tagRepository;
     private final IssueHierarchyValidator hierarchyValidator;
     private final AuthService authService;
     private final UserServiceClient userClient;
@@ -35,24 +38,97 @@ public class IssueService {
     @Transactional
     public IssueDetailResponse createIssue(
             Long userId, Long projectId, Long parentId, String title,
-            String description, IssueType type, Priority priority) {
+            String description, IssueType type, Priority priority, List<Long> tagIds) {
 
         authService.hasPermission(userId, projectId, EntityType.ISSUE, ActionType.CREATE);
-
         log.info("Creating new issue for project: {}", projectId);
 
-        Issue parentIssue = null;
-        if (parentId != null) {
-            parentIssue = issueRepository.findById(parentId)
-                    .orElseThrow(() -> new IssueNotFoundException(
-                            "Parent issue with id " + parentId + " not found"));
-            log.info("Found parent issue: {}", parentIssue.getTitle());
+        Issue parentIssue = findAndValidateParentIssue(parentId, projectId);
 
-            if (!projectId.equals(parentIssue.getProjectId())) {
-                throw new IssueNotInProjectException(
-                        "Parent issue with id " + parentId + " belongs to project " + parentIssue.getProjectId() + ", not to project " + projectId);
-            }
+        Issue newIssue = buildAndSaveBaseIssue(userId, projectId, parentIssue, title, description, type, priority);
+
+        List<TagResponse> tags = processTags(newIssue, tagIds, projectId);
+
+        log.info("Successfully created issue with id: {}, level: {}", newIssue.getId(), newIssue.getLevel());
+
+        return IssueDetailResponse.fromIssue(
+                newIssue,
+                tags
+        );
+    }
+
+    @Transactional
+    public IssueDetailResponse updateIssue(
+            Long userId, Long issueId, String title, String description,
+            Priority priority, List<Long> tagIds) {
+
+        Issue issue = issueRepository.findWithTagsById(issueId)
+                .orElseThrow(() -> new IssueNotFoundException("Issue with id " + issueId + " not found"));
+
+        authService.hasPermission(userId, issue.getProjectId(), EntityType.ISSUE, ActionType.EDIT);
+        log.info("Updating issue with id: {}", issueId);
+
+        // Обновляем поля, если они переданы
+        if (title != null) {
+            issue.setTitle(title);
         }
+        if (description != null) {
+            issue.setDescription(description);
+        }
+        if (priority != null) {
+            issue.setPriority(priority);
+        }
+
+        if (tagIds != null) {
+            updateIssueTags(issue, tagIds);
+        }
+
+        Issue updatedIssue = issueRepository.save(issue);
+        log.info("Successfully updated issue with id: {}", updatedIssue.getId());
+
+        return getIssueById(userId, issueId);
+    }
+
+    private void updateIssueTags(Issue issue, List<Long> tagIds) {
+        if (tagIds.isEmpty()) {
+            issue.setTags(new HashSet<>());
+            return;
+        }
+
+        Set<ProjectTag> foundTags = new HashSet<>(tagRepository.findAllById(tagIds));
+
+        if (foundTags.size() != tagIds.size()) {
+            throw new ProjectTagNotFoundException("One or more tags not found");
+        }
+
+        if (!foundTags.stream().allMatch(tag -> tag.getProjectId().equals(issue.getProjectId()))) {
+            throw new ProjectTagNotFoundException("All tags must belong to project " + issue.getProjectId());
+        }
+
+        issue.setTags(foundTags);
+    }
+
+    private Issue findAndValidateParentIssue(Long parentId, Long projectId) {
+        if (parentId == null) {
+            return null;
+        }
+
+        Issue parentIssue = issueRepository.findById(parentId)
+                .orElseThrow(() -> new IssueNotFoundException(
+                        "Parent issue with id " + parentId + " not found"));
+        log.info("Found parent issue: {}", parentIssue.getTitle());
+
+        if (!projectId.equals(parentIssue.getProjectId())) {
+            throw new IssueNotInProjectException(
+                    "Parent issue belongs to project " + parentIssue.getProjectId() + ", not to project " + projectId);
+        }
+
+        return parentIssue;
+    }
+
+    private Issue buildAndSaveBaseIssue(
+            Long userId, Long projectId, Issue parentIssue,
+            String title, String description, IssueType type, Priority priority) {
 
         Issue newIssue = Issue.builder()
                 .projectId(projectId)
@@ -67,11 +143,33 @@ public class IssueService {
         newIssue.setParentIssue(parentIssue);
         hierarchyValidator.validateHierarchy(newIssue, parentIssue);
 
-        Issue savedIssue = issueRepository.save(newIssue);
-        log.info("Successfully created issue with id: {}, level: {}",
-                savedIssue.getId(), savedIssue.getLevel());
+        return issueRepository.save(newIssue);
+    }
 
-        return IssueDetailResponse.fromIssue(savedIssue);
+    private List<TagResponse> processTags(Issue issue, List<Long> tagIds, Long projectId) {
+        if (tagIds == null || tagIds.isEmpty()) {
+            return List.of();
+        }
+
+        Set<ProjectTag> foundTags = new HashSet<>(tagRepository.findAllById(tagIds));
+        validateTags(foundTags, tagIds, projectId);
+
+        issue.setTags(foundTags);
+        issueRepository.save(issue);
+
+        return foundTags.stream()
+                .map(TagResponse::from)
+                .toList();
+    }
+
+    private void validateTags(Set<ProjectTag> foundTags, List<Long> requestedTagIds, Long projectId) {
+        if (foundTags.size() != requestedTagIds.size()) {
+            throw new ProjectTagNotFoundException("One or more tags not found");
+        }
+
+        if (!foundTags.stream().allMatch(tag -> tag.getProjectId().equals(projectId))) {
+            throw new ProjectTagNotFoundException("All tags must belong to project " + projectId);
+        }
     }
 
     @Transactional(readOnly = true)
@@ -155,7 +253,7 @@ public class IssueService {
             return Collections.emptyMap();
         }
 
-        log.info("Cache miss for user profiles: {}. Fetching from UserService...", userIds);
+        log.info("Fetching users from UserService");
 
         try {
             UserBatchRequest request = new UserBatchRequest(new ArrayList<>(userIds));
