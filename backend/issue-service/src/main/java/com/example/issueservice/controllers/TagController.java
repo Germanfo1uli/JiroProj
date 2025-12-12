@@ -65,7 +65,7 @@ public class TagController {
     @PatchMapping("/{tagId}")
     public ResponseEntity<TagResponse> updateProjectTag(
             @PathVariable Long tagId,
-            CreateUpdateTagResponse request,
+            @RequestBody CreateUpdateTagResponse request,
             @AuthenticationPrincipal JwtUser principal) {
 
         log.info("Request to update project tag with id: {}", tagId);

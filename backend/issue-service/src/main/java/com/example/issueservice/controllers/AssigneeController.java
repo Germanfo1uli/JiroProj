@@ -2,6 +2,7 @@ package com.example.issueservice.controllers;
 
 import com.example.issueservice.dto.models.enums.AssignmentType;
 import com.example.issueservice.dto.request.AddAssigneeRequest;
+import com.example.issueservice.dto.request.AssigneeRequest;
 import com.example.issueservice.security.JwtUser;
 import com.example.issueservice.services.AssignService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -64,10 +65,10 @@ public class AssigneeController {
     public ResponseEntity<Void> removeAssignee(
             @AuthenticationPrincipal JwtUser principal,
             @PathVariable Long issueId,
-            @Valid @RequestBody AssignmentType type) {
+            @Valid @RequestBody AssigneeRequest request) {
 
         log.info("Request to remove assignee from issue {}", issueId);
-        assignService.removeAssignee(principal.userId(), issueId, type);
+        assignService.removeAssignee(principal.userId(), issueId, request.type());
         return ResponseEntity.noContent().build();
     }
 
@@ -79,10 +80,10 @@ public class AssigneeController {
     public ResponseEntity<Void> removeSelfAssign(
             @AuthenticationPrincipal JwtUser principal,
             @PathVariable Long issueId,
-            @Valid @RequestBody AssignmentType type) {
+            @Valid @RequestBody AssigneeRequest request) {
 
         log.info("Request to remove self assign from issue {}", issueId);
-        assignService.removeSelfAssign(principal.userId(), issueId, type);
+        assignService.removeSelfAssign(principal.userId(), issueId, request.type());
         return ResponseEntity.noContent().build();
     }
 }
