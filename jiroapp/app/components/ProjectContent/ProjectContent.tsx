@@ -117,7 +117,6 @@ const ProjectContent = ({ project: initialProject, onBackToDashboard }: ProjectC
                             <motion.div className={styles.projectMeta} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
                                 <span className={styles.metaItem}><FaCalendar className={styles.metaIcon} />Создан {formatDate(project.createdAt)}</span>
                                 {project.yourRole && <span className={styles.metaItem}><FaUserCircle className={styles.metaIcon} />Ваша роль: {project.yourRole}</span>}
-                                {userRole && <span className={styles.metaItem}><FaUserCircle className={styles.metaIcon} />Статус: {userRole.isOwner ? 'Владелец' : 'Участник'}</span>}
                             </motion.div>
                         </div>
                     </div>
