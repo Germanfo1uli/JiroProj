@@ -96,7 +96,7 @@ public class IssueService {
         Issue issue = issueRepository.findWithTagsById(issueId)
                 .orElseThrow(() -> new IssueNotFoundException("Issue with id " + issueId + " not found"));
 
-        authService.hasPermission(userId, issue.getProjectId(), EntityType.ISSUE, ActionType.APPLY);
+        authService.hasPermission(userId, issue.getProjectId(), EntityType.TAG, ActionType.APPLY);
 
         if (issue.getAssigneeId() == null) {
             throw new AccessDeniedException("Issue has no assignee. Cannot modify tags.");

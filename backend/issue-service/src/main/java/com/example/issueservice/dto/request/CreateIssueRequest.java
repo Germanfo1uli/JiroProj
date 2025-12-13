@@ -12,6 +12,9 @@ public record CreateIssueRequest(
         @NotNull(message = "ProjectID is required")
         Long projectId,
 
+        @Schema(description = "ID назначенного пользователя", example = "123")
+        Long assigneeId,
+
         @Schema(description = "ID родительской задачи", example = "123")
         Long parentId,
 

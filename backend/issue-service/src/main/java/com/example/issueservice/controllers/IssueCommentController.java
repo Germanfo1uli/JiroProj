@@ -36,9 +36,6 @@ public class IssueCommentController {
 
         log.info("Request to create comment for issue {}", issueId);
 
-        // TODO: Взять ID автора из JWT-токена (контекста безопасности)
-        Long authorId = 1L;
-
         CommentResponse createdComment = commentService.createComment(principal.userId(), issueId, request.message());
         log.info("Successfully created comment with id: {}", createdComment.id());
         return new ResponseEntity<>(createdComment, HttpStatus.CREATED);
