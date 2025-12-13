@@ -17,7 +17,7 @@ import jakarta.validation.Valid;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/issues")
+@RequestMapping("/api/issues/{issueId}/comments")
 @RequiredArgsConstructor
 public class IssueCommentController {
 
@@ -27,7 +27,7 @@ public class IssueCommentController {
             summary = "Создание комментария",
             security = @SecurityRequirement(name = "bearerAuth")
     )
-    @PostMapping("/{issueId}/comments")
+    @PostMapping
     public ResponseEntity<CommentResponse> createComment(
             @Valid @RequestBody CreateUpdateCommentRequest request,
             @AuthenticationPrincipal JwtUser principal,
@@ -41,14 +41,16 @@ public class IssueCommentController {
     }
 
     @Operation(
-            summary = "Создание комментария",
+            summary = "Изменение комментария",
             security = @SecurityRequirement(name = "bearerAuth")
     )
-    @PatchMapping("/comments/{commentId}")
+    @PatchMapping("/{commentId}")
     public ResponseEntity<CommentResponse> updateComment(
             @Valid @RequestBody CreateUpdateCommentRequest request,
             @AuthenticationPrincipal JwtUser principal,
-            @PathVariable Long commentId) {
+            @PathVariable Long commentId,
+            @PathVariable String issueId) {
+
         log.info("Request to update comment with id: {}", commentId);
 
         CommentResponse response = commentService.updateComment(principal.userId(), commentId, request.message());
@@ -63,7 +65,9 @@ public class IssueCommentController {
     @DeleteMapping("/comments/{commentId}")
     public ResponseEntity<Void> deleteComment(
             @AuthenticationPrincipal JwtUser principal,
-            @PathVariable Long commentId) {
+            @PathVariable Long commentId,
+            @PathVariable String issueId) {
+
         log.info("Request to delete comment with id: {}", commentId);
 
         commentService.deleteComment(principal.userId(), commentId);

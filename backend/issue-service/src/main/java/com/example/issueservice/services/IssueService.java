@@ -6,10 +6,7 @@ import com.example.issueservice.dto.data.UserBatchRequest;
 import com.example.issueservice.dto.models.IssueComment;
 import com.example.issueservice.dto.models.ProjectTag;
 import com.example.issueservice.dto.models.enums.*;
-import com.example.issueservice.dto.response.CommentResponse;
-import com.example.issueservice.dto.response.IssueDetailResponse;
-import com.example.issueservice.dto.response.PublicProfileResponse;
-import com.example.issueservice.dto.response.TagResponse;
+import com.example.issueservice.dto.response.*;
 import com.example.issueservice.exception.*;
 import com.example.issueservice.dto.models.Issue;
 import com.example.issueservice.repositories.IssueCommentRepository;
@@ -65,8 +62,7 @@ public class IssueService {
         return IssueDetailResponse.fromIssue(
                 newIssue,
                 tags,
-                assignee,
-                null
+                assignee
         );
     }
 
@@ -197,7 +193,6 @@ public class IssueService {
 
         authService.hasPermission(userId, issue.getProjectId(), EntityType.ISSUE, ActionType.VIEW);
 
-        // Собираем ID пользователей задачи (без комментариев)
         Set<Long> userIds = Stream.of(
                         issue.getCreatorId(),
                         issue.getAssigneeId(),
@@ -215,6 +210,10 @@ public class IssueService {
                 .map(TagResponse::from)
                 .toList();
 
+        List<AttachmentResponse> attachments = issue.getAttachments().stream()
+                .map(AttachmentResponse::from)
+                .toList();
+
         return IssueDetailResponse.withUsers(
                 issue,
                 userProfiles.get(issue.getCreatorId()),
@@ -222,7 +221,8 @@ public class IssueService {
                 userProfiles.get(issue.getCodeReviewerId()),
                 userProfiles.get(issue.getQaEngineerId()),
                 tags,
-                comments
+                comments,
+                attachments
         );
     }
 
@@ -289,6 +289,7 @@ public class IssueService {
                             reviewer,
                             qa,
                             tags,
+                            null,
                             null
                     );
                 })

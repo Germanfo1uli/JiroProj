@@ -61,11 +61,14 @@ public record IssueDetailResponse(
         List<TagResponse> tags,
 
         @Schema(description = "Список комментариев")
-        List<CommentResponse> comments
+        List<CommentResponse> comments,
+
+        @Schema(description = "Список комментариев")
+        List<AttachmentResponse> attachments
 ) {
         public static IssueDetailResponse fromIssue(
                 Issue issue, List<TagResponse> tags,
-                PublicProfileResponse assignee, List<CommentResponse> comments) {
+                PublicProfileResponse assignee) {
 
                 return new IssueDetailResponse(
                         issue.getId(),
@@ -80,11 +83,12 @@ public record IssueDetailResponse(
                         issue.getCreatedAt(),
                         issue.getUpdatedAt(),
                         null,
-                        null,
+                        assignee,
                         null,
                         null,
                         tags,
-                        comments
+                        null,
+                        null
                 );
         }
 
@@ -95,7 +99,8 @@ public record IssueDetailResponse(
                 PublicProfileResponse reviewer,
                 PublicProfileResponse qa,
                 List<TagResponse> tags,
-                List<CommentResponse> comments) {
+                List<CommentResponse> comments,
+                List<AttachmentResponse> attachments) {
                 return new IssueDetailResponse(
                         issue.getId(),
                         issue.getProjectId(),
@@ -113,7 +118,8 @@ public record IssueDetailResponse(
                         reviewer,
                         qa,
                         tags,
-                        comments
+                        comments,
+                        attachments
                 );
         }
 }

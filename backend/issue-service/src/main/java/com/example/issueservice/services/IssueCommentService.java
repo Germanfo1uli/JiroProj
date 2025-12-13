@@ -1,7 +1,6 @@
 package com.example.issueservice.services;
 
 import com.example.issueservice.client.UserServiceClient;
-import com.example.issueservice.dto.data.UserBatchRequest;
 import com.example.issueservice.dto.models.enums.ActionType;
 import com.example.issueservice.dto.models.enums.EntityType;
 import com.example.issueservice.dto.response.CommentResponse;
@@ -18,12 +17,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service

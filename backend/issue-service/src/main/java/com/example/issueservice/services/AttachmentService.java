@@ -1,85 +1,94 @@
 package com.example.issueservice.services;
 
-import com.example.issueservice.dto.response.AttachmentDto;
-import com.example.issueservice.exception.IssueNotFoundException;
-import com.example.issueservice.dto.models.Attachment;
-import com.example.issueservice.dto.models.IssueComment;
 import com.example.issueservice.dto.models.Issue;
+import com.example.issueservice.dto.models.Attachment;
+import com.example.issueservice.dto.response.AttachmentResponse;
+import com.example.issueservice.dto.response.UserPermissionsResponse;
+import com.example.issueservice.dto.models.enums.ActionType;
+import com.example.issueservice.dto.models.enums.EntityType;
+import com.example.issueservice.exception.*;
 import com.example.issueservice.repositories.AttachmentRepository;
-import com.example.issueservice.repositories.IssueCommentRepository;
 import com.example.issueservice.repositories.IssueRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.UUID;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AttachmentService {
 
     private final AttachmentRepository attachmentRepository;
     private final IssueRepository issueRepository;
-    private final IssueCommentRepository commentRepository;
+    private final AuthService authService;
 
     @Transactional
-    public AttachmentDto addAttachmentToIssue(Long issueId, String originalFileName, String filePath) {
-        log.info("Adding attachment '{}' to issue {}", originalFileName, issueId);
-        if (!issueRepository.existsById(issueId)) {
-            throw new IssueNotFoundException("Issue with id " + issueId + " not found");
+    public AttachmentResponse uploadAttachment(Long userId, Long issueId, MultipartFile file) {
+
+        Issue issue = issueRepository.findById(issueId)
+                .orElseThrow(() -> new IssueNotFoundException("Issue not found"));
+
+        authService.hasPermission(userId, issue.getProjectId(), EntityType.ATTACHMENT, ActionType.CREATE);
+
+        try {
+            Attachment attachment = Attachment.builder()
+                    .issue(issue)
+                    .fileName(file.getOriginalFilename())
+                    .fileData(file.getBytes())
+                    .fileSize(file.getSize())
+                    .contentType(file.getContentType() != null ? file.getContentType() : "application/octet-stream")
+                    .createdBy(userId)
+                    .build();
+
+            attachment = attachmentRepository.save(attachment);
+            log.info("User {} uploaded attachment {} to issue {}", userId, attachment.getId(), issueId);
+
+            return AttachmentResponse.from(attachment);
+        } catch (IOException e) {
+            log.error("Failed to read file", e);
+            throw new FileUploadException("Failed to read uploaded file");
         }
-        Attachment attachment = Attachment.builder()
-                .issue(Issue.builder().id(issueId).build())
-                .name(originalFileName)
-                .path(filePath)
-                .build();
-        Attachment savedAttachment = attachmentRepository.save(attachment);
-        log.info("Successfully saved attachment with id: {}", savedAttachment.getId());
-        return convertToDto(savedAttachment);
     }
 
-    @Transactional
-    public AttachmentDto addAttachmentToComment(Long commentId, String originalFileName, String filePath) {
-        log.info("Adding attachment '{}' to comment {}", originalFileName, commentId);
-        IssueComment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new IllegalArgumentException("Comment with id " + commentId + " not found"));
+    @Transactional(readOnly = true)
+    public byte[] downloadAttachment(Long userId, Long attachmentId) {
 
-        Attachment attachment = Attachment.builder()
-                .comment(comment)
-                .name(originalFileName)
-                .path(filePath)
-                .build();
-        Attachment savedAttachment = attachmentRepository.save(attachment);
-        log.info("Successfully saved attachment with id: {}", savedAttachment.getId());
-        return convertToDto(savedAttachment);
-    }
-
-    public List<AttachmentDto> getAttachmentsByIssueId(Long issueId) {
-        log.info("Fetching attachments for issue: {}", issueId);
-        List<Attachment> attachments = attachmentRepository.findByIssueId(issueId);
-        return attachments.stream().map(this::convertToDto).collect(Collectors.toList());
-    }
-
-    @Transactional
-    public void deleteAttachment(Long attachmentId, Long requestingUserId) {
-        log.info("User {} is trying to delete attachment {}", requestingUserId, attachmentId);
         Attachment attachment = attachmentRepository.findById(attachmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Attachment with id " + attachmentId + " not found"));
+                .orElseThrow(() -> new AttachmentNotFoundException("Attachment not found"));
 
-        // TODO: Добавить проверку прав. Удалять может только автор задачи/комментария или админ.
-        attachmentRepository.delete(attachment);
-        log.info("Successfully deleted attachment {}", attachmentId);
+        Long projectId = attachment.getIssue().getProjectId();
+        authService.hasPermission(userId, projectId, EntityType.ISSUE, ActionType.VIEW);
+
+        log.info("User {} downloaded attachment {}", userId, attachmentId);
+        return attachment.getFileData();
     }
 
-    private AttachmentDto convertToDto(Attachment attachment) {
-        return AttachmentDto.builder()
-                .id(attachment.getId())
-                .name(attachment.getName())
-                .path(attachment.getPath())
-                .createdAt(attachment.getCreatedAt())
-                .build();
+    @Transactional
+    public void deleteAttachment(Long userId, Long attachmentId) {
+
+        Attachment attachment = attachmentRepository.findById(attachmentId)
+                .orElseThrow(() -> new AttachmentNotFoundException("Attachment not found"));
+
+        Long projectId = attachment.getIssue().getProjectId();
+        boolean isAuthor = attachment.getCreatedBy().equals(userId);
+
+        if (!isAuthor) {
+            UserPermissionsResponse permissions = authService.getUserPermissions(userId, projectId);
+            if (!permissions.isOwner()) {
+                throw new AccessDeniedException("Not author and not project owner");
+            }
+        } else {
+            authService.hasPermission(userId, projectId, EntityType.ATTACHMENT, ActionType.DELETE_OWN);
+        }
+
+        attachmentRepository.delete(attachment);
+        log.info("User {} deleted attachment {}", userId, attachmentId);
     }
 }
