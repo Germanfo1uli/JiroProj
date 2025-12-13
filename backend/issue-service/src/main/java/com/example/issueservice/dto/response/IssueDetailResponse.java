@@ -58,9 +58,18 @@ public record IssueDetailResponse(
         PublicProfileResponse qa,
 
         @Schema(description = "Список тегов задачи")
-        List<TagResponse> tags
+        List<TagResponse> tags,
+
+        @Schema(description = "Список комментариев")
+        List<CommentResponse> comments,
+
+        @Schema(description = "Список комментариев")
+        List<AttachmentResponse> attachments
 ) {
-        public static IssueDetailResponse fromIssue(Issue issue, List<TagResponse> tags) {
+        public static IssueDetailResponse fromIssue(
+                Issue issue, List<TagResponse> tags,
+                PublicProfileResponse assignee) {
+
                 return new IssueDetailResponse(
                         issue.getId(),
                         issue.getProjectId(),
@@ -74,10 +83,12 @@ public record IssueDetailResponse(
                         issue.getCreatedAt(),
                         issue.getUpdatedAt(),
                         null,
+                        assignee,
                         null,
                         null,
+                        tags,
                         null,
-                        tags
+                        null
                 );
         }
 
@@ -87,7 +98,9 @@ public record IssueDetailResponse(
                 PublicProfileResponse assignee,
                 PublicProfileResponse reviewer,
                 PublicProfileResponse qa,
-                List<TagResponse> tags) {
+                List<TagResponse> tags,
+                List<CommentResponse> comments,
+                List<AttachmentResponse> attachments) {
                 return new IssueDetailResponse(
                         issue.getId(),
                         issue.getProjectId(),
@@ -104,7 +117,9 @@ public record IssueDetailResponse(
                         assignee,
                         reviewer,
                         qa,
-                        tags
+                        tags,
+                        comments,
+                        attachments
                 );
         }
 }

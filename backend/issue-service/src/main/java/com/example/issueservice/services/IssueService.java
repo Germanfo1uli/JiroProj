@@ -1,14 +1,15 @@
 package com.example.issueservice.services;
 
+import com.example.issueservice.client.BoardServiceClient;
 import com.example.issueservice.client.UserServiceClient;
 import com.example.issueservice.dto.data.UserBatchRequest;
+import com.example.issueservice.dto.models.IssueComment;
 import com.example.issueservice.dto.models.ProjectTag;
 import com.example.issueservice.dto.models.enums.*;
-import com.example.issueservice.dto.response.IssueDetailResponse;
-import com.example.issueservice.dto.response.PublicProfileResponse;
-import com.example.issueservice.dto.response.TagResponse;
+import com.example.issueservice.dto.response.*;
 import com.example.issueservice.exception.*;
 import com.example.issueservice.dto.models.Issue;
+import com.example.issueservice.repositories.IssueCommentRepository;
 import com.example.issueservice.repositories.IssueRepository;
 import com.example.issueservice.repositories.ProjectTagRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,17 +29,30 @@ public class IssueService {
 
     private final IssueRepository issueRepository;
     private final ProjectTagRepository tagRepository;
+    private final IssueCommentRepository commentRepository;
     private final IssueHierarchyValidator hierarchyValidator;
     private final AuthService authService;
     private final UserServiceClient userClient;
+    private final BoardServiceClient boardClient;
 
     @Transactional
     public IssueDetailResponse createIssue(
-            Long userId, Long projectId, Long parentId, String title,
+            Long userId, Long projectId, Long assigneeId, Long parentId, String title,
             String description, IssueType type, Priority priority, List<Long> tagIds) {
 
         authService.hasPermission(userId, projectId, EntityType.ISSUE, ActionType.CREATE);
         log.info("Creating new issue for project: {}", projectId);
+
+        PublicProfileResponse assignee = null;
+
+        if (assigneeId != null) {
+            try {
+                boardClient.getMember(assigneeId, projectId);
+                assignee = userClient.getProfileById(assigneeId);
+            } catch (Exception e) {
+                throw new UserNotFoundException("User " + assigneeId + " is not a member of project " + projectId);
+            }
+        }
 
         Issue parentIssue = findAndValidateParentIssue(parentId, projectId);
         Issue newIssue = buildAndSaveBaseIssue(userId, projectId, parentIssue, title, description, type, priority);
@@ -50,7 +64,8 @@ public class IssueService {
         log.info("Successfully created issue with id: {}, level: {}", newIssue.getId(), newIssue.getLevel());
         return IssueDetailResponse.fromIssue(
                 newIssue,
-                tags
+                tags,
+                assignee
         );
     }
 
@@ -91,7 +106,7 @@ public class IssueService {
         Issue issue = issueRepository.findWithTagsById(issueId)
                 .orElseThrow(() -> new IssueNotFoundException("Issue with id " + issueId + " not found"));
 
-        authService.hasPermission(userId, issue.getProjectId(), EntityType.ISSUE, ActionType.APPLY);
+        authService.hasPermission(userId, issue.getProjectId(), EntityType.TAG, ActionType.APPLY);
 
         if (issue.getAssigneeId() == null) {
             throw new AccessDeniedException("Issue has no assignee. Cannot modify tags.");
@@ -190,10 +205,16 @@ public class IssueService {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
 
-        var userProfiles = getUserProfilesBatch(userIds);
+        Map<Long, PublicProfileResponse> userProfiles = getUserProfilesBatch(userIds);
+
+        List<CommentResponse> comments = getCommentsForIssue(userId, issue.getProjectId(), issueId);
 
         List<TagResponse> tags = issue.getTags().stream()
                 .map(TagResponse::from)
+                .toList();
+
+        List<AttachmentResponse> attachments = issue.getAttachments().stream()
+                .map(AttachmentResponse::from)
                 .toList();
 
         return IssueDetailResponse.withUsers(
@@ -202,8 +223,36 @@ public class IssueService {
                 userProfiles.get(issue.getAssigneeId()),
                 userProfiles.get(issue.getCodeReviewerId()),
                 userProfiles.get(issue.getQaEngineerId()),
-                tags
+                tags,
+                comments,
+                attachments
         );
+    }
+
+    private List<CommentResponse> getCommentsForIssue(Long userId, Long projectId, Long issueId) {
+        try {
+            authService.hasPermission(userId, projectId, EntityType.COMMENT, ActionType.VIEW);
+
+            List<IssueComment> comments = commentRepository.findByIssueIdOrderByCreatedAtAsc(issueId);
+
+            if (comments.isEmpty()) {
+                return Collections.emptyList();
+            }
+
+            Set<Long> commentUserIds = comments.stream()
+                    .map(IssueComment::getUserId)
+                    .collect(Collectors.toSet());
+
+            Map<Long, PublicProfileResponse> profiles = getUserProfilesBatch(commentUserIds);
+
+            return comments.stream()
+                    .map(comment -> CommentResponse.from(comment, profiles.get(comment.getUserId())))
+                    .collect(Collectors.toList());
+
+        } catch (AccessDeniedException e) {
+            log.warn("User {} does not have permission to view comments for issue {}", userId, issueId);
+            return null;
+        }
     }
 
     @Transactional(readOnly = true)
@@ -242,7 +291,9 @@ public class IssueService {
                             assignee,
                             reviewer,
                             qa,
-                            tags
+                            tags,
+                            null,
+                            null
                     );
                 })
                 .collect(Collectors.toList());
