@@ -6,11 +6,13 @@ import com.example.issueservice.security.JwtUser;
 import com.example.issueservice.services.IssueCommentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -19,6 +21,9 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/api/issues/{issueId}/comments")
 @RequiredArgsConstructor
+@Validated
+@SecurityRequirement(name = "bearerAuth")
+@Tag(name = "Comment Management", description = "Управление комментариями")
 public class IssueCommentController {
 
     private final IssueCommentService commentService;
@@ -62,7 +67,7 @@ public class IssueCommentController {
             summary = "Удаление комментария (Автором или Owner'ом)",
             security = @SecurityRequirement(name = "bearerAuth")
     )
-    @DeleteMapping("/comments/{commentId}")
+    @DeleteMapping("/{commentId}")
     public ResponseEntity<Void> deleteComment(
             @AuthenticationPrincipal JwtUser principal,
             @PathVariable Long commentId,

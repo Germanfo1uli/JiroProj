@@ -11,14 +11,11 @@ import com.example.issueservice.repositories.AttachmentRepository;
 import com.example.issueservice.repositories.IssueRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -62,6 +59,8 @@ public class AttachmentService {
 
         Attachment attachment = attachmentRepository.findById(attachmentId)
                 .orElseThrow(() -> new AttachmentNotFoundException("Attachment not found"));
+
+        authService.hasPermission(userId, attachment.getIssue().getProjectId(), EntityType.ATTACHMENT, ActionType.CREATE);
 
         Long projectId = attachment.getIssue().getProjectId();
         authService.hasPermission(userId, projectId, EntityType.ISSUE, ActionType.VIEW);

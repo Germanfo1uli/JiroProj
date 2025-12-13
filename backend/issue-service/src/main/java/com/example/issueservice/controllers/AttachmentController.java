@@ -32,6 +32,10 @@ public class AttachmentController {
     private final AttachmentService attachmentService;
     private final AttachmentRepository attachmentRepository;
 
+    @Operation(
+            summary = "Загрузка файла",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<AttachmentResponse> upload(
             @PathVariable Long issueId,
@@ -42,6 +46,10 @@ public class AttachmentController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(
+            summary = "Скачивание файла",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
     @GetMapping("/{attachmentId}")
     public ResponseEntity<byte[]> download(
             @PathVariable Long issueId,
@@ -59,6 +67,10 @@ public class AttachmentController {
                 .body(fileData);
     }
 
+    @Operation(
+            summary = "Удаление файла",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
     @DeleteMapping("/{attachmentId}")
     public ResponseEntity<Void> delete(
             @PathVariable Long issueId,
