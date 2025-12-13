@@ -11,6 +11,7 @@ import AddCardModal from './components/modal/AddCardModal'
 import ConfirmationModal from './components/modal/ConfirmationModal'
 import BoardManagerModal from './components/modal/BoardManagerModal'
 import EditCardModal from './components/modal/EditCardModal'
+import ViewCardModal from './components/modal/ViewCardModal'
 import { useEffect } from 'react'
 
 const DashboardContent = () => {
@@ -31,15 +32,20 @@ const DashboardContent = () => {
         closeAddCardModal,
         openBoardManager,
         closeBoardManager,
+        openViewCardModal,
+        closeViewCardModal,
         handleSaveBoards,
         handleAddCard,
         handleEditCard,
+        handleViewCard,
         handleUpdateCard,
         handleDeleteCard,
+        handleAddComment,
         confirmDelete,
         cancelDelete,
         filterAndSortCards,
-        getAvailableBoardTitles
+        getAvailableBoardTitles,
+        getBoardByCardId
     } = useDashboard()
 
     useEffect(() => {
@@ -106,7 +112,7 @@ const DashboardContent = () => {
                     totalBoards: boards.length,
                     totalTasks: boards.reduce((sum, board) => sum + (board.cards?.length || 0), 0),
                     completedTasks: boards.reduce((sum, board) => {
-                        if (board.title === 'Done') return sum + (board.cards?.length || 0)
+                        if (board.title === 'DONE') return sum + (board.cards?.length || 0)
                         return sum
                     }, 0)
                 }}
@@ -136,6 +142,7 @@ const DashboardContent = () => {
                 onToggleExpansion={toggleBoardExpansion}
                 onEditCard={handleEditCard}
                 onDeleteCard={handleDeleteCard}
+                onViewCard={handleViewCard}
                 onAddCard={openAddCardModal}
             />
 
@@ -170,6 +177,20 @@ const DashboardContent = () => {
                         boards={boards}
                         onSave={handleSaveBoards}
                         getAvailableBoardTitles={getAvailableBoardTitles}
+                    />
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {state.isViewCardModalOpen && state.viewingCard && (
+                    <ViewCardModal
+                        isOpen={state.isViewCardModalOpen}
+                        onClose={closeViewCardModal}
+                        card={state.viewingCard}
+                        board={getBoardByCardId(state.viewingCard.id)}
+                        getPriorityColor={getPriorityColor}
+                        onAddComment={handleAddComment}
+                        assignees={state.viewingCard.assignees}
                     />
                 )}
             </AnimatePresence>

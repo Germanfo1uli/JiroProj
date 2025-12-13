@@ -1,7 +1,7 @@
 'use client'
 
 import { JSX } from 'react'
-import { FaUserCircle, FaPaperclip, FaFlag, FaRegFlag } from 'react-icons/fa'
+import { FaUserCircle, FaPaperclip, FaFlag, FaRegFlag, FaUsers } from 'react-icons/fa'
 import CardMenu from './CardMenu'
 import styles from './TaskCard.module.css'
 
@@ -10,6 +10,7 @@ type Priority = 'low' | 'medium' | 'high'
 interface Author {
     name: string
     avatar: string | null
+    role?: string
 }
 
 interface Card {
@@ -19,6 +20,7 @@ interface Card {
     priority: Priority
     priorityLevel: number
     author: Author
+    assignees?: Author[]
     tags: string[]
     progress: number
     comments: number
@@ -31,9 +33,10 @@ interface TaskCardProps {
     getPriorityBgColor: (priority: Priority) => string
     onEdit?: (card: Card) => void
     onDelete?: (cardId: number) => void
+    onView?: (card: Card) => void
 }
 
-const TaskCard = ({ card, getPriorityColor, getPriorityBgColor, onEdit, onDelete }: TaskCardProps) => {
+const TaskCard = ({ card, getPriorityColor, getPriorityBgColor, onEdit, onDelete, onView }: TaskCardProps) => {
     const getPriorityIcon = (priority: Priority): JSX.Element => {
         switch (priority) {
             case 'high':
@@ -59,8 +62,17 @@ const TaskCard = ({ card, getPriorityColor, getPriorityBgColor, onEdit, onDelete
         }
     }
 
+    const handleView = () => {
+        if (onView) {
+            onView(card)
+        }
+    }
+
     const handleMenuClose = () => {
     }
+
+    const displayAssignees = card.assignees || [card.author]
+    const hasMultipleAssignees = displayAssignees.length > 1
 
     return (
         <div className={styles.taskCard}>
@@ -82,6 +94,7 @@ const TaskCard = ({ card, getPriorityColor, getPriorityBgColor, onEdit, onDelete
                     <CardMenu
                         onEdit={handleEdit}
                         onDelete={handleDelete}
+                        onView={handleView}
                         onClose={handleMenuClose}
                     />
                 </div>
@@ -113,26 +126,55 @@ const TaskCard = ({ card, getPriorityColor, getPriorityBgColor, onEdit, onDelete
                         )}
                     </div>
 
-                    <div className={styles.authorSection}>
-                        <div className={styles.authorAvatar}>
-                            {card.author.avatar ? (
-                                <img
-                                    src={card.author.avatar}
-                                    alt={card.author.name}
-                                />
-                            ) : (
-                                <FaUserCircle className={styles.defaultAvatar} />
-                            )}
-                        </div>
-                        <div className={styles.authorInfo}>
-                            <span className={styles.authorName}>{card.author.name}</span>
-                            {card.attachments > 0 && (
-                                <div className={styles.authorAttachments}>
-                                    <FaPaperclip className={styles.attachmentIcon} />
-                                    <span>{card.attachments}</span>
+                    <div className={styles.assigneesSection}>
+                        {hasMultipleAssignees ? (
+                            <div className={styles.multipleAssignees}>
+                                <div className={styles.assigneesAvatars}>
+                                    {displayAssignees.slice(0, 2).map((assignee, index) => (
+                                        <div key={index} className={`${styles.assigneeAvatar} ${styles.avatarStacked}`}>
+                                            {assignee.avatar ? (
+                                                <img
+                                                    src={assignee.avatar}
+                                                    alt={assignee.name}
+                                                />
+                                            ) : (
+                                                <FaUserCircle className={styles.defaultAvatar} />
+                                            )}
+                                        </div>
+                                    ))}
+                                    {displayAssignees.length > 2 && (
+                                        <div className={`${styles.assigneeAvatar} ${styles.avatarMore}`}>
+                                            <span className={styles.moreCount}>+{displayAssignees.length - 2}</span>
+                                        </div>
+                                    )}
                                 </div>
-                            )}
-                        </div>
+                                <div className={styles.assigneesInfo}>
+                                    <div className={styles.assigneesCount}>
+                                        <FaUsers className={styles.assigneesIcon} />
+                                        <span>{displayAssignees.length} исполнителя</span>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className={styles.singleAssignee}>
+                                <div className={styles.assigneeAvatar}>
+                                    {displayAssignees[0].avatar ? (
+                                        <img
+                                            src={displayAssignees[0].avatar}
+                                            alt={displayAssignees[0].name}
+                                        />
+                                    ) : (
+                                        <FaUserCircle className={styles.defaultAvatar} />
+                                    )}
+                                </div>
+                                <div className={styles.assigneeInfo}>
+                                    <span className={styles.assigneeName}>{displayAssignees[0].name}</span>
+                                    {displayAssignees[0].role && (
+                                        <span className={styles.assigneeRole}>{displayAssignees[0].role}</span>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

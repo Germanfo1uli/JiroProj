@@ -231,3 +231,126 @@
         align-self: flex-end;
     }
 }
+.assigneesSection {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.multipleAssignees {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.assigneesAvatars {
+    display: flex;
+    position: relative;
+}
+
+.avatarStacked {
+    position: relative;
+    margin-left: -8px;
+    z-index: 1;
+}
+
+.avatarStacked:first-child {
+    margin-left: 0;
+    z-index: 3;
+}
+
+.avatarStacked:nth-child(2) {
+    z-index: 2;
+}
+
+.avatarMore {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3b82f6, #60a5fa);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 600;
+    margin-left: -8px;
+    border: 2px solid white;
+    z-index: 1;
+}
+
+.moreCount {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.assigneesInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.assigneesCount {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: #475569;
+    font-weight: 500;
+}
+
+.assigneesIcon {
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+.singleAssignee {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.assigneeAvatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: linear-gradient(135deg, #3b82f6, #60a5fa);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.assigneeAvatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.assigneeInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+}
+
+.assigneeName {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+}
+
+.assigneeRole {
+    font-size: 0.7rem;
+    color: #64748b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+}

@@ -1,16 +1,17 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { FaEllipsisH, FaEdit, FaTrash, FaTimes } from 'react-icons/fa'
+import { FaEllipsisH, FaEdit, FaTrash, FaTimes, FaEye } from 'react-icons/fa'
 import styles from './CardMenu.module.css'
 
 interface CardMenuProps {
     onEdit: () => void
     onDelete: () => void
+    onView: () => void
     onClose: () => void
 }
 
-const CardMenu = ({ onEdit, onDelete, onClose }: CardMenuProps) => {
+const CardMenu = ({ onEdit, onDelete, onView, onClose }: CardMenuProps) => {
     const [isOpen, setIsOpen] = useState(false)
     const [position, setPosition] = useState<'bottom' | 'top'>('bottom')
     const menuRef = useRef<HTMLDivElement>(null)
@@ -50,6 +51,11 @@ const CardMenu = ({ onEdit, onDelete, onClose }: CardMenuProps) => {
         setIsOpen(false)
     }
 
+    const handleView = () => {
+        onView()
+        setIsOpen(false)
+    }
+
     return (
         <div className={styles.cardMenuContainer} ref={menuRef}>
             <button
@@ -82,6 +88,14 @@ const CardMenu = ({ onEdit, onDelete, onClose }: CardMenuProps) => {
                     </div>
 
                     <div className={styles.menuItems}>
+                        <button
+                            className={styles.menuItem}
+                            onClick={handleView}
+                        >
+                            <FaEye className={styles.menuItemIcon} />
+                            <span>Просмотреть</span>
+                        </button>
+
                         <button
                             className={styles.menuItem}
                             onClick={handleEdit}

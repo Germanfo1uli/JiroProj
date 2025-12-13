@@ -21,6 +21,7 @@ interface BoardColumnProps {
     onToggleExpansion: (boardId: number) => void;
     onEditCard: (card: Card) => void;
     onDeleteCard: (cardId: number) => void;
+    onViewCard: (card: Card) => void;
     onAddCard: () => void;
 }
 
@@ -37,6 +38,7 @@ export const BoardColumn = ({
                                 onToggleExpansion,
                                 onEditCard,
                                 onDeleteCard,
+                                onViewCard,
                                 onAddCard
                             }: BoardColumnProps) => {
     return (
@@ -83,6 +85,7 @@ export const BoardColumn = ({
                                 getPriorityBgColor={getPriorityBgColor}
                                 onEdit={onEditCard}
                                 onDelete={onDeleteCard}
+                                onView={onViewCard}
                             />
 
                             {isExpanded && filteredCards.slice(1).map((card) => (
@@ -93,6 +96,7 @@ export const BoardColumn = ({
                                     getPriorityBgColor={getPriorityBgColor}
                                     onEdit={onEditCard}
                                     onDelete={onDeleteCard}
+                                    onView={onViewCard}
                                 />
                             ))}
 

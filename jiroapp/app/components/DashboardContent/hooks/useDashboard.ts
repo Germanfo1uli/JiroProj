@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Board, Card, SortOption, FilterOption, DashboardState, Priority } from '../types/dashboard.types';
+import { Board, Card, SortOption, FilterOption, DashboardState, Priority, Attachment, Comment, Author } from '../types/dashboard.types';
 
 const initialBoards: Board[] = [
     {
@@ -15,12 +15,27 @@ const initialBoards: Board[] = [
                 priorityLevel: 3,
                 author: {
                     name: 'Алексей Петров',
-                    avatar: null
+                    avatar: null,
+                    role: 'Дизайнер'
                 },
+                assignees: [
+                    { name: 'Алексей Петров', avatar: null, role: 'Дизайнер' },
+                    { name: 'Мария Иванова', avatar: null, role: 'Frontend разработчик' }
+                ],
                 tags: ['Дизайн', 'Прототип', 'UI/UX'],
                 progress: 0,
                 comments: 3,
-                attachments: 2
+                attachments: 2,
+                attachmentsList: [
+                    { id: 1, name: 'wireframe.fig', url: '#', size: '2.4 MB', type: 'figma' },
+                    { id: 2, name: 'requirements.pdf', url: '#', size: '1.8 MB', type: 'pdf' }
+                ],
+                commentsList: [
+                    { id: 1, author: { name: 'Мария Иванова', avatar: null, role: 'Frontend разработчик' }, content: 'Нужно добавить раздел с настройками профиля', createdAt: '15.01.2024 14:30' },
+                    { id: 2, author: { name: 'Иван Сидоров', avatar: null, role: 'Backend разработчик' }, content: 'Согласен, также стоит предусмотреть адаптивную версию', createdAt: '15.01.2024 15:45' },
+                    { id: 3, author: { name: 'Алексей Петров', avatar: null, role: 'Дизайнер' }, content: 'Хорошо, добавлю в следующий прототип', createdAt: '16.01.2024 10:20' }
+                ],
+                createdAt: '10.01.2024'
             }
         ]
     },
@@ -37,12 +52,27 @@ const initialBoards: Board[] = [
                 priorityLevel: 2,
                 author: {
                     name: 'Мария Иванова',
-                    avatar: null
+                    avatar: null,
+                    role: 'Frontend разработчик'
                 },
+                assignees: [
+                    { name: 'Мария Иванова', avatar: null, role: 'Frontend разработчик' },
+                    { name: 'Иван Сидоров', avatar: null, role: 'Backend разработчик' },
+                    { name: 'Алексей Петров', avatar: null, role: 'Дизайнер' }
+                ],
                 tags: ['Бэкенд', 'API', 'Node.js'],
                 progress: 65,
                 comments: 7,
-                attachments: 5
+                attachments: 5,
+                attachmentsList: [
+                    { id: 1, name: 'api-spec.yaml', url: '#', size: '45 KB', type: 'yaml' },
+                    { id: 2, name: 'endpoints.md', url: '#', size: '12 KB', type: 'markdown' }
+                ],
+                commentsList: [
+                    { id: 1, author: { name: 'Иван Сидоров', avatar: null, role: 'Backend разработчик' }, content: 'Нужно добавить пагинацию для списка задач', createdAt: '14.01.2024 11:20' },
+                    { id: 2, author: { name: 'Мария Иванова', avatar: null, role: 'Frontend разработчик' }, content: 'Уже добавил, проверяйте', createdAt: '14.01.2024 13:45' }
+                ],
+                createdAt: '12.01.2024'
             },
             {
                 id: 3,
@@ -52,12 +82,24 @@ const initialBoards: Board[] = [
                 priorityLevel: 3,
                 author: {
                     name: 'Иван Сидоров',
-                    avatar: null
+                    avatar: null,
+                    role: 'Backend разработчик'
                 },
+                assignees: [
+                    { name: 'Иван Сидоров', avatar: null, role: 'Backend разработчик' },
+                    { name: 'Елена Козлова', avatar: null, role: 'DevOps инженер' }
+                ],
                 tags: ['База данных', 'Настройка', 'PostgreSQL'],
                 progress: 40,
                 comments: 2,
-                attachments: 4
+                attachments: 4,
+                attachmentsList: [
+                    { id: 1, name: 'database-schema.sql', url: '#', size: '8 KB', type: 'sql' }
+                ],
+                commentsList: [
+                    { id: 1, author: { name: 'Елена Козлова', avatar: null, role: 'DevOps инженер' }, content: 'Не забыть про индексы для оптимизации', createdAt: '13.01.2024 09:15' }
+                ],
+                createdAt: '13.01.2024'
             }
         ]
     },
@@ -74,12 +116,25 @@ const initialBoards: Board[] = [
                 priorityLevel: 2,
                 author: {
                     name: 'Елена Козлова',
-                    avatar: null
+                    avatar: null,
+                    role: 'DevOps инженер'
                 },
+                assignees: [
+                    { name: 'Елена Козлова', avatar: null, role: 'DevOps инженер' },
+                    { name: 'Алексей Петров', avatar: null, role: 'Дизайнер' },
+                    { name: 'Мария Иванова', avatar: null, role: 'Frontend разработчик' }
+                ],
                 tags: ['Тестирование', 'QA', 'Jest'],
                 progress: 100,
                 comments: 5,
-                attachments: 3
+                attachments: 3,
+                attachmentsList: [
+                    { id: 1, name: 'test-results.pdf', url: '#', size: '3.2 MB', type: 'pdf' }
+                ],
+                commentsList: [
+                    { id: 1, author: { name: 'Алексей Петров', avatar: null, role: 'Дизайнер' }, content: 'Отличная работа! Все тесты проходят', createdAt: '16.01.2024 16:30' }
+                ],
+                createdAt: '11.01.2024'
             }
         ]
     },
@@ -96,12 +151,21 @@ const initialBoards: Board[] = [
                 priorityLevel: 1,
                 author: {
                     name: 'Алексей Петров',
-                    avatar: null
+                    avatar: null,
+                    role: 'Дизайнер'
                 },
+                assignees: [
+                    { name: 'Алексей Петров', avatar: null, role: 'Дизайнер' }
+                ],
                 tags: ['Настройка', 'DevOps'],
                 progress: 100,
                 comments: 1,
-                attachments: 0
+                attachments: 0,
+                attachmentsList: [],
+                commentsList: [
+                    { id: 1, author: { name: 'Мария Иванова', avatar: null, role: 'Frontend разработчик' }, content: 'Готово к работе!', createdAt: '09.01.2024 18:00' }
+                ],
+                createdAt: '09.01.2024'
             }
         ]
     }
@@ -110,19 +174,23 @@ const initialBoards: Board[] = [
 const initialAuthors = [
     {
         name: 'Алексей Петров',
-        avatar: null
+        avatar: null,
+        role: 'Дизайнер'
     },
     {
         name: 'Мария Иванова',
-        avatar: null
+        avatar: null,
+        role: 'Frontend разработчик'
     },
     {
         name: 'Иван Сидоров',
-        avatar: null
+        avatar: null,
+        role: 'Backend разработчик'
     },
     {
         name: 'Елена Козлова',
-        avatar: null
+        avatar: null,
+        role: 'DevOps инженер'
     }
 ];
 
@@ -148,6 +216,8 @@ export const useDashboard = () => {
         isTreeViewOpen: false,
         isAddCardModalOpen: false,
         isBoardManagerOpen: false,
+        isViewCardModalOpen: false,
+        viewingCard: null,
         editingCard: null,
         currentBoardId: 1,
         deleteConfirmation: {
@@ -233,6 +303,20 @@ export const useDashboard = () => {
         updateState({ isBoardManagerOpen: false });
     };
 
+    const openViewCardModal = (card: Card): void => {
+        updateState({ isViewCardModalOpen: true, viewingCard: card });
+        const boardWithCard = boards.find(board =>
+            board.cards && board.cards.some(c => c.id === card.id)
+        );
+        if (boardWithCard) {
+            updateState({ currentBoardId: boardWithCard.id });
+        }
+    };
+
+    const closeViewCardModal = (): void => {
+        updateState({ isViewCardModalOpen: false, viewingCard: null });
+    };
+
     const handleSaveBoards = (updatedBoards: Board[]): void => {
         setBoards(updatedBoards);
     };
@@ -259,6 +343,10 @@ export const useDashboard = () => {
         if (boardWithCard) {
             updateState({ currentBoardId: boardWithCard.id });
         }
+    };
+
+    const handleViewCard = (card: Card) => {
+        openViewCardModal(card);
     };
 
     const handleUpdateCard = (data: { card: Card; boardIds: number[] }) => {
@@ -308,6 +396,24 @@ export const useDashboard = () => {
                 }
             });
         }
+    };
+
+    const handleAddComment = (cardId: number, comment: Comment) => {
+        const updatedBoards = boards.map(board => ({
+            ...board,
+            cards: board.cards.map(card => {
+                if (card.id === cardId) {
+                    const updatedCommentsList = card.commentsList ? [...card.commentsList, comment] : [comment];
+                    return {
+                        ...card,
+                        comments: updatedCommentsList.length,
+                        commentsList: updatedCommentsList
+                    };
+                }
+                return card;
+            })
+        }));
+        setBoards(updatedBoards);
     };
 
     const confirmDelete = () => {
@@ -374,6 +480,10 @@ export const useDashboard = () => {
         }));
     };
 
+    const getBoardByCardId = (cardId: number): Board | undefined => {
+        return boards.find(board => board.cards.some(card => card.id === cardId));
+    };
+
     return {
         boards,
         setBoards,
@@ -392,14 +502,19 @@ export const useDashboard = () => {
         closeAddCardModal,
         openBoardManager,
         closeBoardManager,
+        openViewCardModal,
+        closeViewCardModal,
         handleSaveBoards,
         handleAddCard,
         handleEditCard,
+        handleViewCard,
         handleUpdateCard,
         handleDeleteCard,
+        handleAddComment,
         confirmDelete,
         cancelDelete,
         filterAndSortCards,
-        getAvailableBoardTitles
+        getAvailableBoardTitles,
+        getBoardByCardId
     };
 };

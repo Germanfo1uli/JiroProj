@@ -13,6 +13,7 @@ interface BoardsGridProps {
     onToggleExpansion: (boardId: number) => void;
     onEditCard: (card: Card) => void;
     onDeleteCard: (cardId: number) => void;
+    onViewCard: (card: Card) => void;
     onAddCard: () => void;
 }
 
@@ -27,6 +28,7 @@ export const BoardsGrid = ({
                                onToggleExpansion,
                                onEditCard,
                                onDeleteCard,
+                               onViewCard,
                                onAddCard
                            }: BoardsGridProps) => {
     return (
@@ -54,6 +56,7 @@ export const BoardsGrid = ({
                             onToggleExpansion={onToggleExpansion}
                             onEditCard={onEditCard}
                             onDeleteCard={onDeleteCard}
+                            onViewCard={onViewCard}
                             onAddCard={onAddCard}
                         />
                     );

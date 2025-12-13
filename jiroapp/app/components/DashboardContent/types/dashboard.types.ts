@@ -3,6 +3,22 @@ export type Priority = 'low' | 'medium' | 'high';
 export interface Author {
     name: string;
     avatar: string | null;
+    role?: string;
+}
+
+export interface Attachment {
+    id: number;
+    name: string;
+    url: string;
+    size: string;
+    type: string;
+}
+
+export interface Comment {
+    id: number;
+    author: Author;
+    content: string;
+    createdAt: string;
 }
 
 export interface Card {
@@ -12,10 +28,14 @@ export interface Card {
     priority: Priority;
     priorityLevel: number;
     author: Author;
+    assignees?: Author[];
     tags: string[];
     progress: number;
     comments: number;
     attachments: number;
+    attachmentsList?: Attachment[];
+    commentsList?: Comment[];
+    createdAt?: string;
 }
 
 export interface Board {
@@ -38,6 +58,8 @@ export interface DashboardState {
     isTreeViewOpen: boolean;
     isAddCardModalOpen: boolean;
     isBoardManagerOpen: boolean;
+    isViewCardModalOpen: boolean;
+    viewingCard: Card | null;
     editingCard: Card | null;
     currentBoardId: number;
     deleteConfirmation: {
