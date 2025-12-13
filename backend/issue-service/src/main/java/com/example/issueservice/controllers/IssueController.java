@@ -40,8 +40,8 @@ public class IssueController {
 
         log.info("Request to create issue: {}", request.title());
         IssueDetailResponse response = issueService.createIssue(
-                principal.userId(), request.projectId(), request.parentId(),
-                request.title(), request.description(),
+                principal.userId(), request.projectId(), request.assigneeId(),
+                request.parentId(), request.title(), request.description(),
                 request.type(), request.priority(), request.tagIds());
         return ResponseEntity.ok(response);
     }

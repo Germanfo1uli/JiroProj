@@ -63,7 +63,10 @@ public record IssueDetailResponse(
         @Schema(description = "Список комментариев")
         List<CommentResponse> comments
 ) {
-        public static IssueDetailResponse fromIssue(Issue issue, List<TagResponse> tags, List<CommentResponse> comments) {
+        public static IssueDetailResponse fromIssue(
+                Issue issue, List<TagResponse> tags,
+                PublicProfileResponse assignee, List<CommentResponse> comments) {
+
                 return new IssueDetailResponse(
                         issue.getId(),
                         issue.getProjectId(),

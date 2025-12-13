@@ -1,5 +1,6 @@
 package com.example.issueservice.services;
 
+import com.example.issueservice.client.BoardServiceClient;
 import com.example.issueservice.client.UserServiceClient;
 import com.example.issueservice.dto.data.UserBatchRequest;
 import com.example.issueservice.dto.models.IssueComment;
@@ -35,14 +36,23 @@ public class IssueService {
     private final IssueHierarchyValidator hierarchyValidator;
     private final AuthService authService;
     private final UserServiceClient userClient;
+    private final BoardServiceClient boardClient;
 
     @Transactional
     public IssueDetailResponse createIssue(
-            Long userId, Long projectId, Long parentId, String title,
+            Long userId, Long projectId, Long assigneeId, Long parentId, String title,
             String description, IssueType type, Priority priority, List<Long> tagIds) {
 
         authService.hasPermission(userId, projectId, EntityType.ISSUE, ActionType.CREATE);
         log.info("Creating new issue for project: {}", projectId);
+
+        try {
+            boardClient.getMember(assigneeId, projectId);
+        } catch (Exception e) {
+            throw new UserNotFoundException("User " + userId + " is not a member of project " + projectId);
+        }
+
+        PublicProfileResponse assignee = userClient.getProfileById(assigneeId);
 
         Issue parentIssue = findAndValidateParentIssue(parentId, projectId);
         Issue newIssue = buildAndSaveBaseIssue(userId, projectId, parentIssue, title, description, type, priority);
@@ -55,6 +65,7 @@ public class IssueService {
         return IssueDetailResponse.fromIssue(
                 newIssue,
                 tags,
+                assignee,
                 null
         );
     }
