@@ -32,6 +32,8 @@ public class AttachmentService {
         Issue issue = issueRepository.findById(issueId)
                 .orElseThrow(() -> new IssueNotFoundException("Issue not found"));
 
+        log.info("Uploading file to issue {} by user {}", issueId, userId);
+
         authService.hasPermission(userId, issue.getProjectId(), EntityType.ATTACHMENT, ActionType.CREATE);
 
         try {
@@ -60,6 +62,8 @@ public class AttachmentService {
         Attachment attachment = attachmentRepository.findById(attachmentId)
                 .orElseThrow(() -> new AttachmentNotFoundException("Attachment not found"));
 
+        log.info("Downloading file by user {}", userId);
+
         authService.hasPermission(userId, attachment.getIssue().getProjectId(), EntityType.ATTACHMENT, ActionType.CREATE);
 
         Long projectId = attachment.getIssue().getProjectId();
@@ -74,6 +78,8 @@ public class AttachmentService {
 
         Attachment attachment = attachmentRepository.findById(attachmentId)
                 .orElseThrow(() -> new AttachmentNotFoundException("Attachment not found"));
+
+        log.info("Delete file by user {}", userId);
 
         Long projectId = attachment.getIssue().getProjectId();
         boolean isAuthor = attachment.getCreatedBy().equals(userId);

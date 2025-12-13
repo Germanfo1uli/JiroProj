@@ -14,6 +14,6 @@ public interface IssueRepository extends JpaRepository<Issue, Long> {
     @EntityGraph(attributePaths = {"tags"})
     List<Issue> findByProjectId(Long projectId);
 
-    @EntityGraph(attributePaths = {"tags"})
+    @EntityGraph(attributePaths = {"tags", "comments"})
     Optional<Issue> findWithTagsById(Long id);
 }
