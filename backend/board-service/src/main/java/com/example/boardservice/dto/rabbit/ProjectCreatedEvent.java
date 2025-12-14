@@ -12,7 +12,7 @@ public record ProjectCreatedEvent (
         long creatorId,
         Instant createdAtUtc
 ) {
-    public static ProjectCreatedEvent fromProject(Project project) {
+    public static ProjectCreatedEvent fromProject(Project project, long ownerId) {
 
         LocalDateTime projectCreatedAt = project.getCreatedAt();
 
@@ -23,7 +23,7 @@ public record ProjectCreatedEvent (
         return new ProjectCreatedEvent(
                 project.getId(),
                 project.getName(),
-                project.getOwnerId(),
+                ownerId,
                 createdAtInstant
         );
     }

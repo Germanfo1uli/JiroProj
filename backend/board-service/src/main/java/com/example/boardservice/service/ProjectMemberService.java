@@ -15,6 +15,7 @@ import com.example.boardservice.dto.response.ProjectMemberResponse;
 import com.example.boardservice.dto.response.PublicProfileResponse;
 import com.example.boardservice.exception.*;
 import com.example.boardservice.repository.ProjectMemberRepository;
+import com.example.boardservice.repository.ProjectRepository;
 import com.example.boardservice.repository.ProjectRoleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +34,7 @@ import java.util.stream.Collectors;
 public class ProjectMemberService {
     private final ProjectMemberRepository memberRepository;
     private final ProjectRoleRepository roleRepository;
+    private final ProjectRepository projectRepository;
     private final UserServiceClient userClient;
     private final AuthService authService;
     private final RedisCacheService redisCacheService;
@@ -51,7 +53,8 @@ public class ProjectMemberService {
             throw new AlreadyMemberException("You are already a project member");
         }
 
-        Project project = Project.builder().id(projectId).build();
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ProjectNotFoundException(projectId));
         ProjectRole role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new RoleNotFoundException("Role with ID: " + roleId + "not found"));
 

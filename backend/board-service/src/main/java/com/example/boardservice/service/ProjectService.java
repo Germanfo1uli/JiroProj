@@ -59,7 +59,7 @@ public class ProjectService {
         memberService.addOwner(ownerId, project, ownerRole);
 
         eventPublisher.publishEvent(
-                ProjectCreatedEvent.fromProject(project)
+                ProjectCreatedEvent.fromProject(project, ownerId)
         );
 
         return new CreateProjectResponse(project.getId(), project.getName());
@@ -125,7 +125,7 @@ public class ProjectService {
     @Transactional
     public GetProjectResponse updateProject(Long userId, Long projectId, String name, String description) {
 
-        authService.checkPermission(userId, projectId, EntityType.PROJECT, ActionType.MANAGE);
+        authService.checkOwnerOnly(userId, projectId);
 
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new ProjectNotFoundException(projectId));
