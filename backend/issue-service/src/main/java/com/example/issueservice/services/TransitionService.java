@@ -2,10 +2,13 @@ package com.example.issueservice.services;
 
 import com.example.issueservice.dto.models.Issue;
 import com.example.issueservice.dto.models.enums.*;
+import com.example.issueservice.dto.rabbit.IssueCommentUpdatedEvent;
+import com.example.issueservice.dto.rabbit.IssueStatusChangedEvent;
 import com.example.issueservice.exception.*;
 import com.example.issueservice.repositories.IssueRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +22,7 @@ public class TransitionService {
     private final IssueRepository issueRepository;
     private final AuthService authService;
     private final AssignHelper assignHelper;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public void transitionAsOwner(Long userId, Long issueId, IssueStatus targetStatus) {
@@ -36,6 +40,8 @@ public class TransitionService {
                     "Cannot transition issue with assignee to " + targetStatus.name() + ". Issue is already in progress.");
         }
 
+        IssueStatus oldStatus = issue.getStatus();
+
         issue.setStatus(targetStatus);
         boolean isCompletedStatus = Set.of(IssueStatus.STAGING, IssueStatus.DONE).contains(targetStatus);
 
@@ -46,6 +52,10 @@ public class TransitionService {
         }
 
         issueRepository.save(issue);
+
+        eventPublisher.publishEvent(
+                IssueStatusChangedEvent.from(issue, userId, oldStatus.name())
+        );
 
         log.info("Successfully transitioned issue {} to status {} by owner", issueId, targetStatus.name());
     }
@@ -68,6 +78,8 @@ public class TransitionService {
         log.info("Role transitioning issue {} from {} to {} by user {} as {}",
                 issueId, issue.getStatus().name(), targetStatus.name(), userId, assignmentType.name());
 
+        IssueStatus oldStatus = issue.getStatus();
+
         issue.setStatus(targetStatus);
         boolean isCompletedStatus = Set.of(IssueStatus.STAGING, IssueStatus.DONE).contains(targetStatus);
 
@@ -76,6 +88,10 @@ public class TransitionService {
         } else if (!isCompletedStatus) {
             issue.setCompletedAt(null);
         }
+
+        eventPublisher.publishEvent(
+                IssueStatusChangedEvent.from(issue, userId, oldStatus.name())
+        );
 
         issueRepository.save(issue);
 

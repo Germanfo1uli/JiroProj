@@ -64,16 +64,8 @@ public class EventProducerService {
         sendEvent(event, "issue.updated");
     }
 
-    public void sendIssuePriorityChangedEvent(IssuePriorityChangedEvent event) {
-        sendEvent(event, "issue.priority.changed");
-    }
-
     public void sendIssueStatusChangedEvent(IssueStatusChangedEvent event) {
         sendEvent(event, "issue.status.changed");
-    }
-
-    public void sendIssueTypeChangedEvent(IssueTypeChangedEvent event) {
-        sendEvent(event, "issue.type.changed");
     }
 
     public void sendIssueAssigneeAddedEvent(IssueAssigneeAddedEvent event) {

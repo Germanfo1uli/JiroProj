@@ -40,18 +40,8 @@ public class TransactionalEventForwarder {
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void handleIssuePriorityChanged(IssuePriorityChangedEvent event) {
-        producer.sendIssuePriorityChangedEvent(event);
-    }
-
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleIssueStatusChanged(IssueStatusChangedEvent event) {
         producer.sendIssueStatusChangedEvent(event);
-    }
-
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void handleIssueTypeChanged(IssueTypeChangedEvent event) {
-        producer.sendIssueTypeChangedEvent(event);
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
