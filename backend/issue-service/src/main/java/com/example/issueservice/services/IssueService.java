@@ -314,6 +314,10 @@ public class IssueService {
                     PublicProfileResponse reviewer = userProfiles.get(issue.getCodeReviewerId());
                     PublicProfileResponse qa = userProfiles.get(issue.getQaEngineerId());
 
+                    List<AttachmentResponse> attachments = issue.getAttachments().stream()
+                            .map(AttachmentResponse::from)
+                            .toList();
+
                     return IssueDetailResponse.withUsers(
                             issue,
                             creator,
@@ -322,7 +326,7 @@ public class IssueService {
                             qa,
                             tags,
                             null,
-                            null
+                            attachments
                     );
                 })
                 .collect(Collectors.toList());

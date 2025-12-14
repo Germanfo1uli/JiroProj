@@ -30,6 +30,12 @@ public class TransitionService {
         log.info("Owner transitioning issue {} from {} to {} by user {}",
                 issueId, issue.getStatus().name(), targetStatus.name(), userId);
 
+        if (issue.getAssigneeId() != null &&
+                (targetStatus == IssueStatus.SELECTED_FOR_DEVELOPMENT || targetStatus == IssueStatus.TO_DO)) {
+            throw new InvalidStatusTransitionException(
+                    "Cannot transition issue with assignee to " + targetStatus.name() + ". Issue is already in progress.");
+        }
+
         issue.setStatus(targetStatus);
         boolean isCompletedStatus = Set.of(IssueStatus.STAGING, IssueStatus.DONE).contains(targetStatus);
 
