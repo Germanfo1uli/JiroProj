@@ -4,28 +4,7 @@ import { JSX } from 'react'
 import { FaUserCircle, FaPaperclip, FaFlag, FaRegFlag, FaUsers } from 'react-icons/fa'
 import CardMenu from './CardMenu'
 import styles from './TaskCard.module.css'
-
-type Priority = 'low' | 'medium' | 'high'
-
-interface Author {
-    name: string
-    avatar: string | null
-    role?: string
-}
-
-interface Card {
-    id: number
-    title: string
-    description: string
-    priority: Priority
-    priorityLevel: number
-    author: Author
-    assignees?: Author[]
-    tags: string[]
-    progress: number
-    comments: number
-    attachments: number
-}
+import { Card, Priority } from '../types/dashboard.types'
 
 interface TaskCardProps {
     card: Card
@@ -102,13 +81,17 @@ const TaskCard = ({ card, getPriorityColor, getPriorityBgColor, onEdit, onDelete
                 <p className={styles.cardDescription}>
                     {card.description}
                 </p>
-                <div className={styles.cardTags}>
-                    {card.tags.map((tag, index) => (
-                        <span key={index} className={styles.tag}>
-                            {tag}
-                        </span>
-                    ))}
-                </div>
+
+                {/* Теги отображаются здесь */}
+                {card.tags && card.tags.length > 0 && (
+                    <div className={styles.cardTags}>
+                        {card.tags.map((tag, index) => (
+                            <span key={index} className={styles.tag}>
+                                {tag}
+                            </span>
+                        ))}
+                    </div>
+                )}
 
                 <div className={styles.cardFooter}>
                     <div className={styles.cardMeta}>

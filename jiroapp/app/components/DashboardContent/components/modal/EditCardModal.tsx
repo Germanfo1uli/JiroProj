@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useCallback, useState, useMemo } from 'react'
+import { useEffect, useCallback, useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useDropzone } from 'react-dropzone'
@@ -21,11 +21,11 @@ import {
     FaFileWord,
     FaFileExcel,
     FaCode,
-    FaImage
+    FaImage,
+    FaPlus
 } from 'react-icons/fa'
-import styles from './EditCardModal.module.css'
+import styles from './ModalStyles.module.css'
 
-// Типы
 type Priority = 'low' | 'medium' | 'high'
 
 interface Author {
@@ -61,12 +61,17 @@ interface UploadedFile {
     preview?: string
 }
 
-// Схема валидации
+interface Tag {
+    id: number
+    projectId: number
+    name: string
+}
+
 const schema = z.object({
     title: z.string().min(1, 'Название задачи обязательно').max(200, 'Слишком длинное название'),
     description: z.string().max(2000, 'Описание слишком длинное').optional(),
     priority: z.enum(['low', 'medium', 'high']),
-    authorId: z.string().min(1, 'Выберите исполнителя'),
+    authorId: z.string().optional(),
     tags: z.array(z.string()).max(10, 'Максимум 10 тегов'),
     selectedBoards: z.array(z.number()).min(1, 'Выберите хотя бы одну доску'),
 })
@@ -76,11 +81,21 @@ type FormData = z.infer<typeof schema>
 interface EditCardModalProps {
     isOpen: boolean
     onClose: () => void
-    onSave: (data: { card: Card; boardIds: number[]; files: UploadedFile[] }) => void
+    onSave: (data: {
+        issueId: number;
+        title: string;
+        description: string;
+        priority: string;
+        tagIds: number[];
+        tagNames: string[];
+    }) => void
     card: Card | null
     boards: Board[]
     authors: Author[]
     currentBoardId: number
+    projectId: number | null
+    availableTags: Tag[]
+    onTagCreate: (tagName: string) => Promise<Tag | null>
 }
 
 export default function EditCardModal({
@@ -91,6 +106,9 @@ export default function EditCardModal({
                                           boards,
                                           authors,
                                           currentBoardId,
+                                          projectId,
+                                          availableTags,
+                                          onTagCreate
                                       }: EditCardModalProps) {
     const {
         register,
@@ -106,11 +124,14 @@ export default function EditCardModal({
             title: '',
             description: '',
             priority: 'medium',
-            authorId: authors[0]?.name || '',
+            authorId: '',
             tags: [],
             selectedBoards: [currentBoardId],
         },
     })
+
+    const [showNewTagInput, setShowNewTagInput] = useState(false)
+    const [newTagInput, setNewTagInput] = useState('')
 
     useEffect(() => {
         if (card && isOpen) {
@@ -118,7 +139,7 @@ export default function EditCardModal({
                 title: card.title,
                 description: card.description,
                 priority: card.priority,
-                authorId: card.author.name,
+                authorId: card.author.name || '',
                 tags: [...card.tags],
                 selectedBoards: [currentBoardId],
             })
@@ -135,19 +156,49 @@ export default function EditCardModal({
 
     const tags = watch('tags')
 
-    const handleAddTag = useCallback((value: string) => {
-        const trimmed = value.trim()
-        if (!trimmed) return
-        if (tags.includes(trimmed)) {
-            toast.error('Тег уже существует')
+    const handleAddExistingTag = useCallback((tagName: string) => {
+        if (tags.includes(tagName)) {
+            toast.error('Тег уже добавлен')
             return
         }
         if (tags.length >= 10) {
             toast.error('Максимум 10 тегов')
             return
         }
-        setValue('tags', [...tags, trimmed], { shouldDirty: true })
+        setValue('tags', [...tags, tagName], { shouldDirty: true })
     }, [tags, setValue])
+
+    const handleAddNewTag = useCallback(async () => {
+        const trimmed = newTagInput.trim()
+        if (!trimmed) {
+            toast.error('Введите название тега')
+            return
+        }
+        if (tags.includes(trimmed)) {
+            toast.error('Тег уже добавлен')
+            return
+        }
+        if (availableTags.some(tag => tag.name === trimmed)) {
+            toast.error('Такой тег уже существует')
+            return
+        }
+        if (tags.length >= 10) {
+            toast.error('Максимум 10 тегов')
+            return
+        }
+
+        try {
+            const newTag = await onTagCreate(trimmed)
+            if (newTag) {
+                setValue('tags', [...tags, newTag.name], { shouldDirty: true })
+                setNewTagInput('')
+                setShowNewTagInput(false)
+                toast.success('Тег создан и добавлен')
+            }
+        } catch (error) {
+            toast.error('Ошибка при создании тега')
+        }
+    }, [newTagInput, tags, availableTags, onTagCreate, setValue])
 
     const handleRemoveTag = useCallback((tagToRemove: string) => {
         setValue(
@@ -243,33 +294,38 @@ export default function EditCardModal({
         [selectedBoards, setValue]
     )
 
+    const priorityToApiMap: Record<string, string> = {
+        'low': 'LOW',
+        'medium': 'MEDIUM',
+        'high': 'HIGH'
+    }
+
     const onSubmit = useCallback(
         (data: FormData) => {
             if (!card) return
 
-            const selectedAuthor = authors.find((a) => a.name === data.authorId) || authors[0]
+            const existingTagIds: number[] = []
+            const newTagNames: string[] = []
 
-            const updatedCard: Card = {
-                ...card,
-                title: data.title,
-                description: data.description,
-                priority: data.priority,
-                priorityLevel: data.priority === 'high' ? 3 : data.priority === 'medium' ? 2 : 1,
-                author: selectedAuthor,
-                tags: data.tags,
-                attachments: uploadedFiles.length,
-            }
-
-            onSave({
-                card: updatedCard,
-                boardIds: data.selectedBoards,
-                files: uploadedFiles,
+            data.tags.forEach(tagName => {
+                const existingTag = availableTags.find(tag => tag.name === tagName)
+                if (existingTag) {
+                    existingTagIds.push(existingTag.id)
+                } else {
+                    newTagNames.push(tagName)
+                }
             })
 
-            toast.success('Карточка успешно сохранена')
-            onClose()
+            onSave({
+                issueId: card.id,
+                title: data.title,
+                description: data.description || '',
+                priority: priorityToApiMap[data.priority] || 'MEDIUM',
+                tagIds: existingTagIds,
+                tagNames: newTagNames
+            })
         },
-        [card, authors, uploadedFiles, onSave, onClose]
+        [card, availableTags, onSave]
     )
 
     if (!isOpen || !card) return null
@@ -345,10 +401,10 @@ export default function EditCardModal({
                                 <div className={styles.formRow}>
                                     <div className={styles.formSection}>
                                         <label className={styles.formLabel}>
-                      <span className={styles.labelText}>
-                        <FaExclamationTriangle className={styles.labelIcon} />
-                        Приоритет
-                      </span>
+                                            <span className={styles.labelText}>
+                                                <FaExclamationTriangle className={styles.labelIcon} />
+                                                Приоритет
+                                            </span>
                                             <select className={styles.select} {...register('priority')}>
                                                 <option value="low">Низкий</option>
                                                 <option value="medium">Средний</option>
@@ -359,11 +415,12 @@ export default function EditCardModal({
 
                                     <div className={styles.formSection}>
                                         <label className={styles.formLabel}>
-                      <span className={styles.labelText}>
-                        <FaUserCircle className={styles.labelIcon} />
-                        Исполнитель
-                      </span>
+                                            <span className={styles.labelText}>
+                                                <FaUserCircle className={styles.labelIcon} />
+                                                Исполнитель (опционально)
+                                            </span>
                                             <select className={styles.select} {...register('authorId')}>
+                                                <option value="">Не назначено</option>
                                                 {authors.map((author) => (
                                                     <option key={author.name} value={author.name}>
                                                         {author.name}
@@ -376,81 +433,118 @@ export default function EditCardModal({
 
                                 <div className={styles.formSection}>
                                     <label className={styles.formLabel}>
-                    <span className={styles.labelText}>
-                      <FaTag className={styles.labelIcon} />
-                      Теги
-                    </span>
-                                        <Controller
-                                            name="tags"
-                                            control={control}
-                                            render={({ field }) => (
-                                                <div className={styles.tagsWrapper}>
-                                                    <div className={styles.tagsInputContainer}>
+                                        <span className={styles.labelText}>
+                                            <FaTag className={styles.labelIcon} />
+                                            Теги
+                                        </span>
+                                        <div className={styles.tagsWrapper}>
+                                            <div className={styles.tagsSelection}>
+                                                <div className={styles.existingTags}>
+                                                    <select
+                                                        value=""
+                                                        onChange={(e) => {
+                                                            if (e.target.value) {
+                                                                handleAddExistingTag(e.target.value)
+                                                                e.target.value = ''
+                                                            }
+                                                        }}
+                                                        className={styles.select}
+                                                    >
+                                                        <option value="">Выберите существующий тег</option>
+                                                        {availableTags.map(tag => (
+                                                            <option key={tag.id} value={tag.name}>
+                                                                {tag.name}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                                {!showNewTagInput ? (
+                                                    <motion.button
+                                                        type="button"
+                                                        className={styles.addNewTagBtn}
+                                                        onClick={() => setShowNewTagInput(true)}
+                                                        whileHover={{ scale: 1.05 }}
+                                                        whileTap={{ scale: 0.95 }}
+                                                    >
+                                                        <FaPlus /> Новый тег
+                                                    </motion.button>
+                                                ) : (
+                                                    <div className={styles.newTagInputWrapper}>
                                                         <input
                                                             type="text"
+                                                            value={newTagInput}
+                                                            onChange={(e) => setNewTagInput(e.target.value)}
+                                                            placeholder="Введите новый тег"
                                                             className={styles.textInput}
-                                                            placeholder="Введите тег и нажмите Enter..."
                                                             onKeyPress={(e) => {
                                                                 if (e.key === 'Enter') {
                                                                     e.preventDefault()
-                                                                    handleAddTag((e.target as HTMLInputElement).value)
-                                                                    ;(e.target as HTMLInputElement).value = ''
+                                                                    handleAddNewTag()
                                                                 }
                                                             }}
                                                         />
+                                                        <div className={styles.newTagActions}>
+                                                            <motion.button
+                                                                type="button"
+                                                                className={styles.confirmNewTagBtn}
+                                                                onClick={handleAddNewTag}
+                                                                whileHover={{ scale: 1.05 }}
+                                                                whileTap={{ scale: 0.95 }}
+                                                            >
+                                                                Добавить
+                                                            </motion.button>
+                                                            <motion.button
+                                                                type="button"
+                                                                className={styles.cancelNewTagBtn}
+                                                                onClick={() => {
+                                                                    setShowNewTagInput(false)
+                                                                    setNewTagInput('')
+                                                                }}
+                                                                whileHover={{ scale: 1.05 }}
+                                                                whileTap={{ scale: 0.95 }}
+                                                            >
+                                                                Отмена
+                                                            </motion.button>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div className={styles.selectedTags}>
+                                                {tags.map((tag, index) => (
+                                                    <motion.span
+                                                        key={index}
+                                                        className={styles.tag}
+                                                        initial={{ opacity: 0, scale: 0.8 }}
+                                                        animate={{ opacity: 1, scale: 1 }}
+                                                        exit={{ opacity: 0, scale: 0.8 }}
+                                                        transition={{ delay: index * 0.05 }}
+                                                    >
+                                                        {tag}
                                                         <motion.button
                                                             type="button"
-                                                            className={styles.addTagButton}
-                                                            onClick={(e) => {
-                                                                const input = e.currentTarget.previousElementSibling as HTMLInputElement
-                                                                handleAddTag(input.value)
-                                                                input.value = ''
-                                                            }}
-                                                            whileHover={{ scale: 1.02 }}
-                                                            whileTap={{ scale: 0.98 }}
+                                                            className={styles.removeTagButton}
+                                                            onClick={() => handleRemoveTag(tag)}
+                                                            whileHover={{ scale: 1.2, rotate: 90 }}
                                                         >
-                                                            Добавить
+                                                            ×
                                                         </motion.button>
-                                                    </div>
-                                                    <div className={styles.tagsContainer}>
-                                                        <AnimatePresence>
-                                                            {field.value.map((tag, index) => (
-                                                                <motion.span
-                                                                    key={tag}
-                                                                    className={styles.tag}
-                                                                    initial={{ opacity: 0, scale: 0.8 }}
-                                                                    animate={{ opacity: 1, scale: 1 }}
-                                                                    exit={{ opacity: 0, scale: 0.8 }}
-                                                                    transition={{ delay: index * 0.05 }}
-                                                                >
-                                                                    {tag}
-                                                                    <motion.button
-                                                                        type="button"
-                                                                        className={styles.removeTagButton}
-                                                                        onClick={() => handleRemoveTag(tag)}
-                                                                        whileHover={{ scale: 1.2, rotate: 90 }}
-                                                                    >
-                                                                        ×
-                                                                    </motion.button>
-                                                                </motion.span>
-                                                            ))}
-                                                        </AnimatePresence>
-                                                    </div>
-                                                    {errors.tags && (
-                                                        <span className={styles.errorText}>{errors.tags.message}</span>
-                                                    )}
-                                                </div>
-                                            )}
-                                        />
+                                                    </motion.span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        {errors.tags && (
+                                            <span className={styles.errorText}>{errors.tags.message}</span>
+                                        )}
                                     </label>
                                 </div>
 
                                 <div className={styles.formSection}>
                                     <label className={styles.formLabel}>
-                    <span className={styles.labelText}>
-                      <FaPaperclip className={styles.labelIcon} />
-                      Прикрепленные файлы
-                    </span>
+                                        <span className={styles.labelText}>
+                                            <FaPaperclip className={styles.labelIcon} />
+                                            Прикрепленные файлы
+                                        </span>
 
                                         <motion.div
                                             {...getRootProps()}
@@ -543,8 +637,8 @@ export default function EditCardModal({
                                                     </div>
                                                     {errors.selectedBoards && (
                                                         <span className={styles.errorText}>
-                              {errors.selectedBoards.message}
-                            </span>
+                                                            {errors.selectedBoards.message}
+                                                        </span>
                                                     )}
                                                 </>
                                             )}

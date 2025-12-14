@@ -6,7 +6,7 @@ import {
 } from 'react-icons/fa';
 import styles from '../Dashboard.module.css';
 import TaskCard from '../components/TaskCard';
-import { Board, Card } from '../types/dashboard.types';
+import { Board, Card, Priority } from '../types/dashboard.types';
 
 interface BoardColumnProps {
     board: Board;
@@ -15,8 +15,8 @@ interface BoardColumnProps {
     isCollapsed: boolean;
     hasMultipleCards: boolean;
     showExpandButton: boolean;
-    getPriorityColor: (priority: string) => string;
-    getPriorityBgColor: (priority: string) => string;
+    getPriorityColor: (priority: Priority) => string;
+    getPriorityBgColor: (priority: Priority) => string;
     onToggleCollapse: (boardId: number) => void;
     onToggleExpansion: (boardId: number) => void;
     onEditCard: (card: Card) => void;

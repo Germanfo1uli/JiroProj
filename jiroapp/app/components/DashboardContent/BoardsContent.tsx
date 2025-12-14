@@ -24,6 +24,7 @@ const BoardsContent = ({ projectId }: BoardsContentProps) => {
         state,
         updateState,
         authors,
+        availableTags,
         isLoading,
         getPriorityColor,
         getPriorityBgColor,
@@ -51,6 +52,8 @@ const BoardsContent = ({ projectId }: BoardsContentProps) => {
         filterAndSortCards,
         getAvailableBoardTitles,
         getBoardByCardId,
+        refreshIssues,
+        createTag
     } = useDashboard(projectId)
 
     useEffect(() => {
@@ -74,12 +77,6 @@ const BoardsContent = ({ projectId }: BoardsContentProps) => {
         const interval = setInterval(createParticles, 10000)
         return () => clearInterval(interval)
     }, [])
-
-    const totalTasks = boards.reduce((sum, board) => sum + (board.cards?.length || 0), 0)
-    const completedTasks = boards.reduce((sum, board) => {
-        if (board.title === 'DONE') return sum + (board.cards?.length || 0)
-        return sum
-    }, 0)
 
     return (
         <motion.div
@@ -199,6 +196,9 @@ const BoardsContent = ({ projectId }: BoardsContentProps) => {
                         onSave={handleAddCard}
                         boards={boards}
                         authors={authors}
+                        projectId={projectId}
+                        availableTags={availableTags}
+                        onTagCreate={createTag}
                     />
                 )}
             </AnimatePresence>
@@ -239,6 +239,9 @@ const BoardsContent = ({ projectId }: BoardsContentProps) => {
                         boards={boards}
                         authors={authors}
                         currentBoardId={state.currentBoardId}
+                        projectId={projectId}
+                        availableTags={availableTags}
+                        onTagCreate={createTag}
                     />
                 )}
             </AnimatePresence>

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Board, Card, SortOption, FilterOption, DashboardState, Priority, Attachment, Comment, Author } from '../types/dashboard.types';
 import { api } from '@/app/auth/hooks/useTokenRefresh';
+import toast from 'react-hot-toast';
 
 interface IssueUser {
     id: number;
@@ -122,29 +123,46 @@ export const useDashboard = (projectId: number | null) => {
         }
     });
 
-    const authors: Author[] = [];
+    const [availableTags, setAvailableTags] = useState<IssueTag[]>([]);
+    const [authors, setAuthors] = useState<Author[]>([]);
 
     const updateState = (updates: Partial<DashboardState>) => {
         setState(prev => ({ ...prev, ...updates }));
     };
 
+    const fetchProjectTags = useCallback(async () => {
+        if (!projectId) return;
+
+        try {
+            const response = await api.get<IssueTag[]>('/tags', {
+                params: { projectId }
+            });
+            setAvailableTags(response.data);
+        } catch (error) {
+            console.error('Ошибка при загрузке тегов проекта:', error);
+        }
+    }, [projectId]);
+
     const transformIssueToCard = (issue: IssueResponse): Card => {
         const assignees: Author[] = [];
-        if (issue.assignee) {
+
+        if (issue.assignee && issue.assignee.username) {
             assignees.push({
                 name: issue.assignee.username,
                 avatar: null,
                 role: 'Исполнитель'
             });
         }
-        if (issue.reviewer) {
+
+        if (issue.reviewer && issue.reviewer.username) {
             assignees.push({
                 name: issue.reviewer.username,
                 avatar: null,
                 role: 'Ревьюер'
             });
         }
-        if (issue.qa) {
+
+        if (issue.qa && issue.qa.username) {
             assignees.push({
                 name: issue.qa.username,
                 avatar: null,
@@ -152,19 +170,27 @@ export const useDashboard = (projectId: number | null) => {
             });
         }
 
+        const author: Author = issue.creator && issue.creator.username ? {
+            name: issue.creator.username,
+            avatar: null,
+            role: 'Создатель'
+        } : {
+            name: 'Неизвестный пользователь',
+            avatar: null,
+            role: 'Создатель'
+        };
+
+        const tags = issue.tags?.map(tag => tag.name) || [];
+
         return {
             id: issue.id,
             title: issue.title,
             description: issue.description || 'Без описания',
             priority: priorityMap[issue.priority] || 'medium',
             priorityLevel: priorityLevelMap[issue.priority] || 2,
-            author: {
-                name: issue.creator.username,
-                avatar: null,
-                role: 'Создатель'
-            },
+            author: author,
             assignees: assignees.length > 0 ? assignees : undefined,
-            tags: issue.tags?.map(tag => tag.name) || [],
+            tags: tags,
             progress: 0,
             comments: 0,
             attachments: 0,
@@ -174,18 +200,38 @@ export const useDashboard = (projectId: number | null) => {
         };
     };
 
-    const fetchIssues = useCallback(async () => {
-        if (projectId === null || projectId === undefined) {
-            return;
+    const fetchProjectData = useCallback(async () => {
+        if (!projectId) return;
+
+        try {
+            const usersResponse = await api.get<IssueUser[]>(`/projects/${projectId}/members`);
+
+            const authorsData: Author[] = usersResponse.data.map(user => ({
+                name: user.username,
+                avatar: null,
+                role: 'Участник проекта'
+            }));
+
+            setAuthors(authorsData);
+        } catch (error) {
+            console.error('Ошибка при загрузке данных проекта:', error);
         }
+    }, [projectId]);
+
+    const fetchIssues = useCallback(async () => {
+        if (!projectId) return;
 
         setIsLoading(true);
         try {
-            const response = await api.get<IssueResponse[]>('/issues', {
-                params: { projectId }
-            });
+            const [issuesResponse] = await Promise.all([
+                api.get<IssueResponse[]>('/issues', {
+                    params: { projectId }
+                }),
+                fetchProjectData(),
+                fetchProjectTags()
+            ]);
 
-            const issues = response.data;
+            const issues = issuesResponse.data;
 
             const updatedBoards = initialBoards.map(board => {
                 const boardCards = issues
@@ -208,10 +254,10 @@ export const useDashboard = (projectId: number | null) => {
         } finally {
             setIsLoading(false);
         }
-    }, [projectId]);
+    }, [projectId, fetchProjectData, fetchProjectTags]);
 
     useEffect(() => {
-        if (projectId !== null && projectId !== undefined) {
+        if (projectId) {
             fetchIssues();
         } else {
             setBoards(initialBoards);
@@ -235,6 +281,45 @@ export const useDashboard = (projectId: number | null) => {
         } catch (error) {
             console.error('Ошибка при удалении задачи:', error);
             return false;
+        }
+    };
+
+    const updateIssue = async (issueId: number, data: {
+        title: string;
+        description: string;
+        priority: string;
+        tagIds: number[];
+        tagNames: string[];
+    }) => {
+        try {
+            const newTagPromises = data.tagNames.map(tagName =>
+                api.post('/tags', {
+                    projectId,
+                    name: tagName
+                }).catch(err => {
+                    console.error('Ошибка при создании тега:', err);
+                    return null;
+                })
+            );
+
+            const newTagResponses = await Promise.all(newTagPromises);
+            const newTagIds = newTagResponses
+                .filter(response => response !== null && response.data?.id)
+                .map(response => response.data.id);
+
+            const allTagIds = [...data.tagIds, ...newTagIds];
+
+            await api.patch(`/issues/${issueId}`, {
+                title: data.title,
+                description: data.description,
+                priority: data.priority,
+                tagIds: allTagIds
+            });
+
+            return true;
+        } catch (error) {
+            console.error('Ошибка при обновлении задачи:', error);
+            throw error;
         }
     };
 
@@ -326,18 +411,73 @@ export const useDashboard = (projectId: number | null) => {
         setBoards(updatedBoards);
     };
 
-    const handleAddCard = async (data: { card: Card; boardIds: number[] }) => {
-        const updatedBoards = boards.map(board => {
-            if (data.boardIds.includes(board.id)) {
-                return {
-                    ...board,
-                    cards: Array.isArray(board.cards) ? [...board.cards, data.card] : [data.card]
-                };
+    const handleAddCard = async (data: {
+        projectId: number;
+        title: string;
+        description: string;
+        type: string;
+        priority: string;
+        tagIds: number[];
+        tagNames: string[];
+    }) => {
+        try {
+            let allTagIds = [...data.tagIds];
+
+            if (data.tagNames.length > 0) {
+                const newTagPromises = data.tagNames.map(tagName =>
+                    api.post('/tags', {
+                        projectId: data.projectId,
+                        name: tagName
+                    }).catch(err => {
+                        console.error('Ошибка при создании тега:', err);
+                        return null;
+                    })
+                );
+
+                const newTagResponses = await Promise.all(newTagPromises);
+                const newTagIds = newTagResponses
+                    .filter(response => response !== null && response.data?.id)
+                    .map(response => response.data.id);
+
+                allTagIds = [...allTagIds, ...newTagIds];
             }
-            return board;
-        });
-        setBoards(updatedBoards);
-        closeAddCardModal();
+
+            const response = await api.post('/issues', {
+                projectId: data.projectId,
+                title: data.title,
+                description: data.description,
+                type: data.type,
+                priority: data.priority,
+                tagIds: allTagIds
+            });
+
+            const newIssue = response.data;
+            const newCard = transformIssueToCard(newIssue);
+
+            const targetBoard = boards.find(board => board.title === 'TO DO');
+
+            if (targetBoard) {
+                const updatedBoards = boards.map(board => {
+                    if (board.id === targetBoard.id) {
+                        return {
+                            ...board,
+                            cards: Array.isArray(board.cards) ? [...board.cards, newCard] : [newCard]
+                        };
+                    }
+                    return board;
+                });
+                setBoards(updatedBoards);
+            }
+
+            await fetchProjectTags();
+            toast.success('Карточка успешно создана');
+            closeAddCardModal();
+            return true;
+        } catch (error) {
+            console.error('Ошибка при создании задачи:', error);
+            toast.error('Не удалось создать карточку');
+            return false;
+        }
     };
 
     const handleEditCard = (card: Card) => {
@@ -364,37 +504,61 @@ export const useDashboard = (projectId: number | null) => {
         }
     };
 
-    const handleUpdateCard = (data: { card: Card; boardIds: number[] }) => {
-        const updatedBoards = boards.map(board => {
-            if (board.cards && board.cards.some(c => c.id === data.card.id) && !data.boardIds.includes(board.id)) {
-                return {
+    const handleUpdateCard = async (data: {
+        issueId: number;
+        title: string;
+        description: string;
+        priority: string;
+        tagIds: number[];
+        tagNames: string[];
+    }) => {
+        try {
+            let allTagIds = [...data.tagIds];
+
+            if (data.tagNames.length > 0) {
+                const newTagPromises = data.tagNames.map(tagName =>
+                    api.post('/tags', {
+                        projectId,
+                        name: tagName
+                    }).catch(err => {
+                        console.error('Ошибка при создании тега:', err);
+                        return null;
+                    })
+                );
+
+                const newTagResponses = await Promise.all(newTagPromises);
+                const newTagIds = newTagResponses
+                    .filter(response => response !== null && response.data?.id)
+                    .map(response => response.data.id);
+
+                allTagIds = [...allTagIds, ...newTagIds];
+            }
+
+            await api.patch(`/issues/${data.issueId}`, {
+                title: data.title,
+                description: data.description,
+                priority: data.priority,
+                tagIds: allTagIds
+            });
+
+            const updatedCard = await fetchIssueById(data.issueId);
+            if (updatedCard) {
+                const updatedBoards = boards.map(board => ({
                     ...board,
-                    cards: board.cards.filter(c => c.id !== data.card.id)
-                };
-            }
-            if (data.boardIds.includes(board.id)) {
-                const cardExists = board.cards && board.cards.some(c => c.id === data.card.id);
-
-                if (cardExists) {
-                    return {
-                        ...board,
-                        cards: board.cards.map(c =>
-                            c.id === data.card.id ? data.card : c
-                        )
-                    };
-                } else {
-                    return {
-                        ...board,
-                        cards: Array.isArray(board.cards) ? [...board.cards, data.card] : [data.card]
-                    };
-                }
+                    cards: board.cards.map(card =>
+                        card.id === data.issueId ? updatedCard : card
+                    )
+                }));
+                setBoards(updatedBoards);
             }
 
-            return board;
-        });
-
-        setBoards(updatedBoards);
-        updateState({ editingCard: null });
+            await fetchProjectTags();
+            updateState({ editingCard: null });
+            toast.success('Карточка успешно обновлена');
+        } catch (error) {
+            console.error('Ошибка при обновлении карточки:', error);
+            toast.error('Не удалось обновить карточку');
+        }
     };
 
     const handleDeleteCard = async (cardId: number) => {
@@ -426,9 +590,11 @@ export const useDashboard = (projectId: number | null) => {
                     updateState({
                         deleteConfirmation: { isOpen: false, cardId: null, cardTitle: '' }
                     });
+                    toast.success('Карточка успешно удалена');
                 }
             } catch (error) {
                 console.error('Ошибка при удалении задачи:', error);
+                toast.error('Не удалось удалить карточку');
             }
         }
     };
@@ -506,12 +672,28 @@ export const useDashboard = (projectId: number | null) => {
         return boards.find(board => board.cards.some(card => card.id === cardId));
     };
 
+    const createTag = useCallback(async (tagName: string): Promise<IssueTag | null> => {
+        if (!projectId) return null;
+        try {
+            const response = await api.post('/tags', {
+                projectId,
+                name: tagName
+            });
+            await fetchProjectTags();
+            return response.data;
+        } catch (error) {
+            console.error('Ошибка при создании тега:', error);
+            return null;
+        }
+    }, [projectId, fetchProjectTags]);
+
     return {
         boards,
         setBoards,
         state,
         updateState,
         authors,
+        availableTags,
         isLoading,
         getPriorityColor,
         getPriorityBgColor,
@@ -539,6 +721,7 @@ export const useDashboard = (projectId: number | null) => {
         filterAndSortCards,
         getAvailableBoardTitles,
         getBoardByCardId,
-        refreshIssues: fetchIssues
+        refreshIssues: fetchIssues,
+        createTag
     };
 };
