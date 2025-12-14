@@ -41,7 +41,7 @@ public class ProjectService {
     private final ProjectRoleService roleService;
     private final AuthService authService;
     private final RedisCacheService redisCacheService;
-    private final ApplicationEventPublisher applicationEventPublisher;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public CreateProjectResponse createProject(Long ownerId, String name, String description) {
@@ -57,9 +57,9 @@ public class ProjectService {
 
         memberService.addOwner(ownerId, project, ownerRole);
 
-        ProjectCreatedEvent event = ProjectCreatedEvent.fromProject(project);
-
-        applicationEventPublisher.publishEvent(event);
+        eventPublisher.publishEvent(
+                ProjectCreatedEvent.fromProject(project)
+        );
 
         return new CreateProjectResponse(project.getId(), project.getName());
     }

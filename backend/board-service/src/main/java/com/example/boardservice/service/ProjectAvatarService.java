@@ -27,7 +27,7 @@ public class ProjectAvatarService {
     private final ProjectAvatarRepository avatarRepository;
     private final ProjectRepository projectRepository;
     private final AuthService authService;
-    private final ApplicationEventPublisher applicationEventPublisher;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public void uploadAvatar(Long userId, Long projectId, MultipartFile file) {
@@ -55,9 +55,9 @@ public class ProjectAvatarService {
 
         avatarRepository.save(avatar);
 
-        ProjectUpdatedEvent event = ProjectUpdatedEvent.fromProject(project, userId);
-
-        applicationEventPublisher.publishEvent(event);
+        eventPublisher.publishEvent(
+                ProjectUpdatedEvent.fromProject(project, userId)
+        );
     }
 
     private String getExtension(String originalName) {
