@@ -12,6 +12,9 @@ import java.util.UUID;
 
 @Service
 public class EventProducerService {
+    private static final String EXCHANGE_NAME = "activity.exchange";
+    private static final String MESSAGE_TYPE_PREFIX = "urn:message:Backend.Shared.DTOs:";
+
     private final RabbitTemplate rabbitTemplate;
     private final ObjectMapper objectMapper;
 
@@ -20,56 +23,44 @@ public class EventProducerService {
         this.objectMapper = objectMapper;
     }
 
-    public void sendProjectCreatedEvent(ProjectCreatedEvent event) {
+    private void sendEvent(Object event, String routingKey) {
         try {
             String json = objectMapper.writeValueAsString(event);
+            String className = event.getClass().getSimpleName();
 
             MessageProperties props = new MessageProperties();
-
-            props.setHeader("MT-MessageType", "urn:message:Backend.Shared.DTOs:ProjectCreatedEvent");
+            props.setHeader("MT-MessageType", MESSAGE_TYPE_PREFIX + className);
             props.setContentType("application/json");
             props.setContentEncoding("UTF-8");
             props.setMessageId(UUID.randomUUID().toString());
 
             Message message = new Message(json.getBytes(StandardCharsets.UTF_8), props);
-            rabbitTemplate.send("activity.exchange", "project.created", message);
+            rabbitTemplate.send(EXCHANGE_NAME, routingKey, message);
 
-            System.out.println("✅ Sent ProjectCreatedEvent: " + json);
+            System.out.println("Sent " + className + ": " + json);
         } catch (Exception e) {
-            System.err.println("Failed to send ProjectCreatedEvent: " + e.getMessage());
+            System.err.println("Failed to send event: " + e.getMessage());
             throw new RuntimeException(e);
         }
     }
 
+    public void sendProjectCreatedEvent(ProjectCreatedEvent event) {
+        sendEvent(event, "project.created");
+    }
+
     public void sendProjectUpdatedEvent(ProjectUpdatedEvent event) {
-        try {
-            String json = objectMapper.writeValueAsString(event);
-            rabbitTemplate.convertAndSend("activity.exchange", "project.updated", json);
-        } catch (Exception e) {
-        }
+        sendEvent(event, "project.updated");
     }
 
     public void sendProjectDeletedEvent(ProjectDeletedEvent event) {
-        try {
-            String json = objectMapper.writeValueAsString(event);
-            rabbitTemplate.convertAndSend("activity.exchange", "project.deleted", json);
-        } catch (Exception e) {
-        }
+        sendEvent(event, "project.deleted");
     }
 
     public void sendProjectMemberAddedEvent(ProjectMemberAddedEvent event) {
-        try {
-            String json = objectMapper.writeValueAsString(event);
-            rabbitTemplate.convertAndSend("activity.exchange", "project.member.added", json);
-        } catch (Exception e) {
-        }
+        sendEvent(event, "project.member.added");
     }
 
     public void sendProjectMemberRemovedEvent(ProjectMemberRemovedEvent event) {
-        try {
-            String json = objectMapper.writeValueAsString(event);
-            rabbitTemplate.convertAndSend("activity.exchange", "project.member.removed", json);
-        } catch (Exception e) {
-        }
+        sendEvent(event, "project.member.removed");
     }
 }

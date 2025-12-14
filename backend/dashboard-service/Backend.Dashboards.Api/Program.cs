@@ -118,6 +118,22 @@ builder.Services.AddDbContext<DashboardDbContext>(options =>
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<DashboardDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+    try
+    {
+        await dbContext.Database.MigrateAsync();
+        logger.LogInformation("Миграции успешно применены");
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Ошибка при применении миграций");
+        throw;
+    }
+}
 
 if (app.Environment.IsDevelopment())
 {
