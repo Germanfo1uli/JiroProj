@@ -247,18 +247,11 @@ services:
       
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
-
       RABBITMQ__HOSTNAME: rabbitmq
       RABBITMQ__PORT: 5672 
       RABBITMQ__USERNAME: ${RABBITMQ_USER:-admin}
       RABBITMQ__PASSWORD: ${RABBITMQ_PASS:-secret}
 
-      DOTNET_URLS: http://localhost:8084
-
-    volumes:
-      - ./sprints-service:/src/sprints-service
-      - ./shared-libs:/src/shared-libs
-      - sprints-nuget-cache:/root/.nuget/packages
 
   dashboard-service:
     build:
@@ -300,10 +293,6 @@ services:
       
       DOTNET_URLS: http://localhost:8085
       
-    volumes:
-      - ./dashboard-service:/src/dashboard-service
-      - ./shared-libs:/src/shared-libs
-      - dashboard-nuget-cache:/root/.nuget/packages
 
 volumes:
   pg_data:
