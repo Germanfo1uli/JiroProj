@@ -7,6 +7,7 @@ import com.example.boardservice.dto.models.ProjectRole;
 import com.example.boardservice.dto.models.enums.ActionType;
 import com.example.boardservice.dto.models.enums.EntityType;
 import com.example.boardservice.dto.rabbit.ProjectCreatedEvent;
+import com.example.boardservice.dto.rabbit.ProjectUpdatedEvent;
 import com.example.boardservice.dto.response.CreateProjectResponse;
 import com.example.boardservice.dto.response.GetProjectResponse;
 import com.example.boardservice.dto.response.InternalProjectResponse;
@@ -18,6 +19,7 @@ import com.example.boardservice.repository.ProjectRepository;
 import com.example.boardservice.repository.ProjectRoleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -39,7 +41,7 @@ public class ProjectService {
     private final ProjectRoleService roleService;
     private final AuthService authService;
     private final RedisCacheService redisCacheService;
-    private final EventProducerService eventProducerService;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Transactional
     public CreateProjectResponse createProject(Long ownerId, String name, String description) {
@@ -55,8 +57,9 @@ public class ProjectService {
 
         memberService.addOwner(ownerId, project, ownerRole);
 
-        eventProducerService.sendProjectCreatedEvent(
-                ProjectCreatedEvent.fromProject(project));
+        ProjectCreatedEvent event = ProjectCreatedEvent.fromProject(project);
+
+        applicationEventPublisher.publishEvent(event);
 
         return new CreateProjectResponse(project.getId(), project.getName());
     }
