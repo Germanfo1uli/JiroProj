@@ -230,6 +230,33 @@ public class IssueService {
         );
     }
 
+    public InternalIssueResponse getIssueInternal(Long issueId) {
+        Issue issue = issueRepository.findById(issueId)
+                .orElseThrow(() -> new IssueNotFoundException("Issue with id " + issueId + " not found"));
+
+        try {
+            boardClient.getProjectById(issue.getProjectId());
+        } catch (Exception e) {
+            throw new ProjectNotFoundException(issue.getProjectId());
+        }
+
+        return InternalIssueResponse.from(issue);
+    }
+
+    public List<InternalIssueResponse> getIssuesInternal(Long projectId) {
+        List<Issue> issues = issueRepository.findAllByProjectId(projectId);
+
+        try {
+            boardClient.getProjectById(projectId);
+        } catch (Exception e) {
+            throw new ProjectNotFoundException(projectId);
+        }
+
+        return issues.stream()
+                .map(InternalIssueResponse::from)
+                .collect(Collectors.toList());
+    }
+
     private List<CommentResponse> getCommentsForIssue(Long userId, Long projectId, Long issueId) {
         try {
             authService.hasPermission(userId, projectId, EntityType.COMMENT, ActionType.VIEW);
