@@ -59,6 +59,13 @@ builder.Services.AddMassTransit(x =>
     x.AddConsumer<AttachmentCreatedConsumer>();
     x.AddConsumer<AttachmentDeletedConsumer>();
 
+    // --- Регистрация потребителей из sprints-service ---
+    x.AddConsumer<SprintCreatedConsumer>();
+    x.AddConsumer<SprintStartedConsumer>();
+    x.AddConsumer<SprintCompletedConsumer>();
+    x.AddConsumer<SprintIssueAddedConsumer>();
+    x.AddConsumer<SprintIssueRemovedConsumer>();
+
     x.UsingRabbitMq((context, cfg) =>
     {
         var rabbitMqSettings = context.GetRequiredService<IConfiguration>().GetSection("RabbitMq");
@@ -94,6 +101,13 @@ builder.Services.AddMassTransit(x =>
             e.ConfigureConsumer<IssueCommentDeletedConsumer>(context);
             e.ConfigureConsumer<AttachmentCreatedConsumer>(context);
             e.ConfigureConsumer<AttachmentDeletedConsumer>(context);
+
+            // Sprints consumers
+            e.ConfigureConsumer<SprintCreatedConsumer>(context);
+            e.ConfigureConsumer<SprintStartedConsumer>(context);
+            e.ConfigureConsumer<SprintCompletedConsumer>(context);
+            e.ConfigureConsumer<SprintIssueAddedConsumer>(context);
+            e.ConfigureConsumer<SprintIssueRemovedConsumer>(context);
 
             e.Bind("activity.exchange", s =>
             {
