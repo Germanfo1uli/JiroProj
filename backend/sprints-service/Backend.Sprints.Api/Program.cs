@@ -34,6 +34,13 @@ builder.Services.AddRefitClient<IIssueClient>()
     })
     .AddHttpMessageHandler<InternalAuthHandler>();
 
+builder.Services.AddRefitClient<IInternalApiClient>()
+    .ConfigureHttpClient(client =>
+    {
+        client.BaseAddress = new Uri("http://issue-service:8082");
+    })
+    .AddHttpMessageHandler<InternalAuthHandler>();
+
 builder.Services.AddDbContext<SprintsDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default"),
         npgsqlOptions => npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "sprints_service_schema")));
