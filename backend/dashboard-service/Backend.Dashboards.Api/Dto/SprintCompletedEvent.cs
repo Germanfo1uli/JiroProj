@@ -14,5 +14,5 @@ public class SprintCompletedEvent
     public long CompleterId { get; set; }
 
     [JsonPropertyName("completedAtUtc")]
-    public DateTime CompletedAtUtc { get; set; } = DateTime.UtcNow;
+    public DateTimeOffset CompletedAtUtc { get; set; } = DateTimeOffset.UtcNow;
 }

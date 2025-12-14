@@ -14,5 +14,5 @@ public class SprintStartedEvent
     public long StarterId { get; set; }
 
     [JsonPropertyName("startedAtUtc")]
-    public DateTime StartedAtUtc { get; set; } = DateTime.UtcNow;
+    public DateTimeOffset StartedAtUtc { get; set; } = DateTimeOffset.UtcNow;
 }

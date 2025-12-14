@@ -17,5 +17,5 @@ public class SprintIssueRemovedEvent
     public long RemovedByUserId { get; set; }
 
     [JsonPropertyName("RemovedAtUtc")]
-    public DateTime RemovedAtUtc { get; set; } = DateTime.UtcNow;
+    public DateTimeOffset RemovedAtUtc { get; set; } = DateTimeOffset.UtcNow;
 }

@@ -17,5 +17,5 @@ public class IssueAssigneeAddedEvent
     public long AssignerId { get; set; }
 
     [JsonPropertyName("assignedAtUtc")]
-    public DateTime AssignedAtUtc { get; set; } = DateTime.UtcNow;
+    public DateTimeOffset AssignedAtUtc { get; set; } = DateTimeOffset.UtcNow;
 }

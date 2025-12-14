@@ -11,5 +11,5 @@ public class ProjectUpdatedEvent
     public long UpdaterId { get; set; }
 
     [JsonPropertyName("updatedAtUtc")]
-    public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
+    public DateTimeOffset UpdatedAtUtc { get; set; } = DateTimeOffset.UtcNow;
 }

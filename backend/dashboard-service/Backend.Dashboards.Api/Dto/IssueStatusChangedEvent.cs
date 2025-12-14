@@ -20,5 +20,5 @@ public class IssueStatusChangedEvent
     public string NewStatus { get; set; } = string.Empty;
 
     [JsonPropertyName("changedAtUtc")]
-    public DateTime ChangedAtUtc { get; set; } = DateTime.UtcNow;
+    public DateTimeOffset ChangedAtUtc { get; set; } = DateTimeOffset.UtcNow;
 }

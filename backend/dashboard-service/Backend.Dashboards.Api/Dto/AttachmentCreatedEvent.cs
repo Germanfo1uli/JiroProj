@@ -20,5 +20,5 @@ public class AttachmentCreatedEvent
     public long UploaderId { get; set; }
 
     [JsonPropertyName("createdAtUtc")]
-    public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
+    public DateTimeOffset CreatedAtUtc { get; set; } = DateTimeOffset.UtcNow;
 }

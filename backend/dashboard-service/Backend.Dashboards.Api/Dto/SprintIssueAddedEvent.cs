@@ -17,5 +17,5 @@ public class SprintIssueAddedEvent
     public long AddedByUserId { get; set; }
 
     [JsonPropertyName("addedAtUtc")]
-    public DateTime AddedAtUtc { get; set; } = DateTime.UtcNow;
+    public DateTimeOffset AddedAtUtc { get; set; } = DateTimeOffset.UtcNow;
 }

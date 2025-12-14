@@ -14,5 +14,5 @@ public class ProjectMemberRemovedEvent
     public long RemovedByUserId { get; set; }
 
     [JsonPropertyName("removedAtUtc")]
-    public DateTime RemovedAtUtc { get; set; } = DateTime.UtcNow;
+    public DateTimeOffset RemovedAtUtc { get; set; } = DateTimeOffset.UtcNow;
 }

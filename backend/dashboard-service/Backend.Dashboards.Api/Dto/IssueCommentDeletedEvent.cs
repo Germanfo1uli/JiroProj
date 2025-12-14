@@ -17,5 +17,5 @@ public class IssueCommentDeletedEvent
     public long DeleterId { get; set; }
 
     [JsonPropertyName("deletedAtUtc")]
-    public DateTime DeletedAtUtc { get; set; } = DateTime.UtcNow;
+    public DateTimeOffset DeletedAtUtc { get; set; } = DateTimeOffset.UtcNow;
 }

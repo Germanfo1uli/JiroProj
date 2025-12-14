@@ -17,5 +17,5 @@ public class IssueCommentUpdatedEvent
     public long EditorId { get; set; }
 
     [JsonPropertyName("updatedAtUtc")]
-    public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
+    public DateTimeOffset UpdatedAtUtc { get; set; } = DateTimeOffset.UtcNow;
 }
