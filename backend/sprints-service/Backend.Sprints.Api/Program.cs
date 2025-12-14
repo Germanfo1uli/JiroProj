@@ -27,13 +27,6 @@ builder.Services.Configure<ServiceAuthSettings>(builder.Configuration.GetSection
 
 builder.Services.AddTransient<InternalAuthHandler>();
 
-builder.Services.AddRefitClient<IUserClient>()
-    .ConfigureHttpClient(client =>
-    {
-        client.BaseAddress = new Uri("http://user-service:8081");
-    })
-    .AddHttpMessageHandler<InternalAuthHandler>();
-
 builder.Services.AddRefitClient<IIssueClient>()
     .ConfigureHttpClient(client =>
     {
