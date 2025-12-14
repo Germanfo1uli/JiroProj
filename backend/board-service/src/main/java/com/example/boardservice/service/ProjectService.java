@@ -7,6 +7,7 @@ import com.example.boardservice.dto.models.ProjectRole;
 import com.example.boardservice.dto.models.enums.ActionType;
 import com.example.boardservice.dto.models.enums.EntityType;
 import com.example.boardservice.dto.rabbit.ProjectCreatedEvent;
+import com.example.boardservice.dto.rabbit.ProjectDeletedEvent;
 import com.example.boardservice.dto.rabbit.ProjectUpdatedEvent;
 import com.example.boardservice.dto.response.CreateProjectResponse;
 import com.example.boardservice.dto.response.GetProjectResponse;
@@ -139,6 +140,10 @@ public class ProjectService {
         ProjectMember user = memberRepository.findByUserIdAndProject_Id(userId, projectId)
                 .orElseThrow(() -> new AccessDeniedException("User with ID: " + userId + " not found in project ID: " + projectId));
 
+        eventPublisher.publishEvent(
+                ProjectUpdatedEvent.fromProject(project, userId)
+        );
+
         return new GetProjectResponse(
                 projectId,
                 project.getOwnerId(),
@@ -160,6 +165,10 @@ public class ProjectService {
             log.warn("Project {} already deleted", projectId);
             return;
         }
+
+        eventPublisher.publishEvent(
+                ProjectDeletedEvent.fromProject(project)
+        );
 
         project.setDeletedAt(LocalDateTime.now());
         projectRepository.save(project);

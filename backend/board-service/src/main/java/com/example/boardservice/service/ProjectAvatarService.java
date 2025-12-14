@@ -81,5 +81,9 @@ public class ProjectAvatarService {
 
         project.setAvatar(null);
         projectRepository.save(project);
+
+        eventPublisher.publishEvent(
+                ProjectUpdatedEvent.fromProject(project, userId)
+        );
     }
 }

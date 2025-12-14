@@ -1,7 +1,5 @@
 package com.example.boardservice.dto.rabbit;
 
-import com.example.boardservice.dto.models.ProjectMember;
-
 import java.time.Instant;
 
 public record ProjectMemberRemovedEvent (
@@ -10,12 +8,12 @@ public record ProjectMemberRemovedEvent (
         long removedByUserId,
         Instant removedAtUtc
 ) {
-    public static ProjectMemberRemovedEvent fromProject(ProjectMember member, long addedBy) {
+    public static ProjectMemberRemovedEvent from(long projectId, long kickedId, long userId) {
 
         return new ProjectMemberRemovedEvent(
-                member.getProject().getId(),
-                member.getUserId(),
-                addedBy,
+                projectId,
+                kickedId,
+                userId,
                 Instant.now()
         );
     }

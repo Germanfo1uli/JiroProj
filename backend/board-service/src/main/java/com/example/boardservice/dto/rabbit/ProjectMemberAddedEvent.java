@@ -10,7 +10,7 @@ public record ProjectMemberAddedEvent(
         long addedByUserId,
         Instant addedAtUtc
 ) {
-    public static ProjectMemberAddedEvent fromProject(ProjectMember member, long addedBy) {
+    public static ProjectMemberAddedEvent fromMember(ProjectMember member, long addedBy) {
 
         return new ProjectMemberAddedEvent(
                 member.getProject().getId(),
