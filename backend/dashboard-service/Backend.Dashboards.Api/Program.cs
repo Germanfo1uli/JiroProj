@@ -4,9 +4,11 @@ using Backend.Dashboard.Api.Data;
 using Backend.Dashboard.Api.Data.Repositories;
 using Backend.Dashboard.Api.Handlers;
 using Backend.Dashboard.Api.Services;
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Refit;
 using Steeltoe.Discovery.Eureka;
+using Backend.Dashboard.Api.Messages;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,9 +31,79 @@ builder.Services.AddTransient<InternalAuthHandler>();
 builder.Services.AddRefitClient<IProjectClient>()
     .ConfigureHttpClient(client =>
     {
-        client.BaseAddress = new Uri("http://gateway-service");
+        client.BaseAddress = new Uri("http://board-service:8082");
     })
     .AddHttpMessageHandler<InternalAuthHandler>();
+
+builder.Services.AddMassTransit(x =>
+{
+    // --- Регистрация потребителей из project-service ---
+    x.AddConsumer<ProjectCreatedConsumer>();
+    x.AddConsumer<ProjectUpdatedConsumer>();
+    x.AddConsumer<ProjectDeletedConsumer>();
+    x.AddConsumer<ProjectMemberAddedConsumer>();
+    x.AddConsumer<ProjectMemberRemovedConsumer>();
+
+    // --- Регистрация потребителей из issue-service ---
+    x.AddConsumer<IssueCreatedConsumer>();
+    x.AddConsumer<IssueDeletedConsumer>();
+    x.AddConsumer<IssueUpdatedConsumer>();
+    x.AddConsumer<IssueStatusChangedConsumer>();
+    x.AddConsumer<IssueTypeChangedConsumer>();
+    x.AddConsumer<IssuePriorityChangedConsumer>();
+    x.AddConsumer<IssueAssigneeAddedConsumer>();
+    x.AddConsumer<IssueAssigneeRemovedConsumer>();
+    x.AddConsumer<IssueCommentCreatedConsumer>();
+    x.AddConsumer<IssueCommentUpdatedConsumer>();
+    x.AddConsumer<IssueCommentDeletedConsumer>();
+    x.AddConsumer<AttachmentCreatedConsumer>();
+    x.AddConsumer<AttachmentDeletedConsumer>();
+
+    x.UsingRabbitMq((context, cfg) =>
+    {
+        var rabbitMqSettings = context.GetRequiredService<IConfiguration>().GetSection("RabbitMq");
+        var host = rabbitMqSettings["Host"];
+        var username = rabbitMqSettings["Username"];
+        var password = rabbitMqSettings["Password"];
+
+        cfg.Host(host, "/", h => {
+            h.Username(username);
+            h.Password(password);
+        });
+
+        cfg.ReceiveEndpoint("dashboard.activity.queue", e =>
+        {
+            // Project consumers
+            e.ConfigureConsumer<ProjectCreatedConsumer>(context);
+            e.ConfigureConsumer<ProjectUpdatedConsumer>(context);
+            e.ConfigureConsumer<ProjectDeletedConsumer>(context);
+            e.ConfigureConsumer<ProjectMemberAddedConsumer>(context);
+            e.ConfigureConsumer<ProjectMemberRemovedConsumer>(context);
+
+            // Issue consumers
+            e.ConfigureConsumer<IssueCreatedConsumer>(context);
+            e.ConfigureConsumer<IssueDeletedConsumer>(context);
+            e.ConfigureConsumer<IssueUpdatedConsumer>(context);
+            e.ConfigureConsumer<IssueStatusChangedConsumer>(context);
+            e.ConfigureConsumer<IssueTypeChangedConsumer>(context);
+            e.ConfigureConsumer<IssuePriorityChangedConsumer>(context);
+            e.ConfigureConsumer<IssueAssigneeAddedConsumer>(context);
+            e.ConfigureConsumer<IssueAssigneeRemovedConsumer>(context);
+            e.ConfigureConsumer<IssueCommentCreatedConsumer>(context);
+            e.ConfigureConsumer<IssueCommentUpdatedConsumer>(context);
+            e.ConfigureConsumer<IssueCommentDeletedConsumer>(context);
+            e.ConfigureConsumer<AttachmentCreatedConsumer>(context);
+            e.ConfigureConsumer<AttachmentDeletedConsumer>(context);
+
+            e.Bind("activity.exchange", s =>
+            {
+                s.ExchangeType = "topic";
+                s.RoutingKey = "project.*";
+            });
+        });
+    });
+});
+
 
 builder.Services.AddDbContext<DashboardDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default"),
