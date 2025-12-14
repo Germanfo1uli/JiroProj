@@ -1,5 +1,6 @@
 package com.example.issueservice.controllers;
 
+import com.example.issueservice.dto.data.IssueBatchRequest;
 import com.example.issueservice.dto.response.InternalIssueResponse;
 import com.example.issueservice.security.SystemPrincipal;
 import com.example.issueservice.services.IssueService;
@@ -55,6 +56,22 @@ public class InternalController {
 
         log.info("Service {} requested info for issues of project {}", principal.getUsername(), projectId);
         List<InternalIssueResponse> response = issueService.getIssuesInternal(projectId);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Старт спринта")
+    @PostMapping("/issues")
+    public ResponseEntity<List<InternalIssueResponse>> startSprint(
+            @AuthenticationPrincipal SystemPrincipal principal,
+            @RequestParam Long projectId,
+            @RequestBody IssueBatchRequest issuesIds) {
+
+        if (principal == null) {
+            throw new AccessDeniedException("Missing service authentication");
+        }
+
+        log.info("Service {} requested info for start sprint of project {}", principal.getUsername(), projectId);
+        List<InternalIssueResponse> response = issueService.startSprint(projectId, issuesIds);
         return ResponseEntity.ok(response);
     }
 }

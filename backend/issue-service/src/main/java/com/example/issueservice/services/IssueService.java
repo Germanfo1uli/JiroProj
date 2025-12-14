@@ -2,6 +2,7 @@ package com.example.issueservice.services;
 
 import com.example.issueservice.client.BoardServiceClient;
 import com.example.issueservice.client.UserServiceClient;
+import com.example.issueservice.dto.data.IssueBatchRequest;
 import com.example.issueservice.dto.data.UserBatchRequest;
 import com.example.issueservice.dto.models.IssueComment;
 import com.example.issueservice.dto.models.ProjectTag;
@@ -356,5 +357,11 @@ public class IssueService {
         authService.hasPermission(userId, issue.getProjectId(), EntityType.ISSUE, ActionType.DELETE);
 
         issueRepository.deleteById(issueId);
+    }
+
+    @Transactional
+    public List<InternalIssueResponse> startSprint(Long projectId, IssueBatchRequest issuesIds) {
+
+        return null;
     }
 }
