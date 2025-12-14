@@ -25,7 +25,7 @@ public class EventProducerService {
             String json = objectMapper.writeValueAsString(event);
 
             MessageProperties props = new MessageProperties();
-            // ✅ Исправлено: убрали массив, оставили только строку
+
             props.setHeader("MT-MessageType", "urn:message:Backend.Shared.DTOs:ProjectCreatedEvent");
             props.setContentType("application/json");
             props.setContentEncoding("UTF-8");
@@ -36,7 +36,7 @@ public class EventProducerService {
 
             System.out.println("✅ Sent ProjectCreatedEvent: " + json);
         } catch (Exception e) {
-            System.err.println("❌ Failed to send ProjectCreatedEvent: " + e.getMessage());
+            System.err.println("Failed to send ProjectCreatedEvent: " + e.getMessage());
             throw new RuntimeException(e);
         }
     }
