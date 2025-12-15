@@ -26,7 +26,7 @@ public class OpenApiRoutes {
                         .uri("lb://issue-service"))
                 .route("sprints-service-docs", r -> r
                         .path("/v3/api-docs/sprints-service")
-                        .filters(f -> f.rewritePath("/v3/api-docs/sprints-service", "/v3/api-docs"))
+                        .filters(f -> f.rewritePath("/v3/api-docs/sprints-service", "/v3/api-docs/v1"))
                         .uri("lb://sprints-service"))
                 .route("dashboard-service-docs", r -> r
                         .path("/v3/api-docs/dashboard-service")

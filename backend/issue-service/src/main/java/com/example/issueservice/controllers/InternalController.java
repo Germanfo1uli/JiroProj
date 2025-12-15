@@ -13,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -60,11 +59,11 @@ public class InternalController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Получение профилей по списку userId")
-    @PostMapping("/issues/batch")
-    public ResponseEntity<List<InternalIssueResponse>> getProfilesByIds(
+    @Operation(summary = "Получение задач по списку issuesIds")
+    @GetMapping("/issues/batch")
+    public ResponseEntity<List<InternalIssueResponse>> getIssuesByIds(
             @AuthenticationPrincipal SystemPrincipal principal,
-            @RequestBody @Validated IssueBatchRequest request) {
+            @RequestBody IssueBatchRequest request) {
 
         log.info("Service {} requested {} profiles", principal.getUsername(), request.issuesIds().size());
 
@@ -84,7 +83,7 @@ public class InternalController {
         }
 
         log.info("Service {} requested info for start sprint of project {}", principal.getUsername(), projectId);
-        List<InternalIssueResponse> response = issueService.startSprint(projectId, issuesIds);
+        List<InternalIssueResponse> response = issueService.startSprint(issuesIds.userId(), projectId, issuesIds);
         return ResponseEntity.ok(response);
     }
 }

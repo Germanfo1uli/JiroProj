@@ -7,10 +7,7 @@ import com.example.issueservice.dto.data.UserBatchRequest;
 import com.example.issueservice.dto.models.IssueComment;
 import com.example.issueservice.dto.models.ProjectTag;
 import com.example.issueservice.dto.models.enums.*;
-import com.example.issueservice.dto.rabbit.AttachmentCreatedEvent;
-import com.example.issueservice.dto.rabbit.IssueCreatedEvent;
-import com.example.issueservice.dto.rabbit.IssueDeletedEvent;
-import com.example.issueservice.dto.rabbit.IssueUpdatedEvent;
+import com.example.issueservice.dto.rabbit.*;
 import com.example.issueservice.dto.response.*;
 import com.example.issueservice.exception.*;
 import com.example.issueservice.dto.models.Issue;
@@ -405,7 +402,7 @@ public class IssueService {
     }
 
     @Transactional
-    public List<InternalIssueResponse> startSprint(Long projectId, IssueBatchRequest issuesIds) {
+    public List<InternalIssueResponse> startSprint(Long userId, Long projectId, IssueBatchRequest issuesIds) {
         log.info("Starting sprint for project {} with issues: {}", projectId, issuesIds);
 
         try {
@@ -433,10 +430,18 @@ public class IssueService {
         for (Issue issue : issues) {
             if (issue.getStatus() == IssueStatus.TO_DO) {
                 if (issue.getAssigneeId() == null) {
+                    IssueStatus oldStatus = issue.getStatus();
                     issue.setStatus(IssueStatus.SELECTED_FOR_DEVELOPMENT);
+                    eventPublisher.publishEvent(
+                            IssueStatusChangedEvent.from(issue, userId, oldStatus.name())
+                    );
                     log.info("Changed status of issue {} to SELECTED_FOR_DEVELOPMENT (no assignee)", issue.getId());
                 } else {
+                    IssueStatus oldStatus = issue.getStatus();
                     issue.setStatus(IssueStatus.IN_PROGRESS);
+                    eventPublisher.publishEvent(
+                            IssueStatusChangedEvent.from(issue, userId, oldStatus.name())
+                    );
                     log.info("Changed status of issue {} to IN_PROGRESS (has assignee {})", issue.getId(), issue.getAssigneeId());
                 }
             } else {
