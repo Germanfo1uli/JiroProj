@@ -124,11 +124,16 @@ public class ActivityLogRepository
             .ToListAsync();
     }
 
-    public async Task<Dictionary<long, long>> GetIssueCreatorsAsync(long projectId, IEnumerable<long> issueIds)
+    public async Task<Dictionary<long, long>> GetIssueCreatorsAsync(long projectId, IEnumerable<long> activeIssueIds)
     {
+        if (!activeIssueIds.Any())
+        {
+            return new Dictionary<long, long>();
+        }
+
         return await _context.ActivityLogs
             .Where(log => log.ProjectId == projectId &&
-                           issueIds.Contains(log.EntityId) &&
+                           activeIssueIds.Contains(log.EntityId) && 
                            log.EntityType == "Issue" &&
                            log.ActionType == "Created")
             .ToDictionaryAsync(log => log.EntityId, log => log.UserId);
