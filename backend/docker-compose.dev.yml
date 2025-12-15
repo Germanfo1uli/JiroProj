@@ -245,8 +245,8 @@ services:
       
       ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Search Path=sprints_service_schema
       
-      SPRING_REDIS_HOST: redis
-      SPRING_REDIS_PORT: 6379
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       RABBITMQ__HOSTNAME: rabbitmq
       RABBITMQ__PORT: 5672 
       RABBITMQ__USERNAME: ${RABBITMQ_USER:-admin}
@@ -289,8 +289,8 @@ services:
       
       ConnectionStrings__Default: Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Search Path=dashboard_service_schema
       
-      SPRING_REDIS_HOST: redis
-      SPRING_REDIS_PORT: 6379
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
 
       RABBITMQ__HOSTNAME: rabbitmq
       RABBITMQ__PORT: 5672 

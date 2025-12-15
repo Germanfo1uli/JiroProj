@@ -23,7 +23,7 @@ public class ActivityController : ControllerBase
     {
         _logger.LogInformation("User {UserId} accessing activity for project {ProjectId}", _currentUser.UserId, projectId);
 
-        var activity = await _activityLogService.GetProjectActivityAsync(projectId, page, pageSize);
+        var activity = await _activityLogService.GetProjectActivityAsync(_currentUser.UserId, projectId, page, pageSize);
         return Ok(activity);
     }
 

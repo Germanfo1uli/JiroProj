@@ -1,6 +1,7 @@
 ﻿using Refit;
 using Backend.Shared.DTOs;
 using Backend.Dashboard.Api.Cache;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Backend.Dashboard.Api.Clients
 {
@@ -9,7 +10,7 @@ namespace Backend.Dashboard.Api.Clients
         [Get("/api/internal/projects/{id}")]
         Task<ProjectDto> GetProjectById(long id);
 
-        [Get("/api/permissions/{userId}/{projectId}")]
-        Task<UserPermissionsResponse> GetUserPermissions(long userId, long projectId);
+        [Get("/api/internal/permissions")]
+        Task<UserPermissionsResponse> GetUserPermissions([FromQuery] long projectId, [FromQuery] long userId);
     }
 }

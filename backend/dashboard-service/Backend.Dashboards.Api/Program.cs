@@ -13,6 +13,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.OpenApi.Models;
 using Backend.Dashboard.Api.Cache;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -59,10 +60,11 @@ builder.Services.AddSwaggerGen(options =>
     }
 });
 
-builder.Services.AddStackExchangeRedisCache(options =>
-{
-    options.Configuration = "localhost:6379";
-});
+var redisHost = builder.Configuration["REDIS_HOST"] ?? "localhost";
+var redisPort = builder.Configuration["REDIS_PORT"] ?? "6379";
+
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+    ConnectionMultiplexer.Connect($"{redisHost}:{redisPort}"));
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();

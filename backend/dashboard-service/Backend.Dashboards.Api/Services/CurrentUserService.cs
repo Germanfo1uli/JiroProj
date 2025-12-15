@@ -11,7 +11,7 @@ namespace Backend.Dashboard.Api.Services
             _contextAccessor = contextAccessor;
         }
 
-        public long? UserId => long.TryParse(_contextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var id) ? id : null;
+        public long UserId => long.TryParse(_contextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var id) ? id : throw new UnauthorizedAccessException("UserId not found in headers");
         public string? Email => _contextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Email)?.Value;
         public string? Role => _contextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Role)?.Value;
         public bool IsAuthenticated => _contextAccessor.HttpContext?.User.Identity?.IsAuthenticated ?? false;

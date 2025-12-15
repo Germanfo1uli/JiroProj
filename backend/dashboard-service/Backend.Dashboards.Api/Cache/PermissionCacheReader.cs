@@ -9,28 +9,27 @@ namespace Backend.Dashboard.Api.Cache
 {
     public class PermissionCacheReader
     {
-        private readonly IDistributedCache _redis;
-        private readonly IProjectClient _projectClient;
+        private readonly IConnectionMultiplexer _redis;
+        private readonly IProjectClient _permissionClient;
         private readonly ILogger<PermissionCacheReader> _logger;
-        private readonly JsonSerializerOptions _jsonOptions;
 
         public PermissionCacheReader(
-            IDistributedCache redis,
-            IProjectClient projectClient,
+            IConnectionMultiplexer redis,
+            IProjectClient permissionClient,
             ILogger<PermissionCacheReader> logger)
         {
             _redis = redis;
-            _projectClient = projectClient;
+            _permissionClient = permissionClient;
             _logger = logger;
-            _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         }
 
         public async Task<UserPermissionsResponse> GetUserPermissionsAsync(long userId, long projectId)
         {
+            var db = _redis.GetDatabase();
             var roleKey = string.Format(RedisConstants.UserRoleKey, userId, projectId);
-            var roleIdStr = await _redis.GetStringAsync(roleKey);
+            var roleIdStr = await db.StringGetAsync(roleKey);
 
-            if (string.IsNullOrEmpty(roleIdStr))
+            if (roleIdStr.IsNullOrEmpty)
             {
                 _logger.LogWarning("Cache miss for user {UserId} in project {ProjectId}, calling BoardService", userId, projectId);
                 return await FetchFromBoardServiceAsync(userId, projectId);
@@ -43,18 +42,12 @@ namespace Backend.Dashboard.Api.Cache
             }
 
             var permsKey = string.Format(RedisConstants.RolePermissionsKey, roleId);
-            var permissionsJson = await _redis.GetStringAsync(permsKey);
-            HashSet<string> permissions = null;
-
-            if (!string.IsNullOrEmpty(permissionsJson))
-            {
-                permissions = JsonSerializer.Deserialize<HashSet<string>>(permissionsJson, _jsonOptions);
-            }
+            var permissions = await db.SetMembersAsync(permsKey);
 
             var ownerKey = string.Format(RedisConstants.RoleIsOwnerKey, roleId);
-            var isOwnerStr = await _redis.GetStringAsync(ownerKey);
+            var isOwnerStr = await db.StringGetAsync(ownerKey);
 
-            if (permissions == null || string.IsNullOrEmpty(isOwnerStr))
+            if (permissions.Length == 0 || isOwnerStr.IsNullOrEmpty)
             {
                 _logger.LogWarning("Partial cache miss for role {RoleId}, calling BoardService", roleId);
                 return await FetchFromBoardServiceAsync(userId, projectId);
@@ -63,7 +56,7 @@ namespace Backend.Dashboard.Api.Cache
             return new UserPermissionsResponse(
                 userId,
                 projectId,
-                permissions,
+                permissions.Select(p => p.ToString()).ToHashSet(),
                 bool.Parse(isOwnerStr)
             );
         }
@@ -72,7 +65,7 @@ namespace Backend.Dashboard.Api.Cache
         {
             try
             {
-                return await _projectClient.GetUserPermissions(userId, projectId);
+                return await _permissionClient.GetUserPermissions(userId, projectId);
             }
             catch (ApiException NotFound) when (NotFound.StatusCode == System.Net.HttpStatusCode.NotFound)
             {

@@ -2,7 +2,7 @@
 {
     public interface ICurrentUserService
     {
-        long? UserId { get; }
+        long UserId { get; }
         string? Email { get; }
         string? Role { get; }
         bool IsAuthenticated { get; }
