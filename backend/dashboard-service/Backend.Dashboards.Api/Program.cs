@@ -64,6 +64,9 @@ builder.Services.AddStackExchangeRedisCache(options =>
     options.Configuration = "localhost:6379";
 });
 
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+
 builder.Services.AddSingleton<PermissionCacheReader>();
 builder.Services.AddSingleton<AuthService>();
 

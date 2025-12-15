@@ -20,9 +20,13 @@ public class GatewayAuthenticationMiddleware
         var method = context.Request.Method;
         var clientIp = context.Connection.RemoteIpAddress?.ToString();
 
+        _logger.LogInformation("=== Gateway processing request: {Method} {Path} from {Ip}",
+        context.Request.Method, path, clientIp);
+
         var gatewaySecretHeader = _configuration["ServiceAuth:GatewaySecretHeader"];
         var expectedSecret = _configuration["ServiceAuth:GatewaySecretValue"];
         var publicEndpoints = _configuration.GetSection("PublicEndpoints").Get<List<string>>() ?? new List<string>();
+
 
         if (IsPublicEndpoint(path, publicEndpoints))
         {
@@ -31,42 +35,44 @@ public class GatewayAuthenticationMiddleware
             return;
         }
 
-        if (!context.Request.Headers.TryGetValue(gatewaySecretHeader, out var secretValue) || secretValue != expectedSecret)
-        {
-            _logger.LogWarning("UNAUTHORIZED: Invalid secret for {Method} {Path} from IP: {ClientIp}", method, path, clientIp);
-            await SendUnauthorizedResponse(context, "Invalid gateway secret");
-            return;
-        }
-
-        var claims = new List<Claim>();
-
         if (context.Request.Headers.TryGetValue("X-User-Id", out var userIdValue) && !string.IsNullOrEmpty(userIdValue))
         {
             var role = context.Request.Headers["X-User-Role"].FirstOrDefault() ?? "User";
             var email = context.Request.Headers["X-User-Email"].FirstOrDefault() ?? "";
 
-            claims.Add(new Claim(ClaimTypes.NameIdentifier, userIdValue));
-            claims.Add(new Claim(ClaimTypes.Role, role));
-            claims.Add(new Claim(ClaimTypes.Email, email));
-            claims.Add(new Claim("AuthType", "User"));
+            _logger.LogInformation("User authenticated: ID={UserId}, Role={Role}, Email={Email}",
+                userIdValue, role, email);
 
-            _logger.LogDebug("Authenticated USER: {UserId} ({Role}), path: {Path}", userIdValue, role, path);
+            // Создаем identity
+            var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, userIdValue),
+            new(ClaimTypes.Role, role),
+            new(ClaimTypes.Email, email),
+            new("AuthType", "User")
+        };
+
+            var identity = new ClaimsIdentity(claims, "GatewayAuth");
+            context.User = new ClaimsPrincipal(identity);
         }
         else
         {
             var sourceService = context.Request.Headers["X-Source-Service"].FirstOrDefault() ?? "unknown-service";
-            claims.Add(new Claim(ClaimTypes.Name, sourceService));
-            claims.Add(new Claim(ClaimTypes.Role, "System"));
-            claims.Add(new Claim("AuthType", "System"));
+            _logger.LogInformation("Service-to-service request: {Service}", sourceService);
 
-            _logger.LogDebug("Authenticated SERVICE: {ServiceName}, path: {Path}", sourceService, path);
+            var claims = new List<Claim>
+        {
+            new(ClaimTypes.Name, sourceService),
+            new(ClaimTypes.Role, "System"),
+            new("AuthType", "System")
+        };
+
+            var identity = new ClaimsIdentity(claims, "GatewayAuth");
+            context.User = new ClaimsPrincipal(identity);
         }
 
-        var identity = new ClaimsIdentity(claims, "GatewayAuth");
-        var principal = new ClaimsPrincipal(identity);
-        context.User = principal;
-
         await _next(context);
+        _logger.LogInformation("=== Gateway finished: Status {StatusCode}", context.Response.StatusCode);
     }
 
     private bool IsPublicEndpoint(PathString path, List<string> publicEndpoints)
