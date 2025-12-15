@@ -63,8 +63,8 @@ services:
     image: rabbitmq:3-management-alpine
     hostname: rabbitmq-node
     ports:
-      - "5672:5672"   
-      - "15672:15672" 
+      - "5672:5672"
+      - "15672:15672"
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-admin}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-secret}
@@ -226,7 +226,7 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
-      redis: 
+      redis:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
@@ -248,7 +248,7 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       RABBITMQ__HOSTNAME: rabbitmq
-      RABBITMQ__PORT: 5672 
+      RABBITMQ__PORT: 5672
       RABBITMQ__USERNAME: ${RABBITMQ_USER:-admin}
       RABBITMQ__PASSWORD: ${RABBITMQ_PASS:-secret}
       DOTNET_URLS: http://localhost:8084
@@ -293,7 +293,7 @@ services:
       REDIS_PORT: 6379
 
       RABBITMQ__HOSTNAME: rabbitmq
-      RABBITMQ__PORT: 5672 
+      RABBITMQ__PORT: 5672
       RABBITMQ__USERNAME: ${RABBITMQ_USER:-admin}
       RABBITMQ__PASSWORD: ${RABBITMQ_PASS:-secret}
       

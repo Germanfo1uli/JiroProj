@@ -62,7 +62,7 @@ public class ActivityLogRepository
     {
         var statusActionTypes = new[]
         {
-        "TO_DO", "SELECTED_FOR_DEVELOPMENT", "IN_PROGRESS", "CODE_REVIEW", "QA", "STAGING", "DONE"
+        "SELECTED_FOR_DEVELOPMENT", "IN_PROGRESS", "CODE_REVIEW", "QA", "STAGING", "DONE", "Created"
     };
 
         return await _context.ActivityLogs
