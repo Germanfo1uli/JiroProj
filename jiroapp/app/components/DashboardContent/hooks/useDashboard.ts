@@ -54,6 +54,17 @@ interface IssueResponse {
     attachments: IssueAttachment[];
 }
 
+interface ProjectRole {
+    id: number;
+    name: string;
+    isOwner: boolean;
+    isDefault: boolean;
+    permissions: Array<{
+        entity: string;
+        action: string;
+    }>;
+}
+
 const initialBoards: Board[] = [
     {
         id: 1,
@@ -153,6 +164,7 @@ export const useDashboard = (projectId: number | null) => {
     const [availableTags, setAvailableTags] = useState<IssueTag[]>([]);
     const [authors, setAuthors] = useState<Author[]>([]);
     const [currentUser, setCurrentUser] = useState<Author | null>(null);
+    const [userRole, setUserRole] = useState<ProjectRole | null>(null);
 
     const updateState = (updates: Partial<DashboardState>) => {
         setState(prev => ({ ...prev, ...updates }));
@@ -171,7 +183,6 @@ export const useDashboard = (projectId: number | null) => {
             return user;
         } catch (error) {
             console.error('Ошибка при получении текущего пользователя:', error);
-            // Создаем fallback пользователя
             const fallbackUser: Author = {
                 name: 'Текущий пользователь',
                 avatar: null,
@@ -181,6 +192,20 @@ export const useDashboard = (projectId: number | null) => {
             return fallbackUser;
         }
     }, []);
+
+    const fetchUserRole = useCallback(async () => {
+        if (!projectId) return;
+
+        try {
+            const response = await api.get<ProjectRole>(`/projects/${projectId}/roles/me`);
+            setUserRole(response.data);
+            return response.data;
+        } catch (error) {
+            console.error('Ошибка при получении роли пользователя:', error);
+            setUserRole(null);
+            return null;
+        }
+    }, [projectId]);
 
     const fetchProjectTags = useCallback(async () => {
         if (!projectId) return;
@@ -300,7 +325,8 @@ export const useDashboard = (projectId: number | null) => {
                     params: { projectId }
                 }),
                 fetchProjectData(),
-                fetchProjectTags()
+                fetchProjectTags(),
+                fetchUserRole()
             ]);
 
             const issues = issuesResponse.data;
@@ -326,7 +352,7 @@ export const useDashboard = (projectId: number | null) => {
         } finally {
             setIsLoading(false);
         }
-    }, [projectId, fetchProjectData, fetchProjectTags]);
+    }, [projectId, fetchProjectData, fetchProjectTags, fetchUserRole]);
 
     useEffect(() => {
         if (projectId) {
@@ -807,6 +833,7 @@ export const useDashboard = (projectId: number | null) => {
         authors,
         availableTags,
         currentUser,
+        userRole,
         isLoading,
         getPriorityColor,
         getPriorityBgColor,
@@ -839,6 +866,7 @@ export const useDashboard = (projectId: number | null) => {
         createTag,
         uploadFiles,
         deleteAttachment,
-        fetchCurrentUser
+        fetchCurrentUser,
+        fetchUserRole
     };
 };

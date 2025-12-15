@@ -20,6 +20,10 @@ export const useComments = (issueId: number) => {
     const [comments, setComments] = useState<Comment[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [commentToDelete, setCommentToDelete] = useState<{
+        id: number;
+        authorName: string;
+    } | null>(null);
 
     const transformApiComment = (comment: ApiComment): Comment => {
         return {
@@ -62,9 +66,8 @@ export const useComments = (issueId: number) => {
         try {
             setIsSubmitting(true);
 
-            // Создаем оптимистичный комментарий
             const optimisticComment: Comment = {
-                id: Date.now(), // Временный ID
+                id: Date.now(),
                 author: currentUser,
                 content: content.trim(),
                 createdAt: new Date().toLocaleString('ru-RU', {
@@ -76,17 +79,14 @@ export const useComments = (issueId: number) => {
                 })
             };
 
-            // Оптимистичное обновление
             setComments(prev => [...prev, optimisticComment]);
 
-            // Отправляем на сервер
             const response = await api.post(`/issues/${issueId}/comments`, {
                 message: content.trim()
             });
 
             const newComment = response.data;
 
-            // Заменяем оптимистичный комментарий реальным
             setComments(prev =>
                 prev.map(comment =>
                     comment.id === optimisticComment.id ? transformApiComment(newComment) : comment
@@ -97,7 +97,6 @@ export const useComments = (issueId: number) => {
             return newComment;
         } catch (error) {
             console.error('Ошибка при добавлении комментария:', error);
-            // Откатываем оптимистичное обновление
             setComments(prev => prev.filter(comment => comment.id !== Date.now()));
             toast.error('Не удалось добавить комментарий');
             return null;
@@ -106,19 +105,36 @@ export const useComments = (issueId: number) => {
         }
     };
 
-    const deleteComment = async (commentId: number) => {
-        try {
-            setComments(prev => prev.filter(comment => comment.id !== commentId));
+    const requestDeleteComment = (commentId: number, authorName: string) => {
+        setCommentToDelete({ id: commentId, authorName });
+    };
 
-            await api.delete(`/issues/${issueId}/comments/${commentId}`);
+    const confirmDeleteComment = async () => {
+        if (!commentToDelete) return false;
+
+        try {
+            // Оптимистичное удаление
+            const commentToRemove = comments.find(c => c.id === commentToDelete.id);
+            setComments(prev => prev.filter(comment => comment.id !== commentToDelete.id));
+
+            await api.delete(`/issues/${issueId}/comments/${commentToDelete.id}`);
+
             toast.success('Комментарий удален');
+            setCommentToDelete(null);
             return true;
         } catch (error) {
             console.error('Ошибка при удалении комментария:', error);
-            // Если нужно, можно восстановить комментарий
+            if (commentToRemove) {
+                setComments(prev => [...prev, commentToRemove].sort((a, b) => a.id - b.id));
+            }
             toast.error('Не удалось удалить комментарий');
+            setCommentToDelete(null);
             return false;
         }
+    };
+
+    const cancelDeleteComment = () => {
+        setCommentToDelete(null);
     };
 
     const refreshComments = async () => {
@@ -129,8 +145,11 @@ export const useComments = (issueId: number) => {
         comments,
         isLoading,
         isSubmitting,
+        commentToDelete,
         addComment,
-        deleteComment,
+        requestDeleteComment,
+        confirmDeleteComment,
+        cancelDeleteComment,
         fetchComments,
         refreshComments
     };

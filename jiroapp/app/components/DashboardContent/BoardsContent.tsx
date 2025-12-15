@@ -26,6 +26,7 @@ const BoardsContent = ({ projectId }: BoardsContentProps) => {
         authors,
         availableTags,
         currentUser,
+        userRole,
         isLoading,
         getPriorityColor,
         getPriorityBgColor,
@@ -227,7 +228,8 @@ const BoardsContent = ({ projectId }: BoardsContentProps) => {
                         getPriorityColor={getPriorityColor}
                         onAddComment={handleAddComment}
                         assignees={state.viewingCard.assignees}
-                        currentUser={currentUser} // Передаем текущего пользователя
+                        currentUser={currentUser}
+                        userRole={userRole}
                     />
                 )}
             </AnimatePresence>

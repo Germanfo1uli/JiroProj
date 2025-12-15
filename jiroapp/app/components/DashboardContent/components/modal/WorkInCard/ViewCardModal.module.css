@@ -9,7 +9,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 999999;
+    z-index: 100;
     padding: 1rem;
     animation: overlayFade 0.3s ease;
     overflow: hidden;
@@ -1008,6 +1008,32 @@
     font-size: 0.8rem;
     transition: all 0.2s ease;
     opacity: 0;
+}
+
+.commentItem:hover .deleteCommentButton {
+    opacity: 1;
+}
+
+.deleteCommentButton:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.deleteCommentButton {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    opacity: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
 }
 
 .commentItem:hover .deleteCommentButton {
