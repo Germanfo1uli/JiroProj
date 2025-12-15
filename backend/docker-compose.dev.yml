@@ -247,10 +247,12 @@ services:
       
       REDIS_HOST: redis
       REDIS_PORT: 6379
+
       RABBITMQ__HOSTNAME: rabbitmq
       RABBITMQ__PORT: 5672
       RABBITMQ__USERNAME: ${RABBITMQ_USER:-admin}
       RABBITMQ__PASSWORD: ${RABBITMQ_PASS:-secret}
+      
       DOTNET_URLS: http://localhost:8084
       ASPNETCORE_URLS: "http://+:8084"
       ASPNETCORE_ENVIRONMENT: "Development"

@@ -7,12 +7,52 @@ using Backend.Sprints.Api.Clients;
 using Backend.Sprints.Api.Configuration; 
 using Backend.Sprints.Api.Handlers;
 using Refit;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Dashboard API",
+        Version = "v1.0",
+        Description = "API для дашборда проектов"
+    });
+
+    options.AddSecurityDefinition("bearerAuth", new OpenApiSecurityScheme
+    {
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        Description = "Введите JWT токен:",
+        In = ParameterLocation.Header
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "bearerAuth"
+                }
+            },
+            new string[] {}
+        }
+    });
+
+    var swaggerSettings = builder.Configuration.GetSection("Swagger");
+    var servers = swaggerSettings.GetSection("Servers").Get<List<OpenApiServer>>();
+    foreach (var server in servers)
+    {
+        options.AddServer(server);
+    }
+});
 
 builder.Services.AddScoped<SprintRepository>();
 builder.Services.AddScoped<SprintIssueRepository>();
