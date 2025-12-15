@@ -1,1 +1,0 @@
-﻿namespace Backend.Shared.DTOs;
