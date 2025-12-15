@@ -16,6 +16,8 @@ import {
 import { FaTrash, FaEdit } from 'react-icons/fa';
 import { Developer } from '../types/developer.types';
 import { useDeveloperProjects } from '../hooks/useDeveloperProjects';
+import { useState, useEffect } from 'react';
+import { api } from '@/app/auth/hooks/useTokenRefresh';
 
 interface DevelopersTableProps {
     developers: Developer[];
@@ -30,6 +32,10 @@ interface DevelopersTableProps {
     }>;
 }
 
+interface AvatarCache {
+    [userId: number]: string;
+}
+
 export const DevelopersTable = ({
                                     developers,
                                     isLeader,
@@ -38,6 +44,7 @@ export const DevelopersTable = ({
                                     projectRoles
                                 }: DevelopersTableProps) => {
     const { getDeveloperProjects } = useDeveloperProjects();
+    const [avatarCache, setAvatarCache] = useState<AvatarCache>({});
 
     const canEditDeveloper = (developer: Developer) => {
         return isLeader && !developer.isCurrentUser;
@@ -72,6 +79,52 @@ export const DevelopersTable = ({
             role.name === developer.originalRole && role.isOwner
         );
     };
+
+    const fetchUserAvatar = async (userId: number) => {
+        if (avatarCache[userId]) {
+            return avatarCache[userId];
+        }
+
+        try {
+            const response = await api.get(`/users/${userId}/avatar`, {
+                responseType: 'blob'
+            });
+
+            if (response.data) {
+                const blob = response.data;
+                const avatarUrl = URL.createObjectURL(blob);
+
+                setAvatarCache(prev => ({
+                    ...prev,
+                    [userId]: avatarUrl
+                }));
+
+                return avatarUrl;
+            }
+        } catch (error) {
+            console.error(`Error loading avatar for user ${userId}:`, error);
+        }
+
+        return null;
+    };
+
+    useEffect(() => {
+        developers.forEach(developer => {
+            if (developer.id && !avatarCache[developer.id]) {
+                fetchUserAvatar(developer.id);
+            }
+        });
+    }, [developers]);
+
+    useEffect(() => {
+        return () => {
+            Object.values(avatarCache).forEach(url => {
+                if (url.startsWith('blob:')) {
+                    URL.revokeObjectURL(url);
+                }
+            });
+        };
+    }, []);
 
     return (
         <TableContainer
@@ -130,6 +183,7 @@ export const DevelopersTable = ({
                     {developers.map((developer) => {
                         const developerProjects = getCurrentProjects(developer);
                         const isOwner = isRoleOwner(developer);
+                        const avatarUrl = avatarCache[developer.id] || developer.avatar;
 
                         return (
                             <TableRow
@@ -157,6 +211,7 @@ export const DevelopersTable = ({
                                 <TableCell>
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                                         <Avatar
+                                            src={avatarUrl || undefined}
                                             sx={{
                                                 width: 44,
                                                 height: 44,
@@ -176,13 +231,7 @@ export const DevelopersTable = ({
                                                 }
                                             }}
                                         >
-                                            {developer.avatar ? (
-                                                <img
-                                                    src={developer.avatar}
-                                                    alt={developer.name}
-                                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                                />
-                                            ) : (
+                                            {!avatarUrl && (
                                                 <span style={{
                                                     color: 'white',
                                                     fontWeight: 700,
