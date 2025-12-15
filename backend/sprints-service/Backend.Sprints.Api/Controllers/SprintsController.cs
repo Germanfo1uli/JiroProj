@@ -5,22 +5,52 @@ using Backend.Shared.DTOs;
 namespace Backend.Sprints.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/sprints")]
 public class SprintsController : ControllerBase
 {
     private readonly ISprintService _sprintService;
+    private readonly ICurrentUserService _currentUser;
 
-    public SprintsController(ISprintService sprintService)
+    public SprintsController(ISprintService sprintService, ICurrentUserService currentUser)
     {
         _sprintService = sprintService;
+        _currentUser = currentUser;
     }
 
-    [HttpPost("projects/{projectId}/sprints")]
+    [HttpGet("projects/{projectId}")]
+    public async Task<IActionResult> GetSprintsByProject(long projectId)
+    {
+        try
+        {
+            var sprints = await _sprintService.GetSprintsByProjectIdAsync(_currentUser.UserId, projectId);
+            return Ok(sprints);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetSprint(long id)
+    {
+        try
+        {
+            var sprint = await _sprintService.GetSprintByIdAsync(_currentUser.UserId, id);
+            return Ok(sprint);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+    }
+
+    [HttpPost("projects/{projectId}")]
     public async Task<IActionResult> CreateSprint(long projectId, [FromBody] CreateSprintRequestDto request)
     {
         try
         {
-            var sprint = await _sprintService.CreateSprintWithIssuesAsync(projectId, request);
+            var sprint = await _sprintService.CreateSprintWithIssuesAsync(_currentUser.UserId, projectId, request);
             return CreatedAtAction(nameof(GetSprint), new { id = sprint.Id }, sprint);
         }
         catch (KeyNotFoundException ex)
@@ -35,65 +65,14 @@ public class SprintsController : ControllerBase
         {
             return Conflict(ex.Message);
         }
-        catch (Exception ex)
-        {
-            return StatusCode(500, ex.Message);
-        }
     }
 
-    [HttpGet("projects/{projectId}/sprints")]
-    public async Task<IActionResult> GetSprintsByProject(long projectId)
-    {
-        try
-        {
-            var sprints = await _sprintService.GetSprintsByProjectIdAsync(projectId);
-            return Ok(sprints);
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(ex.Message);
-        }
-    }
-
-    [HttpGet("projects/{projectId}/sprints-with-issues")]
-    public async Task<IActionResult> GetProjectSprintsWithIssues(long projectId)
-    {
-        try
-        {
-            var result = await _sprintService.GetProjectSprintsWithIssuesAsync(projectId);
-            return Ok(result);
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, ex.Message);
-        }
-    }
-
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetSprint(long id)
-    {
-        try
-        {
-            var sprint = await _sprintService.GetSprintByIdAsync(id);
-            return Ok(sprint);
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(ex.Message);
-        }
-    }
-
-    [HttpPut("{id}")]
+    [HttpPatch("{id}")]
     public async Task<IActionResult> UpdateSprint(long id, [FromBody] UpdateSprintRequestDto request)
     {
         try
         {
-            var sprint = await _sprintService.UpdateSprintAsync(id, request.Name, request.Goal, 
-                request.StartDate, request.EndDate, request.Status);
+            var sprint = await _sprintService.UpdateSprintAsync(_currentUser.UserId, id, request);
             return Ok(sprint);
         }
         catch (KeyNotFoundException ex)
@@ -115,7 +94,7 @@ public class SprintsController : ControllerBase
     {
         try
         {
-            await _sprintService.DeleteSprintAsync(id);
+            await _sprintService.DeleteSprintAsync(_currentUser.UserId, id);
             return NoContent();
         }
         catch (KeyNotFoundException ex)
@@ -124,58 +103,21 @@ public class SprintsController : ControllerBase
         }
     }
 
-    [HttpPost("{sprintId}/complete")]
-    public async Task<IActionResult> CompleteSprint(long sprintId)
+    [HttpPost("{sprintId}/start")]
+    public async Task<IActionResult> StartSprint(long sprintId)
     {
         try
         {
-            await _sprintService.CompleteSprintAsync(sprintId);
-            return Ok(new { message = "Sprint completed successfully" });
+            var sprint = await _sprintService.StartSprintAsync(_currentUser.UserId, sprintId);
+            return Ok(sprint);
         }
         catch (KeyNotFoundException ex)
         {
             return NotFound(ex.Message);
         }
-    }
-
-	[HttpPost("{sprintId}/start")]
-	public async Task<IActionResult> StartSprint(long sprintId)
-	{
-    	try
-    	{
-        	var updatedIssues = await _sprintService.StartSprintAsync(sprintId);
-        
-        	var response = new 
-        	{ 
-            	message = "Sprint started successfully",
-            	sprintId = sprintId,
-            	updatedIssues = updatedIssues,
-            	updatedIssuesCount = updatedIssues.Count
-        	};
-        
-        	return Ok(response);
-    	}
-    	catch (KeyNotFoundException ex)
-    	{
-        	return NotFound(ex.Message);
-    	}
-    	catch (InvalidOperationException ex)
-    	{
-        	return BadRequest(ex.Message);
-    	}
-	}
-
-    [HttpGet("{sprintId}/board")]
-    public async Task<IActionResult> GetSprintBoard(long sprintId)
-    {
-        try
+        catch (InvalidOperationException ex)
         {
-            var board = await _sprintService.GetSprintBoardAsync(sprintId);
-            return Ok(board);
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(ex.Message);
+            return BadRequest(ex.Message);
         }
     }
 }

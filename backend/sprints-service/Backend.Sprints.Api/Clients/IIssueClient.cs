@@ -7,8 +7,6 @@ namespace Backend.Sprints.Api.Clients
 {
     public interface IIssueClient
     {
-        
-
         [Get("/api/internal/issues/{issueId}")]
         Task<InternalIssueResponse> GetIssueByIdAsync(long issueId);
 
@@ -19,8 +17,6 @@ namespace Backend.Sprints.Api.Clients
         Task<List<InternalIssueResponse>> StartSprint([Query] long projectId, [Body] IssueBatchRequest issuesIds);
 
         [Get("/api/internal/issues/batch")]
-        Task<List<InternalIssueResponse>> GetIssuesByIds([Body] IssueBatchRequest issuesIds);
-
-
+        Task<List<InternalIssueResponse>> GetIssuesByIds([Body] IssueBatchRequest request);
     }
 }

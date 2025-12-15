@@ -2,70 +2,84 @@
 using Backend.Sprints.Api.Clients;
 using Backend.Shared.DTOs;
 using Refit;
+using Backend.Sprints.Api.Models.Entities;
 
 namespace Backend.Sprints.Api.Services;
 
 public class SprintIssueService : ISprintIssueService
 {
     private readonly SprintIssueRepository _sprintIssueRepository;
-    private readonly IInternalApiClient _internalApiClient;
+    private readonly SprintRepository _sprintRepository;
     private readonly IIssueClient _issueClient;
+    private readonly ILogger<SprintIssueService> _logger;
+    private readonly AuthService _authService;
 
     public SprintIssueService(
         SprintIssueRepository sprintIssueRepository,
-        IInternalApiClient internalApiClient,
-        IIssueClient issueClient)
-
-
+        SprintRepository sprintRepository,
+        IIssueClient issueClient,
+        ILogger<SprintIssueService> logger,
+        AuthService authService)
     {
         _sprintIssueRepository = sprintIssueRepository;
-        _internalApiClient = internalApiClient;
+        _sprintRepository = sprintRepository;
         _issueClient = issueClient;
+        _logger = logger;
+        _authService = authService;
     }
 
-    public async Task AddIssueToSprintAsync(long sprintId, long issueId)
-	{
-    // Проверяем задачу
-    	try
-    	{
-        	var request = new IssueBatchRequest { IssuesIds = new List<long> { issueId } };
-        	var issuesResponse = await _issueClient.GetIssuesByIds(request);
-        
-        	if (issuesResponse == null || issuesResponse.Count == 0)
-            	throw new KeyNotFoundException($"Issue with id {issueId} not found");
-    	}
-    	catch (ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
-    	{
-        	throw new KeyNotFoundException($"Issue with id {issueId} not found");
-    	}
-    	catch (Exception ex)
-    	{
-        	throw new Exception($"Failed to validate issue {issueId}: {ex.Message}");
-    	}
-    
-    	await _sprintIssueRepository.RemoveIssueFromAllSprintsAsync(issueId);
-    	await _sprintIssueRepository.AddIssueToSprintAsync(sprintId, issueId);
-	}
-
-    public async Task AddIssuesToSprintAsync(long sprintId, List<long> issueIds)
+    public async Task AddIssuesToSprintAsync(long userId, long sprintId, List<long> issueIds)
     {
-        foreach (var issueId in issueIds)
+        if (issueIds == null || !issueIds.Any()) return;
+        var sprint = await _sprintRepository.GetByIdAsync(sprintId);
+        if (sprint == null)
+            throw new KeyNotFoundException($"Sprint with id {sprintId} not found");
+        await _authService.HasPermissionAsync(userId, sprint.ProjectId,
+            Cache.EntityType.SPRINT, Cache.ActionType.MANAGE);
+
+        try
         {
-            await AddIssueToSprintAsync(sprintId, issueId);
-        }
-    }
+            var existingIssues = await _issueClient.GetIssuesByIds(
+                new IssueBatchRequest { IssuesIds = issueIds });
 
-    public async Task RemoveIssuesFromSprintAsync(long sprintId, List<long> issueIds)
-    {
-        foreach (var issueId in issueIds)
+            var foundIds = existingIssues.Select(i => i.Id).ToHashSet();
+            var missingIds = issueIds.Except(foundIds).ToList();
+
+            if (missingIds.Any())
+                throw new KeyNotFoundException($"Issues with ids {string.Join(", ", missingIds)} not found");
+        }
+        catch (ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
         {
-            await _sprintIssueRepository.RemoveIssueFromSprintAsync(sprintId, issueId);
+            throw new KeyNotFoundException("One or more issues not found");
         }
+
+        await _sprintIssueRepository.RemoveIssuesFromAllSprintsAsync(issueIds);
+
+        await _sprintIssueRepository.AddIssuesToSprintAsync(sprintId, issueIds);
+        _logger.LogInformation("Added {Count} issues to sprint {SprintId}", issueIds.Count, sprintId);
     }
 
-    public async Task RemoveIssueFromSprintAsync(long sprintId, long issueId)
+    public async Task RemoveIssueFromSprintAsync(long userId, long sprintId, long issueId)
     {
+        var sprint = await _sprintRepository.GetByIdAsync(sprintId);
+        if (sprint == null)
+            throw new KeyNotFoundException($"Sprint with id {sprintId} not found");
+        await _authService.HasPermissionAsync(userId, sprint.ProjectId,
+            Cache.EntityType.SPRINT, Cache.ActionType.MANAGE);
+        var exists = await _sprintIssueRepository.IsIssueInSprintAsync(sprintId, issueId);
+        if (!exists)
+        {
+            _logger.LogWarning("Issue {IssueId} not found in sprint {SprintId}", issueId, sprintId);
+            throw new KeyNotFoundException($"Issue with id {issueId} not found in sprint {sprintId}");
+        }
+
         await _sprintIssueRepository.RemoveIssueFromSprintAsync(sprintId, issueId);
+        _logger.LogInformation("Removed issue {IssueId} from sprint {SprintId}", issueId, sprintId);
+    }
+
+    public async Task<int> GetIssueCountBySprintIdAsync(long sprintId)
+    {
+        return await _sprintIssueRepository.GetIssueCountBySprintIdAsync(sprintId);
     }
 
     public async Task<List<long>> GetIssueIdsBySprintIdAsync(long sprintId)
@@ -73,13 +87,13 @@ public class SprintIssueService : ISprintIssueService
         return await _sprintIssueRepository.GetIssueIdsBySprintIdAsync(sprintId);
     }
 
-    public async Task<List<long>> GetSprintIdsByIssueIdAsync(long issueId)
+    public async Task ClearAllIssuesFromSprintAsync(long sprintId)
     {
-        return await _sprintIssueRepository.GetSprintIdsByIssueIdAsync(issueId);
-    }
-
-    public async Task<bool> IsIssueInSprintAsync(long sprintId, long issueId)
-    {
-        return await _sprintIssueRepository.IsIssueInSprintAsync(sprintId, issueId);
+        var count = await _sprintIssueRepository.GetIssueCountBySprintIdAsync(sprintId);
+        if (count > 0)
+        {
+            await _sprintIssueRepository.ClearAllIssuesFromSprintAsync(sprintId);
+            _logger.LogInformation("Cleared {Count} issues from sprint {SprintId}", count, sprintId);
+        }
     }
 }

@@ -5,13 +5,12 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Backend.Sprints.Api.Clients
 {
-    public interface IInternalApiClient
+    public interface IProjectClient
     {
         [Get("/api/internal/projects/{projectId}")]
         Task<ProjectDto> GetProjectByIdAsync(long projectId);
 
         [Get("/api/internal/permissions")]
         Task<UserPermissionsResponse> GetUserPermissions([FromQuery] long projectId, [FromQuery] long userId);
-
     }
 }

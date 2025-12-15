@@ -15,7 +15,8 @@ using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(o => o.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -83,6 +84,15 @@ builder.Services.Configure<ServiceAuthSettings>(builder.Configuration.GetSection
 
 builder.Services.AddTransient<InternalAuthHandler>();
 
+var settings = new RefitSettings
+{
+    ContentSerializer = new SystemTextJsonContentSerializer(new JsonSerializerOptions
+    {
+        PropertyNameCaseInsensitive = true,
+        Converters = { new JsonStringEnumConverter() }
+    })
+};
+
 builder.Services.AddRefitClient<IIssueClient>()
     .ConfigureHttpClient(client =>
     {
@@ -90,10 +100,10 @@ builder.Services.AddRefitClient<IIssueClient>()
     })
     .AddHttpMessageHandler<InternalAuthHandler>();
 
-builder.Services.AddRefitClient<IInternalApiClient>()
+builder.Services.AddRefitClient<IProjectClient>()
     .ConfigureHttpClient(client =>
     {
-        client.BaseAddress = new Uri("http://issue-service:8082");
+        client.BaseAddress = new Uri("http://board-service:8082");
     })
     .AddHttpMessageHandler<InternalAuthHandler>();
 

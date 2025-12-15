@@ -9,12 +9,12 @@ namespace Backend.Sprints.Api.Cache
     public class PermissionCacheReader
     {
         private readonly IConnectionMultiplexer _redis;
-        private readonly IInternalApiClient _permissionClient;
+        private readonly IProjectClient _permissionClient;
         private readonly ILogger<PermissionCacheReader> _logger;
 
         public PermissionCacheReader(
             IConnectionMultiplexer redis,
-            IInternalApiClient permissionClient,
+            IProjectClient permissionClient,
             ILogger<PermissionCacheReader> logger)
         {
             _redis = redis;
