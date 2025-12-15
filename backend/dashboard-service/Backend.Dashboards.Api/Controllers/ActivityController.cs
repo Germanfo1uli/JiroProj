@@ -4,7 +4,7 @@ using Backend.Dashboard.Api.Services;
 namespace Backend.Dashboard.Api.Controllers;
 
 [ApiController]
-[Route("api/dashboards/projects/{projectId}/[controller]")]
+[Route("api/logs/projects/{projectId}/[controller]")]
 public class ActivityController : ControllerBase
 {
     private readonly IActivityLogService _activityLogService;
@@ -26,10 +26,9 @@ public class ActivityController : ControllerBase
     {
         try
         {
-
             _logger.LogInformation("User {UserId} accessing activity for project {ProjectId}", _currentUser.UserId, projectId);
 
-            var activityLogs = await _activityLogService.GetProjectActivityAsync(projectId, page, pageSize);
+            var activityLogs = await _activityLogService.GetProjectActivityAsync(_currentUser.UserId, projectId, page, pageSize);
 
             var activityDtos = activityLogs.Select(log => new ActivityLogDto
             {

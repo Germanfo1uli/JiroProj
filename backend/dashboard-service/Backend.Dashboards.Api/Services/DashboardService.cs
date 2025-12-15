@@ -168,13 +168,4 @@ public class DashboardService : IDashboardService
 
         return new List<MetricTrendDto> { trend };
     }
-
-    private async Task SaveMetrics(long projectId, int totalIssues, int completedIssues, decimal completionRate, decimal avgCycleTime)
-    {
-        var now = DateTime.UtcNow;
-        await _snapshotRepository.CreateAsync(new DashboardSnapshot { ProjectId = projectId, MetricName = "total_issues", MetricValue = totalIssues, SnapshotDate = now });
-        await _snapshotRepository.CreateAsync(new DashboardSnapshot { ProjectId = projectId, MetricName = "completed_issues", MetricValue = completedIssues, SnapshotDate = now });
-        await _snapshotRepository.CreateAsync(new DashboardSnapshot { ProjectId = projectId, MetricName = "completion_rate", MetricValue = completionRate, SnapshotDate = now });
-        await _snapshotRepository.CreateAsync(new DashboardSnapshot { ProjectId = projectId, MetricName = "avg_cycle_time_days", MetricValue = avgCycleTime, SnapshotDate = now });
-    }
 }

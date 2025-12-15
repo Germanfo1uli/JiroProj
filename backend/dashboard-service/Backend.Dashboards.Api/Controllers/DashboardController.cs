@@ -5,7 +5,7 @@ using Backend.Dashboard.Api.Models.Entities;
 namespace Backend.Dashboard.Api.Controllers;
 
 [ApiController]
-[Route("api/projects/{projectId}/[controller]")]
+[Route("api/dashboards/{projectId}/[controller]")]
 public class DashboardController : ControllerBase
 {
     private readonly IDashboardService _dashboardService;
@@ -41,7 +41,7 @@ public class DashboardController : ControllerBase
     {
         try
         {
-            var snapshot = await _dashboardService.CreateSnapshotAsync(projectId, request.MetricName, request.MetricValue, request.SnapshotDate);
+            var snapshot = await _dashboardService.CreateSnapshotAsync(projectId, request.MetricName, request.MetricValue, DateTime.UtcNow);
             return Ok(snapshot);
         }
         catch (Exception ex)
@@ -56,5 +56,4 @@ public class CreateSnapshotRequest
 {
     public string MetricName { get; set; } = string.Empty;
     public decimal MetricValue { get; set; }
-    public DateTime SnapshotDate { get; set; } = DateTime.UtcNow;
 }

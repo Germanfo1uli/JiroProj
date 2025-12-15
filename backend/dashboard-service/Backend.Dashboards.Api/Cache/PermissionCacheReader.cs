@@ -65,7 +65,7 @@ namespace Backend.Dashboard.Api.Cache
         {
             try
             {
-                return await _permissionClient.GetUserPermissions(userId, projectId);
+                return await _permissionClient.GetUserPermissions(projectId, userId);
             }
             catch (ApiException NotFound) when (NotFound.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
