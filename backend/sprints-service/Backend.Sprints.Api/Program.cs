@@ -7,9 +7,11 @@ using Backend.Sprints.Api.Clients;
 using Backend.Sprints.Api.Configuration; 
 using Backend.Sprints.Api.Handlers;
 using Refit;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.OpenApi.Models;
-using StackExchange.Redis;
 using Backend.Sprints.Api.Cache;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -243,7 +243,7 @@ services:
       EUREKA__INSTANCE__LEASERENEWALINTERVALINSECONDS: 30
       EUREKA__INSTANCE__LEASEEXPIRATIONDURATIONINSECONDS: 90
       
-      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Search Path=sprints_service_schema
+      ConnectionStrings__Default: Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Search Path=sprints_service_schema
       
       REDIS_HOST: redis
       REDIS_PORT: 6379
