@@ -20,7 +20,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import CreateProjectModal from '../VerticalNavbar/CreateProject/CreateProjectModal'
 import { Project } from '../VerticalNavbar/CreateProject/types/types'
 import styles from './BoardsContent.module.css'
-import confetti from 'canvas-confetti'
 
 const BoardsContent = () => {
     const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false)
@@ -34,13 +33,6 @@ const BoardsContent = () => {
             setIsFirstVisit(false)
         } else {
             localStorage.setItem('taskflow_visited', 'true')
-            setTimeout(() => {
-                confetti({
-                    particleCount: 100,
-                    spread: 70,
-                    origin: { y: 0.6 }
-                })
-            }, 1000)
         }
     }, [])
 
@@ -51,11 +43,6 @@ const BoardsContent = () => {
     const handleProjectCreated = (project: Project) => {
         setProjects(prev => [project, ...prev])
         setIsCreateProjectOpen(false)
-        confetti({
-            particleCount: 50,
-            spread: 60,
-            origin: { y: 0.6 }
-        })
     }
 
     const closeCreateProject = () => {
