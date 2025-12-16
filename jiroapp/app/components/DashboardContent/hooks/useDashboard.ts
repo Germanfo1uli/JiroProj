@@ -810,7 +810,6 @@ export const useDashboard = (projectId: number | null) => {
                 }));
                 setBoards(updatedBoards);
 
-                // Обновляем текущую просматриваемую карточку, если она открыта
                 if (state.viewingCard?.id === cardId) {
                     updateState({ viewingCard: updatedCard });
                 }
@@ -823,6 +822,12 @@ export const useDashboard = (projectId: number | null) => {
             return null;
         }
     };
+
+    const onRefreshCard = useCallback(async () => {
+        if (state.viewingCard?.id) {
+            await refreshCardData(state.viewingCard.id);
+        }
+    }, [state.viewingCard?.id, refreshCardData]);
 
     const getAvailableBoardTitles = () => {
         const existingTitles = boards.map(board => board.title);
@@ -894,6 +899,7 @@ export const useDashboard = (projectId: number | null) => {
         deleteAttachment,
         fetchCurrentUser,
         fetchUserRole,
-        refreshCardData
+        refreshCardData,
+        onRefreshCard
     };
 };

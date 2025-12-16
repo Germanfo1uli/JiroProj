@@ -46,7 +46,7 @@ interface ViewCardModalProps {
     userRole?: {
         isOwner: boolean;
     } | null
-    onRefreshCard?: () => void
+    onRefreshCard?: () => Promise<void>
 }
 
 const ViewCardModal = ({
@@ -65,9 +65,9 @@ const ViewCardModal = ({
     const textareaRef = useRef<HTMLTextAreaElement>(null)
     const modalContentRef = useRef<HTMLDivElement>(null)
 
-    const handleCommentDeleted = () => {
+    const handleCommentDeleted = async () => {
         if (onRefreshCard) {
-            onRefreshCard();
+            await onRefreshCard();
         }
     };
 
@@ -163,12 +163,8 @@ const ViewCardModal = ({
         if (result && onAddComment) {
             const newCommentObj: Comment = {
                 id: result.id,
-                author: {
-                    name: result.creator.username,
-                    avatar: null,
-                    role: 'Участник'
-                },
-                content: result.text,
+                author: currentUser,
+                content: newComment.trim(),
                 createdAt: new Date(result.createdAt).toLocaleString('ru-RU', {
                     year: 'numeric',
                     month: '2-digit',
@@ -181,7 +177,7 @@ const ViewCardModal = ({
             onAddComment(card.id, newCommentObj)
 
             if (onRefreshCard) {
-                onRefreshCard();
+                await onRefreshCard();
             }
         }
 
