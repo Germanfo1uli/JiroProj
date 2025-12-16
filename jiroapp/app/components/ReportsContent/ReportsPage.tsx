@@ -1,7 +1,7 @@
 'use client'
 
 import { memo } from 'react'
-import { Alert, Row, Col, Card, Spin, Empty, ConfigProvider } from 'antd'
+import { Alert, Row, Col, Card, Spin, ConfigProvider } from 'antd'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useReports } from './hooks/useReports'
 import { ReportsHeader } from './components/ReportsHeader/ReportsHeader'
@@ -13,7 +13,11 @@ import styles from './ReportsPage.module.css'
 const MemoizedStatsCards = memo(StatsCards)
 const MemoizedDevelopersStats = memo(DevelopersStats)
 
-export default function ReportsPage() {
+interface ReportsPageProps {
+    projectId: number | null
+}
+
+export default function ReportsPage({ projectId }: ReportsPageProps) {
     const {
         stats,
         developerStats,
@@ -24,9 +28,9 @@ export default function ReportsPage() {
         dateRange,
         setDateRange,
         refreshData
-    } = useReports()
+    } = useReports(projectId)
 
-    if (isLoading && stats.totalTasks === 0) {
+    if (isLoading) {
         return (
             <div className={styles.reportsSection}>
                 <div className={styles.loadingContainer}>

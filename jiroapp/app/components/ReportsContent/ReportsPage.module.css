@@ -73,14 +73,14 @@
 
 @media (max-width: 1024px) {
     .reportsSection {
-        margin-left: 18rem;
+        margin-left: 20rem;
         padding: 1.75rem;
     }
 }
 
 @media (max-width: 768px) {
     .reportsSection {
-        margin-left: 16rem;
+        margin-left: 19rem;
         padding: 1.5rem;
         min-height: calc(100vh - 80px);
     }
@@ -88,7 +88,7 @@
 
 @media (max-width: 640px) {
     .reportsSection {
-        margin-left: 0;
+        margin-left: 19rem;
         padding: 1.25rem;
         min-height: 100vh;
     }

@@ -30,7 +30,7 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
             case 'developers':
                 return <DevelopersPage projectId={activeProject?.id || null} />
             case 'reports':
-                return <ReportsPage />
+                return <ReportsPage projectId={activeProject?.id || null} />
             case 'settings':
                 return activeProject ? (
                     <SettingsContent

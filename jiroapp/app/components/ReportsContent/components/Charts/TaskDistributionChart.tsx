@@ -6,7 +6,15 @@ interface TaskDistributionChartProps {
 }
 
 export const TaskDistributionChart = ({ data }: TaskDistributionChartProps) => {
-    const chartData = data.length > 0 ? data : [{ type: 'Нет данных', value: 0, color: '#d1d5db' }]
+    const chartData = data.length > 0 ? data : []
+
+    if (chartData.length === 0) {
+        return (
+            <div style={{ width: '100%', height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ color: '#64748b', fontSize: 16 }}>Нет данных для отображения</div>
+            </div>
+        )
+    }
 
     const total = chartData.reduce((sum, item) => sum + item.value, 0)
 

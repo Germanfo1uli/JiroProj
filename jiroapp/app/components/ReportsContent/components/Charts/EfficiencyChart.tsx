@@ -10,7 +10,15 @@ export const EfficiencyChart = ({ data }: EfficiencyChartProps) => {
         ...item,
         developer: item.developer || 'Неизвестный',
         efficiency: typeof item.efficiency === 'number' ? item.efficiency : 0
-    })) : [{ developer: 'Нет данных', efficiency: 0, completed: 0, total: 0 }]
+    })) : []
+
+    if (chartData.length === 0) {
+        return (
+            <div style={{ width: '100%', height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ color: '#64748b', fontSize: 16 }}>Нет данных для отображения</div>
+            </div>
+        )
+    }
 
     const getColor = (efficiency: number) => {
         if (efficiency >= 90) return '#10b981'

@@ -390,17 +390,7 @@ const DevelopersPage = ({ projectId }: DevelopersPageProps) => {
                 >
                     <div className={styles.titleSection}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                            <Box sx={{
-                                background: 'linear-gradient(135deg, #8b5cf6, #a78bfa)',
-                                borderRadius: '16px',
-                                padding: '12px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                boxShadow: '0 8px 20px rgba(139, 92, 246, 0.2)'
-                            }}>
-                                <FaUserPlus style={{ color: 'white', fontSize: '24px' }} />
-                            </Box>
+
                             <Box>
                                 <h1 className={styles.pageTitle}>Команда разработчиков</h1>
                                 <Typography
@@ -484,61 +474,6 @@ const DevelopersPage = ({ projectId }: DevelopersPageProps) => {
 
                         <Box sx={{ flex: 1 }} />
 
-                        <Button
-                            onClick={handleManualRefresh}
-                            disabled={loading}
-                            startIcon={loading ? <CircularProgress size={16} /> : <FaSync />}
-                            sx={{
-                                padding: '10px 20px',
-                                borderRadius: '12px',
-                                background: 'linear-gradient(135deg, #8b5cf6, #a78bfa)',
-                                color: 'white',
-                                fontWeight: 600,
-                                textTransform: 'none',
-                                fontSize: '0.9rem',
-                                boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)',
-                                '&:hover': {
-                                    background: 'linear-gradient(135deg, #7c3aed, #8b5cf6)',
-                                    boxShadow: '0 6px 20px rgba(139, 92, 246, 0.4)',
-                                    transform: 'translateY(-2px)'
-                                },
-                                '&:disabled': {
-                                    background: 'rgba(100, 116, 139, 0.1)',
-                                    color: 'rgba(100, 116, 139, 0.3)',
-                                    transform: 'none',
-                                    boxShadow: 'none'
-                                },
-                                transition: 'all 0.3s ease'
-                            }}
-                        >
-                            {loading ? 'Обновление...' : 'Обновить'}
-                        </Button>
-
-                        {isOwner && (
-                            <Button
-                                onClick={() => setIsAddDeveloperOpen(true)}
-                                variant="contained"
-                                startIcon={<FaPlus />}
-                                sx={{
-                                    padding: '10px 24px',
-                                    borderRadius: '12px',
-                                    background: 'linear-gradient(135deg, #10b981, #34d399)',
-                                    color: 'white',
-                                    fontWeight: 600,
-                                    textTransform: 'none',
-                                    fontSize: '0.9rem',
-                                    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
-                                    '&:hover': {
-                                        background: 'linear-gradient(135deg, #059669, #10b981)',
-                                        boxShadow: '0 6px 20px rgba(16, 185, 129, 0.4)',
-                                        transform: 'translateY(-2px)'
-                                    },
-                                    transition: 'all 0.3s ease'
-                                }}
-                            >
-                                Добавить участника
-                            </Button>
-                        )}
                     </Box>
                 </motion.div>
             </div>

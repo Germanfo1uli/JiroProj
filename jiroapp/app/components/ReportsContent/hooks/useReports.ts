@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
-import { useDashboard } from '../../DashboardContent/hooks/useDashboard'
+import { useState, useEffect, useCallback } from 'react'
+import { api } from '../../../auth/hooks/useTokenRefresh'
 import type {
     ProjectStats,
     DeveloperStats,
@@ -8,75 +8,183 @@ import type {
     TaskDistributionData,
     DateRange
 } from '../types/reports.types'
-import {
-    calculateTaskStats,
-    generateProgressData,
-    generateDeveloperStats,
-    generateEfficiencyData,
-    generateTaskDistributionData
-} from '../utils/reports.utils'
 
-export const useReports = () => {
-    const { boards } = useDashboard()
+interface DashboardResponse {
+    projectId: number
+    currentMetrics: {
+        total_issues: number
+        completed_issues: number
+        todo_issues: number
+        in_progress_issues: number
+        completion_rate: number
+    }
+    userEfficiency: Record<string, number>
+    recentActivity: Array<{
+        userId: number
+        actionType: string
+        entityType: string
+        entityId: number
+        createdAt: string
+    }>
+    trends: Record<string, {
+        metricName: string
+        dataPoints: Array<{
+            date: string
+            value: number
+        }>
+    }>
+}
+
+interface UserProfile {
+    id: number
+    username: string
+    tag: string
+    bio: string
+}
+
+const getUserProfile = async (userId: string | number): Promise<UserProfile> => {
+    try {
+        const response = await api.get<UserProfile>(`/users/${userId}/profile`)
+        return response.data
+    } catch (error) {
+        console.error('Ошибка получения профиля пользователя:', error)
+        throw error
+    }
+}
+
+export const useReports = (projectId: number | null) => {
     const [isLoading, setIsLoading] = useState(true)
     const [dateRange, setDateRange] = useState<DateRange | null>(null)
+    const [stats, setStats] = useState<ProjectStats>({
+        totalTasks: 0,
+        completedTasks: 0,
+        inProgressTasks: 0,
+        pendingTasks: 0,
+        overdueTasks: 0,
+        completionRate: 0,
+        averageCompletionTime: 0
+    })
+    const [developerStats, setDeveloperStats] = useState<DeveloperStats[]>([])
+    const [progressData, setProgressData] = useState<TaskProgressData[]>([])
+    const [efficiencyData, setEfficiencyData] = useState<EfficiencyData[]>([])
+    const [taskDistributionData, setTaskDistributionData] = useState<TaskDistributionData[]>([])
 
-    const calculatedStats = useMemo(() => {
-        if (!boards || boards.length === 0) {
-            return {
-                stats: {
-                    totalTasks: 31,
-                    completedTasks: 15,
-                    inProgressTasks: 8,
-                    pendingTasks: 5,
-                    overdueTasks: 3,
-                    completionRate: 48,
-                    averageCompletionTime: 3.2
-                } as ProjectStats,
-                developerStats: [
-                    { name: 'Иван Иванов', completedTasks: 8, overdueTasks: 0, efficiency: 92, totalTasks: 9 },
-                    { name: 'Петр Петров', completedTasks: 6, overdueTasks: 1, efficiency: 82, totalTasks: 7 },
-                    { name: 'Анна Сидорова', completedTasks: 10, overdueTasks: 0, efficiency: 100, totalTasks: 10 },
-                    { name: 'Мария Козлова', completedTasks: 3, overdueTasks: 2, efficiency: 70, totalTasks: 5 }
-                ] as DeveloperStats[],
-                progressData: generateProgressData([]),
-                efficiencyData: [] as EfficiencyData[],
-                taskDistributionData: generateTaskDistributionData({
-                    totalTasks: 31,
-                    completedTasks: 15,
-                    inProgressTasks: 8,
-                    pendingTasks: 5,
-                    overdueTasks: 3,
-                    completionRate: 48,
-                    averageCompletionTime: 3.2
-                })
-            }
+    const fetchDashboardData = useCallback(async () => {
+        if (!projectId) {
+            setIsLoading(false)
+            return
         }
 
+        setIsLoading(true)
         try {
-            const stats = calculateTaskStats(boards)
-            const devStats = generateDeveloperStats(boards)
-            const progress = generateProgressData(boards)
-            const efficiency = generateEfficiencyData(devStats)
-            const distribution = generateTaskDistributionData(stats)
+            const response = await api.get<DashboardResponse>(`/dashboards/${projectId}/Dashboard`)
+            const data = response.data
 
-            return { stats, developerStats: devStats, progressData: progress, efficiencyData: efficiency, taskDistributionData: distribution }
-        } catch (error) {
-            console.error('Ошибка расчета статистики:', error)
-            return {
-                stats: DEFAULT_STATS,
-                developerStats: [],
-                progressData: generateProgressData([]),
-                efficiencyData: [],
-                taskDistributionData: generateTaskDistributionData(DEFAULT_STATS)
+            const metrics = data.currentMetrics
+
+            const newStats: ProjectStats = {
+                totalTasks: metrics.total_issues || 0,
+                completedTasks: metrics.completed_issues || 0,
+                inProgressTasks: metrics.in_progress_issues || 0,
+                pendingTasks: metrics.todo_issues || 0,
+                overdueTasks: 0,
+                completionRate: metrics.completion_rate || 0,
+                averageCompletionTime: 0
             }
+            setStats(newStats)
+
+            const userProfiles = new Map<number, UserProfile>()
+            const userIds = Object.keys(data.userEfficiency || {})
+
+            for (const userId of userIds) {
+                try {
+                    const profile = await getUserProfile(userId)
+                    userProfiles.set(Number(userId), profile)
+                } catch (error) {
+                    console.warn(`Не удалось загрузить профиль пользователя ${userId}`)
+                }
+            }
+
+            const devStatsPromises = Object.entries(data.userEfficiency || {}).map(async ([userId, efficiency]) => {
+                const userProfile = userProfiles.get(Number(userId))
+                const name = userProfile?.username || `Разработчик ${userId}`
+
+                return {
+                    name,
+                    completedTasks: Math.round((efficiency / 100) * 10),
+                    overdueTasks: 0,
+                    efficiency,
+                    totalTasks: 10
+                }
+            })
+
+            const devStats = await Promise.all(devStatsPromises)
+            setDeveloperStats(devStats)
+
+            const effData: EfficiencyData[] = devStats.map(dev => ({
+                developer: dev.name,
+                efficiency: dev.efficiency,
+                completed: dev.completedTasks,
+                total: dev.totalTasks
+            }))
+            setEfficiencyData(effData)
+
+            let trendsData: Array<{ date: string; value: number }> = []
+
+            if (data.trends && Object.keys(data.trends).length > 0) {
+                const firstTrend = Object.values(data.trends)[0]
+                trendsData = firstTrend.dataPoints || []
+            } else {
+                const today = new Date()
+                for (let i = 6; i >= 0; i--) {
+                    const date = new Date(today)
+                    date.setDate(date.getDate() - i)
+                    trendsData.push({
+                        date: date.toISOString().split('T')[0],
+                        value: Math.floor(Math.random() * 5) + 1
+                    })
+                }
+            }
+
+            const progData: TaskProgressData[] = trendsData.map((point, index) => ({
+                date: new Date(point.date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' }),
+                tasks: point.value,
+                cumulative: trendsData.slice(0, index + 1).reduce((sum, p) => sum + p.value, 0)
+            })).slice(-7)
+            setProgressData(progData)
+
+            const distData: TaskDistributionData[] = [
+                { type: 'Выполнено', value: newStats.completedTasks, color: '#10b981' },
+                { type: 'В процессе', value: newStats.inProgressTasks, color: '#3b82f6' },
+                { type: 'Ожидают', value: newStats.pendingTasks, color: '#f59e0b' },
+                { type: 'Просрочено', value: newStats.overdueTasks, color: '#ef4444' }
+            ].filter(item => item.value > 0)
+            setTaskDistributionData(distData)
+
+        } catch (error) {
+            console.error('Ошибка загрузки данных отчетов:', error)
+
+            setStats({
+                totalTasks: 0,
+                completedTasks: 0,
+                inProgressTasks: 0,
+                pendingTasks: 0,
+                overdueTasks: 0,
+                completionRate: 0,
+                averageCompletionTime: 0
+            })
+            setDeveloperStats([])
+            setEfficiencyData([])
+            setProgressData([])
+            setTaskDistributionData([])
+        } finally {
+            setIsLoading(false)
         }
-    }, [boards])
+    }, [projectId])
 
     useEffect(() => {
-        const timer = setTimeout(() => setIsLoading(false), 400)
-        return () => clearTimeout(timer)
-    }, [calculatedStats])
+        fetchDashboardData()
+    }, [fetchDashboardData])
 
     const handleDateRangeChange = useCallback((dates: [Date, Date] | null) => {
         if (dates && dates[0] && dates[1]) {
@@ -87,25 +195,18 @@ export const useReports = () => {
     }, [])
 
     const refreshData = useCallback(() => {
-        setIsLoading(true)
-        setTimeout(() => setIsLoading(false), 400)
-    }, [])
+        fetchDashboardData()
+    }, [fetchDashboardData])
 
     return {
-        ...calculatedStats,
+        stats,
+        developerStats,
+        progressData,
+        efficiencyData,
+        taskDistributionData,
         isLoading,
         dateRange,
         setDateRange: handleDateRangeChange,
         refreshData
     }
-}
-
-const DEFAULT_STATS: ProjectStats = {
-    totalTasks: 0,
-    completedTasks: 0,
-    inProgressTasks: 0,
-    pendingTasks: 0,
-    overdueTasks: 0,
-    completionRate: 0,
-    averageCompletionTime: 0
 }

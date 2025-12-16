@@ -30,7 +30,10 @@
     font-weight: 800;
     color: #1e293b;
     margin: 0 0 0.75rem 0;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    background: linear-gradient(135deg, #1e293b 0%, #3b82f6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .pageSubtitle {

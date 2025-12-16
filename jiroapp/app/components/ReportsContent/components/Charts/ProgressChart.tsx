@@ -6,11 +6,15 @@ interface ProgressChartProps {
 }
 
 export const ProgressChart = ({ data }: ProgressChartProps) => {
-    const chartData = data.length > 0 ? data : [
-        { date: 'День 1', tasks: 0, cumulative: 0 },
-        { date: 'День 2', tasks: 0, cumulative: 0 },
-        { date: 'День 3', tasks: 0, cumulative: 0 }
-    ]
+    const chartData = data.length > 0 ? data : []
+
+    if (chartData.length === 0) {
+        return (
+            <div style={{ width: '100%', height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ color: '#64748b', fontSize: 16 }}>Нет данных для отображения</div>
+            </div>
+        )
+    }
 
     return (
         <div style={{ width: '100%', height: 300 }}>

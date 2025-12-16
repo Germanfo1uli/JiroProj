@@ -35,17 +35,12 @@ export const StatsCards = ({ stats }: StatsCardsProps) => {
             color: '#6b7280'
         },
         {
-            title: 'Просрочено',
-            value: stats.overdueTasks,
-            icon: <FaExclamationTriangle className={styles.statIcon} />,
-            color: '#ef4444'
-        },
-        {
             title: 'Эффективность',
             value: stats.completionRate,
             suffix: '%',
             icon: <FaChartLine className={styles.statIcon} />,
-            color: '#8b5cf6'
+            color: '#8b5cf6',
+            formatter: (value: number) => Math.round(value)
         }
     ]
 
@@ -65,6 +60,8 @@ export const StatsCards = ({ stats }: StatsCardsProps) => {
                                 value={card.value}
                                 suffix={card.suffix}
                                 prefix={card.icon}
+                                // Используем formatter для карточки эффективности
+                                formatter={card.formatter ? (value) => card.formatter?.(value as number) : undefined}
                                 styles={{
                                     content: { color: card.color, fontSize: '28px', fontWeight: 700 }
                                 }}
